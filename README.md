@@ -22,7 +22,7 @@ If the VPC is allocated a /16 subnet, each availability zone within the region w
 
 Optionally, this plugin can also create `AWS::EC2::NatGateway` instances in each availability zone which requires provisioning `AWS::EC2::EIP` resources (AWS limits you to 5 per VPC).
 
-Any Lambda functions executing with the "Application" subnet will only be able to access `S3` (via the S3 VPC endpoint), `DynamoDB` (via the DynamoDB endpoint), `RDS` (provisioned within the "DB" subnet), `ElastiCache` (provisioned within the "DB" subnet), or `RedShift` (provisioned within the "DB" subnet). If your Lambda functions need to access any other AWS-resource or the Internet, then you *MUST* provision `NatGateway` resources.
+Any Lambda functions executing with the "Application" subnet will only be able to access `S3` (via the S3 VPC endpoint), `DynamoDB` (via the DynamoDB VPC endpoint), `RDS` (provisioned within the "DB" subnet), `ElastiCache` (provisioned within the "DB" subnet), or `RedShift` (provisioned within the "DB" subnet). If your Lambda functions need to access any other AWS-resource or the Internet, then you *MUST* provision `NatGateway` resources.
 
 This plugin will also provision the following database-related resources:
 
