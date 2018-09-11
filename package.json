@@ -1,0 +1,36 @@
+{
+  "name": "serverless-plugin-vpc",
+  "version": "0.1.0",
+  "engines": {
+    "node": ">=8.0"
+  },
+  "description": "Serverless Plugin to generate a VPC",
+  "author": "Smoke Turner, LLC",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/smoketurner/serverless-plugin-vpc"
+  },
+  "keywords": [
+    "serverless",
+    "serverless plugin",
+    "vpc",
+    "lambda",
+    "aws",
+    "aws lambda",
+    "amazon web services",
+    "serverless.com"
+  ],
+  "main": "index.js",
+  "dependencies": {
+    "aws-sdk": "^2.312.0",
+    "cidr-split": "^0.1.2",
+    "lodash.merge": "^4.6.1"
+  },
+  "devDependencies": {
+    "aws-sdk-mock": "^4.1.0",
+    "eslint": "^5.5.0",
+    "eslint-config-airbnb-base": "^13.1.0",
+    "eslint-plugin-import": "^2.14.0"
+  }
+}
