@@ -1,10 +1,8 @@
-'use strict';
-
 const AWS = require('aws-sdk');
 const CIDR = require('cidr-split');
 const merge = require('lodash.merge');
 
-class ServerlessPluginVpc {
+class ServerlessVpcPlugin {
   constructor(serverless, options) {
     this.serverless = serverless;
     this.options = options || {};
@@ -12,7 +10,7 @@ class ServerlessPluginVpc {
     this.provider = this.serverless.getProvider('aws');
 
     this.hooks = {
-      'after:package:initialize': this.afterInitialize.bind(this)
+      'after:package:initialize': this.afterInitialize.bind(this),
     };
   }
 
@@ -20,14 +18,14 @@ class ServerlessPluginVpc {
     let cidrBlock = '10.0.0.0/16';
     let useNatGateway = false;
 
-    const vpcConfig = this.serverless.service.custom.vpcConfig;
+    const { vpcConfig } = this.serverless.service.custom;
 
     if (vpcConfig) {
       if (vpcConfig.cidrBlock && typeof vpcConfig.cidrBlock === 'string') {
-        cidrBlock = vpcConfig.cidrBlock;
+        ({ cidrBlock } = vpcConfig);
       }
       if ('useNatGateway' in vpcConfig && typeof vpcConfig.useNatGateway === 'boolean') {
-        useNatGateway = vpcConfig.useNatGateway;
+        ({ useNatGateway } = vpcConfig);
       }
     }
 
@@ -42,13 +40,13 @@ class ServerlessPluginVpc {
       this.serverless.service.provider.compiledCloudFormationTemplate.Resources,
       this.buildVpc({ cidrBlock }),
       this.buildInternetGateway(),
-      ServerlessPluginVpc.buildInternetGatewayAttachment(),
+      ServerlessVpcPlugin.buildInternetGatewayAttachment(),
       this.buildAvailabilityZones({ cidrBlock, zones, useNatGateway }),
-      ServerlessPluginVpc.buildRDSSubnetGroup({ numZones }),
-      ServerlessPluginVpc.buildElastiCacheSubnetGroup({ numZones }),
-      ServerlessPluginVpc.buildRedshiftSubnetGroup({ numZones }),
-      ServerlessPluginVpc.buildS3Endpoint({ numZones }),
-      ServerlessPluginVpc.buildDynamoDBEndpoint({ numZones }),
+      ServerlessVpcPlugin.buildRDSSubnetGroup({ numZones }),
+      ServerlessVpcPlugin.buildElastiCacheSubnetGroup({ numZones }),
+      ServerlessVpcPlugin.buildRedshiftSubnetGroup({ numZones }),
+      ServerlessVpcPlugin.buildS3Endpoint({ numZones }),
+      ServerlessVpcPlugin.buildDynamoDBEndpoint({ numZones }),
     );
   }
 
@@ -68,13 +66,16 @@ class ServerlessPluginVpc {
       Filters: [
         {
           Name: 'region-name',
-          Values: [ region ]
-        }
-      ]
+          Values: [region],
+        },
+      ],
     };
-    return this.ec2.describeAvailabilityZones(params).promise().then((data) => {
-      return data.AvailabilityZones.filter(z => z.State === 'available').map(z => z.ZoneName).sort();
-    });
+    return this.ec2.describeAvailabilityZones(params).promise().then(
+      data => data.AvailabilityZones
+        .filter(z => z.State === 'available')
+        .map(z => z.ZoneName)
+        .sort(),
+    );
   }
 
   /**
@@ -95,17 +96,17 @@ class ServerlessPluginVpc {
           Tags: [
             {
               Key: 'STAGE',
-              Value: this.provider.getStage()
+              Value: this.provider.getStage(),
             },
             {
               Key: 'Name',
               Value: {
-                Ref: 'AWS::StackName'
-              }
-            }
-          ]
-        }
-      }
+                Ref: 'AWS::StackName',
+              },
+            },
+          ],
+        },
+      },
     };
   }
 
@@ -123,17 +124,17 @@ class ServerlessPluginVpc {
           Tags: [
             {
               Key: 'STAGE',
-              Value: this.provider.getStage()
+              Value: this.provider.getStage(),
             },
             {
               Key: 'Name',
               Value: {
-                Ref: 'AWS::StackName'
-              }
-            }
-          ]
-        }
-      }
+                Ref: 'AWS::StackName',
+              },
+            },
+          ],
+        },
+      },
     };
   }
 
@@ -149,13 +150,13 @@ class ServerlessPluginVpc {
         Type: 'AWS::EC2::VPCGatewayAttachment',
         Properties: {
           InternetGatewayId: {
-            Ref: 'InternetGateway'
+            Ref: 'InternetGateway',
           },
           VpcId: {
-            Ref: 'VPC'
-          }
-        }
-      }
+            Ref: 'VPC',
+          },
+        },
+      },
     };
   }
 
@@ -167,13 +168,13 @@ class ServerlessPluginVpc {
    */
   static splitVpc(cidrBlock) {
     return CIDR.fromString(cidrBlock)
-               .split()
-               .map(cidr => cidr.split())
-               .reduce((all, halves) => all.concat(...halves))
-               .map(cidr => cidr.split())
-               .reduce((all, halves) => all.concat(...halves))
-               .map(cidr => cidr.split())
-               .reduce((all, halves) => all.concat(...halves));
+      .split()
+      .map(cidr => cidr.split())
+      .reduce((all, halves) => all.concat(...halves))
+      .map(cidr => cidr.split())
+      .reduce((all, halves) => all.concat(...halves))
+      .map(cidr => cidr.split())
+      .reduce((all, halves) => all.concat(...halves));
   }
 
   /**
@@ -191,7 +192,7 @@ class ServerlessPluginVpc {
    * @return {Object}
    */
   buildAvailabilityZones({ cidrBlock, zones, useNatGateway = true } = {}) {
-    const azCidrBlocks = ServerlessPluginVpc.splitVpc(cidrBlock); // VPC subnet is a /16
+    const azCidrBlocks = ServerlessVpcPlugin.splitVpc(cidrBlock); // VPC subnet is a /16
     const resources = {};
 
     zones.forEach((zone, index) => {
@@ -201,46 +202,45 @@ class ServerlessPluginVpc {
       let subnets = [];
 
       const azSubnets = CIDR.fromString(azCidrBlock).split().map(cidr => cidr.toString());
-      subnets.push(azSubnets[0]);  // Application subnet is a /21
+      subnets.push(azSubnets[0]); // Application subnet is a /21
 
       const publicSubnets = CIDR.fromString(azSubnets[1]).split().map(cidr => cidr.toString());
-      subnets = subnets.concat(publicSubnets);  // Public and DB subnets are both /22
+      subnets = subnets.concat(publicSubnets); // Public and DB subnets are both /22
 
       if (useNatGateway) {
-        merge(resources, ServerlessPluginVpc.buildEIP(position));
+        merge(resources, ServerlessVpcPlugin.buildEIP(position));
         merge(resources, this.buildNatGateway(position, zone));
       }
 
       merge(resources, this.buildSubnet('App', position, zone, subnets[0]));
       merge(resources, this.buildRouteTable('App', position, zone));
-      merge(resources, ServerlessPluginVpc.buildRouteTableAssociation('App', position));
+      merge(resources, ServerlessVpcPlugin.buildRouteTableAssociation('App', position));
 
       const params = {
         name: 'App',
-        position
+        position,
       };
 
       if (useNatGateway) {
-        params.NatGatewayId = 'NatGateway' + position;
-      }
-      else {
+        params.NatGatewayId = `NatGateway${position}`;
+      } else {
         params.GatewayId = 'InternetGateway';
       }
 
-      merge(resources, ServerlessPluginVpc.buildRoute(params));
+      merge(resources, ServerlessVpcPlugin.buildRoute(params));
 
       merge(resources, this.buildSubnet('Public', position, zone, subnets[1]));
       merge(resources, this.buildRouteTable('Public', position, zone));
-      merge(resources, ServerlessPluginVpc.buildRouteTableAssociation('Public', position));
-      merge(resources, ServerlessPluginVpc.buildRoute({
+      merge(resources, ServerlessVpcPlugin.buildRouteTableAssociation('Public', position));
+      merge(resources, ServerlessVpcPlugin.buildRoute({
         name: 'Public',
         position,
-        GatewayId: 'InternetGateway'
+        GatewayId: 'InternetGateway',
       }));
 
       merge(resources, this.buildSubnet('DB', position, zone, subnets[2]));
       merge(resources, this.buildRouteTable('DB', position, zone));
-      merge(resources, ServerlessPluginVpc.buildRouteTableAssociation('DB', position));
+      merge(resources, ServerlessVpcPlugin.buildRouteTableAssociation('DB', position));
     });
 
     return resources;
@@ -256,7 +256,7 @@ class ServerlessPluginVpc {
    * @return {Object}
    */
   buildSubnet(name, position, zone, cidrBlock) {
-    const cfName = name + 'Subnet' + position;
+    const cfName = `${name}Subnet${position}`;
     return {
       [cfName]: {
         Type: 'AWS::EC2::Subnet',
@@ -266,7 +266,7 @@ class ServerlessPluginVpc {
           Tags: [
             {
               Key: 'STAGE',
-              Value: this.provider.getStage()
+              Value: this.provider.getStage(),
             },
             {
               Key: 'Name',
@@ -275,20 +275,20 @@ class ServerlessPluginVpc {
                   '-',
                   [
                     {
-                      Ref:'AWS::StackName'
+                      Ref: 'AWS::StackName',
                     },
                     name.toLowerCase(),
-                    zone
-                  ]
-                ]
-              }
-            }
+                    zone,
+                  ],
+                ],
+              },
+            },
           ],
           VpcId: {
-            Ref: 'VPC'
-          }
-        }
-      }
+            Ref: 'VPC',
+          },
+        },
+      },
     };
   }
 
@@ -299,14 +299,14 @@ class ServerlessPluginVpc {
    * @return {Object}
    */
   static buildEIP(position) {
-    const cfName = 'EIP' + position;
+    const cfName = `EIP${position}`;
     return {
       [cfName]: {
         Type: 'AWS::EC2::EIP',
         Properties: {
-          Domain: 'vpc'
-        }
-      }
+          Domain: 'vpc',
+        },
+      },
     };
   }
 
@@ -318,7 +318,7 @@ class ServerlessPluginVpc {
    * @return {Object}
    */
   buildNatGateway(position, zone) {
-    const cfName = 'NatGateway' + position;
+    const cfName = `NatGateway${position}`;
 
     return {
       [cfName]: {
@@ -326,17 +326,17 @@ class ServerlessPluginVpc {
         Properties: {
           AllocationId: {
             'Fn::GetAtt': [
-              'EIP' + position,
-              'AllocationId'
-            ]
+              `EIP${position}`,
+              'AllocationId',
+            ],
           },
           SubnetId: {
-            Ref: 'PublicSubnet' + position
+            Ref: `PublicSubnet${position}`,
           },
           Tags: [
             {
               Key: 'STAGE',
-              Value: this.provider.getStage()
+              Value: this.provider.getStage(),
             },
             {
               Key: 'Name',
@@ -345,16 +345,16 @@ class ServerlessPluginVpc {
                   '-',
                   [
                     {
-                      Ref: 'AWS::StackName'
+                      Ref: 'AWS::StackName',
                     },
-                    zone
-                  ]
-                ]
-              }
-            }
-          ]
-        }
-      }
+                    zone,
+                  ],
+                ],
+              },
+            },
+          ],
+        },
+      },
     };
   }
 
@@ -367,19 +367,18 @@ class ServerlessPluginVpc {
    * @return {Object}
    */
   buildRouteTable(name, position, zone) {
-    const cfName = name + 'RouteTable' + position;
-
+    const cfName = `${name}RouteTable${position}`;
     return {
       [cfName]: {
         Type: 'AWS::EC2::RouteTable',
         Properties: {
           VpcId: {
-            Ref: 'VPC'
+            Ref: 'VPC',
           },
           Tags: [
             {
               Key: 'STAGE',
-              Value: this.provider.getStage()
+              Value: this.provider.getStage(),
             },
             {
               Key: 'Name',
@@ -388,17 +387,17 @@ class ServerlessPluginVpc {
                   '-',
                   [
                     {
-                      Ref:'AWS::StackName'
+                      Ref: 'AWS::StackName',
                     },
                     name.toLowerCase(),
-                    zone
-                  ]
-                ]
-              }
-            }
-          ]
-        }
-      }
+                    zone,
+                  ],
+                ],
+              },
+            },
+          ],
+        },
+      },
     };
   }
 
@@ -410,20 +409,20 @@ class ServerlessPluginVpc {
    * @return {Object}
    */
   static buildRouteTableAssociation(name, position) {
-    const cfName = name + 'RouteTableAssociation' + position;
+    const cfName = `${name}RouteTableAssociation${position}`;
 
     return {
       [cfName]: {
         Type: 'AWS::EC2::SubnetRouteTableAssociation',
         Properties: {
           RouteTableId: {
-            Ref: name + 'RouteTable' + position
+            Ref: `${name}RouteTable${position}`,
           },
           SubnetId: {
-            Ref: name + 'Subnet' + position
-          }
-        }
-      }
+            Ref: `${name}Subnet${position}`,
+          },
+        },
+      },
     };
   }
 
@@ -433,8 +432,10 @@ class ServerlessPluginVpc {
    * @param {Object} params
    * @return {Object}
    */
-  static buildRoute({ name, position, NatGatewayId = null, GatewayId = null } = {}) {
-    const cfName = name + 'Route' + position;
+  static buildRoute({
+    name, position, NatGatewayId = null, GatewayId = null,
+  } = {}) {
+    const cfName = `${name}Route${position}`;
 
     const route = {
       [cfName]: {
@@ -442,20 +443,19 @@ class ServerlessPluginVpc {
         Properties: {
           DestinationCidrBlock: '0.0.0.0/0',
           RouteTableId: {
-            Ref: name + 'RouteTable' + position
-          }
-        }
-      }
+            Ref: `${name}RouteTable${position}`,
+          },
+        },
+      },
     };
 
     if (NatGatewayId) {
       route[cfName].Properties.NatGatewayId = {
-        Ref: NatGatewayId
+        Ref: NatGatewayId,
       };
-    }
-    else if (GatewayId) {
+    } else if (GatewayId) {
       route[cfName].Properties.GatewayId = {
-        Ref: GatewayId
+        Ref: GatewayId,
       };
     }
 
@@ -470,8 +470,8 @@ class ServerlessPluginVpc {
    */
   static buildRDSSubnetGroup({ name = 'RDSSubnetGroup', numZones } = {}) {
     const subnetIds = [];
-    for (var i = 1; i <= numZones; i++) {
-      subnetIds.push({ Ref: 'DBSubnet' + i });
+    for (let i = 1; i <= numZones; i += 1) {
+      subnetIds.push({ Ref: `DBSubnet${i}` });
     }
 
     return {
@@ -479,11 +479,11 @@ class ServerlessPluginVpc {
         Type: 'AWS::RDS::DBSubnetGroup',
         Properties: {
           DBSubnetGroupDescription: {
-            Ref: 'AWS::StackName'
+            Ref: 'AWS::StackName',
           },
-          SubnetIds: subnetIds
-        }
-      }
+          SubnetIds: subnetIds,
+        },
+      },
     };
   }
 
@@ -495,8 +495,8 @@ class ServerlessPluginVpc {
    */
   static buildElastiCacheSubnetGroup({ name = 'ElastiCacheSubnetGroup', numZones } = {}) {
     const subnetIds = [];
-    for (var i = 1; i <= numZones; i++) {
-      subnetIds.push({ Ref: 'DBSubnet' + i });
+    for (let i = 1; i <= numZones; i += 1) {
+      subnetIds.push({ Ref: `DBSubnet${i}` });
     }
 
     return {
@@ -504,11 +504,11 @@ class ServerlessPluginVpc {
         Type: 'AWS::ElastiCache::SubnetGroup',
         Properties: {
           Description: {
-            Ref: 'AWS::StackName'
+            Ref: 'AWS::StackName',
           },
-          SubnetIds: subnetIds
-        }
-      }
+          SubnetIds: subnetIds,
+        },
+      },
     };
   }
 
@@ -520,8 +520,8 @@ class ServerlessPluginVpc {
    */
   static buildRedshiftSubnetGroup({ name = 'RedshiftSubnetGroup', numZones } = {}) {
     const subnetIds = [];
-    for (var i = 1; i <= numZones; i++) {
-      subnetIds.push({ Ref: 'DBSubnet' + i });
+    for (let i = 1; i <= numZones; i += 1) {
+      subnetIds.push({ Ref: `DBSubnet${i}` });
     }
 
     return {
@@ -529,11 +529,11 @@ class ServerlessPluginVpc {
         Type: 'AWS::Redshift::ClusterSubnetGroup',
         Properties: {
           Description: {
-            Ref: 'AWS::StackName'
+            Ref: 'AWS::StackName',
           },
-          SubnetIds: subnetIds
-        }
-      }
+          SubnetIds: subnetIds,
+        },
+      },
     };
   }
 
@@ -545,8 +545,8 @@ class ServerlessPluginVpc {
    */
   static buildS3Endpoint({ name = 'S3Endpoint', numZones } = {}) {
     const routeTableIds = [];
-    for (var i = 1; i <= numZones; i++) {
-      routeTableIds.push({ Ref: 'AppRouteTable' + i });
+    for (let i = 1; i <= numZones; i += 1) {
+      routeTableIds.push({ Ref: `AppRouteTable${i}` });
     }
 
     return {
@@ -560,17 +560,17 @@ class ServerlessPluginVpc {
               [
                 'com.amazonaws',
                 {
-                  Ref: 'AWS::Region'
+                  Ref: 'AWS::Region',
                 },
-                's3'
-              ]
-            ]
+                's3',
+              ],
+            ],
           },
           VpcId: {
-            Ref: 'VPC'
-          }
-        }
-      }
+            Ref: 'VPC',
+          },
+        },
+      },
     };
   }
 
@@ -582,8 +582,8 @@ class ServerlessPluginVpc {
    */
   static buildDynamoDBEndpoint({ name = 'DynamoDBEndpoint', numZones } = {}) {
     const routeTableIds = [];
-    for (var i = 1; i <= numZones; i++) {
-      routeTableIds.push({ Ref: 'AppRouteTable' + i });
+    for (let i = 1; i <= numZones; i += 1) {
+      routeTableIds.push({ Ref: `AppRouteTable${i}` });
     }
 
     return {
@@ -597,19 +597,19 @@ class ServerlessPluginVpc {
               [
                 'com.amazonaws',
                 {
-                  Ref: 'AWS::Region'
+                  Ref: 'AWS::Region',
                 },
-                'dynamodb'
-              ]
-            ]
+                'dynamodb',
+              ],
+            ],
           },
           VpcId: {
-            Ref: 'VPC'
-          }
-        }
-      }
+            Ref: 'VPC',
+          },
+        },
+      },
     };
   }
 }
 
-module.exports = ServerlessPluginVpc;
+module.exports = ServerlessVpcPlugin;
