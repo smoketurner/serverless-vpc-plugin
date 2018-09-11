@@ -22,6 +22,7 @@ class ServerlessVpcPlugin {
   async afterInitialize() {
     let cidrBlock = '10.0.0.0/16';
     let useNatGateway = false;
+    let zones = [];
 
     const { vpcConfig } = this.serverless.service.custom;
 
@@ -32,12 +33,22 @@ class ServerlessVpcPlugin {
       if ('useNatGateway' in vpcConfig && typeof vpcConfig.useNatGateway === 'boolean') {
         ({ useNatGateway } = vpcConfig);
       }
+      if (vpcConfig.zones && Array.isArray(vpcConfig.zones) && vpcConfig.zones.length > 0) {
+        ({ zones } = vpcConfig);
+      }
     }
 
     const region = this.provider.getRegion();
 
-    const zones = await this.getZonesPerRegion(region);
+    if (zones.length < 1) {
+      this.serverless.cli.log(`Discovering available zones in ${region}...`);
+      zones = await this.getZonesPerRegion(region);
+    }
     const numZones = zones.length;
+
+    if (useNatGateway && numZones > DEFAULT_VPC_EIP_LIMIT) {
+      this.serverless.cli.log(`WARNING: Number of zones (${numZones} is greater than default EIP limit (${DEFAULT_VPC_EIP_LIMIT}). Please ensure you requested an AWS EIP limit increase.`);
+    }
 
     this.serverless.cli.log(`Generating a VPC in ${region} (${cidrBlock}) across ${numZones} availability zones`);
 
@@ -47,9 +58,10 @@ class ServerlessVpcPlugin {
       this.buildInternetGateway(),
       ServerlessVpcPlugin.buildInternetGatewayAttachment(),
       this.buildAvailabilityZones({ cidrBlock, zones, useNatGateway }),
-      ServerlessVpcPlugin.buildRDSSubnetGroup({ numZones }),
+      this.buildRDSSubnetGroup({ numZones }),
       ServerlessVpcPlugin.buildElastiCacheSubnetGroup({ numZones }),
-      ServerlessVpcPlugin.buildRedshiftSubnetGroup({ numZones }),
+      this.buildRedshiftSubnetGroup({ numZones }),
+      ServerlessVpcPlugin.buildDAXSubnetGroup({ numZones }),
       ServerlessVpcPlugin.buildS3Endpoint({ numZones }),
       ServerlessVpcPlugin.buildDynamoDBEndpoint({ numZones }),
       this.buildLambdaSecurityGroup(),
@@ -214,13 +226,12 @@ class ServerlessVpcPlugin {
       subnets = subnets.concat(publicSubnets); // Public and DB subnets are both /22
 
       if (useNatGateway) {
-        merge(resources, ServerlessVpcPlugin.buildEIP(position));
-        merge(resources, this.buildNatGateway(position, zone));
+        merge(
+          resources,
+          ServerlessVpcPlugin.buildEIP(position),
+          this.buildNatGateway(position, zone),
+        );
       }
-
-      merge(resources, this.buildSubnet('App', position, zone, subnets[0]));
-      merge(resources, this.buildRouteTable('App', position, zone));
-      merge(resources, ServerlessVpcPlugin.buildRouteTableAssociation('App', position));
 
       const params = {
         name: 'App',
@@ -233,20 +244,30 @@ class ServerlessVpcPlugin {
         params.GatewayId = 'InternetGateway';
       }
 
-      merge(resources, ServerlessVpcPlugin.buildRoute(params));
+      merge(
+        resources,
 
-      merge(resources, this.buildSubnet('Public', position, zone, subnets[1]));
-      merge(resources, this.buildRouteTable('Public', position, zone));
-      merge(resources, ServerlessVpcPlugin.buildRouteTableAssociation('Public', position));
-      merge(resources, ServerlessVpcPlugin.buildRoute({
-        name: 'Public',
-        position,
-        GatewayId: 'InternetGateway',
-      }));
+        // App Subnet
+        this.buildSubnet('App', position, zone, subnets[0]),
+        this.buildRouteTable('App', position, zone),
+        ServerlessVpcPlugin.buildRouteTableAssociation('App', position),
+        ServerlessVpcPlugin.buildRoute(params),
 
-      merge(resources, this.buildSubnet('DB', position, zone, subnets[2]));
-      merge(resources, this.buildRouteTable('DB', position, zone));
-      merge(resources, ServerlessVpcPlugin.buildRouteTableAssociation('DB', position));
+        // Public Subnet
+        this.buildSubnet('Public', position, zone, subnets[1]),
+        this.buildRouteTable('Public', position, zone),
+        ServerlessVpcPlugin.buildRouteTableAssociation('Public', position),
+        ServerlessVpcPlugin.buildRoute({
+          name: 'Public',
+          position,
+          GatewayId: 'InternetGateway',
+        }),
+
+        // DB Subnet
+        this.buildSubnet('DB', position, zone, subnets[2]),
+        this.buildRouteTable('DB', position, zone),
+        ServerlessVpcPlugin.buildRouteTableAssociation('DB', position),
+      );
     });
 
     return resources;
@@ -474,7 +495,7 @@ class ServerlessVpcPlugin {
    * @param {Objects} params
    * @return {Object}
    */
-  static buildRDSSubnetGroup({ name = 'RDSSubnetGroup', numZones } = {}) {
+  buildRDSSubnetGroup({ name = 'RDSSubnetGroup', numZones } = {}) {
     const subnetIds = [];
     for (let i = 1; i <= numZones; i += 1) {
       subnetIds.push({ Ref: `DBSubnet${i}` });
@@ -484,10 +505,19 @@ class ServerlessVpcPlugin {
       [name]: {
         Type: 'AWS::RDS::DBSubnetGroup',
         Properties: {
+          DBSubnetGroupName: {
+            Ref: 'AWS::StackName',
+          },
           DBSubnetGroupDescription: {
             Ref: 'AWS::StackName',
           },
           SubnetIds: subnetIds,
+          Tags: [
+            {
+              Key: 'STAGE',
+              Value: this.provider.getStage(),
+            },
+          ],
         },
       },
     };
@@ -509,6 +539,9 @@ class ServerlessVpcPlugin {
       [name]: {
         Type: 'AWS::ElastiCache::SubnetGroup',
         Properties: {
+          CacheSubnetGroupName: {
+            Ref: 'AWS::StackName',
+          },
           Description: {
             Ref: 'AWS::StackName',
           },
@@ -524,7 +557,7 @@ class ServerlessVpcPlugin {
    * @param {Object} params
    * @return {Object}
    */
-  static buildRedshiftSubnetGroup({ name = 'RedshiftSubnetGroup', numZones } = {}) {
+  buildRedshiftSubnetGroup({ name = 'RedshiftSubnetGroup', numZones } = {}) {
     const subnetIds = [];
     for (let i = 1; i <= numZones; i += 1) {
       subnetIds.push({ Ref: `DBSubnet${i}` });
@@ -534,6 +567,40 @@ class ServerlessVpcPlugin {
       [name]: {
         Type: 'AWS::Redshift::ClusterSubnetGroup',
         Properties: {
+          Description: {
+            Ref: 'AWS::StackName',
+          },
+          SubnetIds: subnetIds,
+          Tags: [
+            {
+              Key: 'STAGE',
+              Value: this.provider.getStage(),
+            },
+          ],
+        },
+      },
+    };
+  }
+
+  /**
+   * Build an DAXSubnetGroup for a given number of zones
+   *
+   * @param {Object} params
+   * @return {Object}
+   */
+  static buildDAXSubnetGroup({ name = 'DAXSubnetGroup', numZones } = {}) {
+    const subnetIds = [];
+    for (let i = 1; i <= numZones; i += 1) {
+      subnetIds.push({ Ref: `DBSubnet${i}` });
+    }
+
+    return {
+      [name]: {
+        Type: 'AWS::DAX::SubnetGroup',
+        Properties: {
+          SubnetGroupName: {
+            Ref: 'AWS::StackName',
+          },
           Description: {
             Ref: 'AWS::StackName',
           },

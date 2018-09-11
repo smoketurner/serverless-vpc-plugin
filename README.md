@@ -31,6 +31,7 @@ This plugin will also provision the following database-related resources:
 * `AWS::RDS::DBSubnetGroup`
 * `AWS::ElastiCache::SubnetGroup`
 * `AWS::Redshift::ClusterSubnetGroup`
+* `AWS::DAX::SubnetGroup`
 * `AWS::EC2::VPCEndpoint` for S3
 * `AWS::EC2::VPCEndpoint` for DynamoDB
 
@@ -76,6 +77,10 @@ custom:
   vpcConfig:
     cidrBlock: '10.0.0.0/16'
     useNatGateway: true
+    zones: // optionally specify AZs (defaults to auto-discover all availabile AZs)
+      - us-east-1a
+      - us-east-1b
+      - us-east-1c
 ```
 
 ## Roadmap
