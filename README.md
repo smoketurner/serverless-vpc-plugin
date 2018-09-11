@@ -1,9 +1,9 @@
-# serverless-plugin-vpc
+# serverless-vpc-plugin
 
 [![serverless](http://public.serverless.com/badges/v3.svg)](http://www.serverless.com)
-[![npm version](https://badge.fury.io/js/serverless-plugin-vpc.svg)](https://badge.fury.io/js/serverless-plugin-vpc)
-[![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/smoketurner/serverless-plugin-vpc/master/LICENSE)
-[![npm downloads](https://img.shields.io/npm/dt/serverless-plugin-vpc.svg?style=flat)](https://www.npmjs.com/package/serverless-plugin-vpc)
+[![npm version](https://badge.fury.io/js/serverless-vpc-plugin.svg)](https://badge.fury.io/js/serverless-vpc-plugin)
+[![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/smoketurner/serverless-vpc-plugin/master/LICENSE)
+[![npm downloads](https://img.shields.io/npm/dt/serverless-vpc-plugin.svg?style=flat)](https://www.npmjs.com/package/serverless-vpc-plugin)
 
 Automatically creates a VPC using all available Availability Zones the region specified in the serverless.yml configuration.
 
@@ -34,7 +34,7 @@ to make it easier to create these resources across all of the availability zones
 ## Installation
 
 ```
-$ npm install --save-dev serverless-plugin-vpc
+$ npm install --save-dev serverless-vpc-plugin
 ```
 
 ## Configuration
@@ -45,7 +45,7 @@ $ npm install --save-dev serverless-plugin-vpc
 # add in your serverless.yml
 
 plugins:
-  - serverless-plugin-vpc
+  - serverless-vpc-plugin
 
 custom:
   vpcConfig:
