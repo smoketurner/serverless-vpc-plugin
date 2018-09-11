@@ -47,6 +47,7 @@ class ServerlessVpcPlugin {
       ServerlessVpcPlugin.buildRedshiftSubnetGroup({ numZones }),
       ServerlessVpcPlugin.buildS3Endpoint({ numZones }),
       ServerlessVpcPlugin.buildDynamoDBEndpoint({ numZones }),
+      this.buildLambdaSecurityGroup(),
     );
   }
 
@@ -606,6 +607,46 @@ class ServerlessVpcPlugin {
           VpcId: {
             Ref: 'VPC',
           },
+        },
+      },
+    };
+  }
+
+  /**
+   * Build a SecurityGroup to be used by Lambda's when they execute.
+   *
+   * @param {Object} params
+   * @return {Object}
+   */
+  buildLambdaSecurityGroup({ name = 'LambdaExecutionSecurityGroup' } = {}) {
+    return {
+      [name]: {
+        Type: 'AWS::EC2::SecurityGroup',
+        Properties: {
+          GroupDescription: 'Lambda Execution Group',
+          VpcId: {
+            Ref: 'VPC',
+          },
+          Tags: [
+            {
+              Key: 'STAGE',
+              Value: this.provider.getStage(),
+            },
+            {
+              Key: 'Name',
+              Value: {
+                'Fn::Join': [
+                  '-',
+                  [
+                    {
+                      Ref: 'AWS::StackName',
+                    },
+                    'lambda-exec',
+                  ],
+                ],
+              },
+            },
+          ],
         },
       },
     };
