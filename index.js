@@ -2,6 +2,11 @@ const AWS = require('aws-sdk');
 const CIDR = require('cidr-split');
 const merge = require('lodash.merge');
 
+/**
+ * @see https://docs.aws.amazon.com/vpc/latest/userguide/amazon-vpc-limits.html
+ */
+const DEFAULT_VPC_EIP_LIMIT = 5;
+
 class ServerlessVpcPlugin {
   constructor(serverless, options) {
     this.serverless = serverless;

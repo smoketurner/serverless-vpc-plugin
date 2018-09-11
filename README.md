@@ -5,7 +5,7 @@
 [![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/smoketurner/serverless-vpc-plugin/master/LICENSE)
 [![npm downloads](https://img.shields.io/npm/dt/serverless-vpc-plugin.svg?style=flat)](https://www.npmjs.com/package/serverless-vpc-plugin)
 
-Automatically creates a VPC using all available Availability Zones in AWS region specified in the `serverless.yml` configuration file.
+Automatically creates a VPC using all available Availability Zones in a region.
 
 This plugin provisions the following resources:
 
