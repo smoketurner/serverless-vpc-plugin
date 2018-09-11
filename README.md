@@ -5,19 +5,19 @@
 [![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/smoketurner/serverless-vpc-plugin/master/LICENSE)
 [![npm downloads](https://img.shields.io/npm/dt/serverless-vpc-plugin.svg?style=flat)](https://www.npmjs.com/package/serverless-vpc-plugin)
 
-Automatically creates a VPC using all available Availability Zones the region specified in the serverless.yml configuration.
+Automatically creates a VPC using all available Availability Zones in AWS region specified in the `serverless.yml` configuration file.
 
 This plugin provisions the following resources:
 
 * `AWS::EC2::VPC`
 * `AWS::EC2::InternetGateway `(for outbound public internet access)
-* `AWS::EC2::VPCGatewayAttachment` (to attach the IGW to the VPC)
+* `AWS::EC2::VPCGatewayAttachment` (to attach the `InternetGateway` to the VPC)
 
 If the VPC is allocated a /16 subnet, each availability zone within the region will be allocated a /20 subnet. Within each availability zone, this plugin will further divide the subnets: 
 
-* "Application" `AWS::EC2::Subnet` (/21) - default route is either `InternetGateway` or `NatGateway`
-* "Public" `AWS::EC2::Subnet` (/22) - default route set to `InternetGateway`
-* "Database" `AWS::EC2::Subnet` (/22) - no default route set in routing table
+* `AWS::EC2::Subnet` "Application" (/21) - default route is either `InternetGateway` or `NatGateway`
+* `AWS::EC2::Subnet` "Public" (/22) - default route set `InternetGateway`
+* `AWS::EC2::Subnet` "Database" (/22) - no default route set in routing table
 
 Optionally, this plugin can also create `AWS::EC2::NatGateway` instances in each availability zone which requires provisioning `AWS::EC2::EIP` resources (AWS limits you to 5 per VPC).
 
@@ -39,7 +39,7 @@ $ npm install --save-dev serverless-vpc-plugin
 
 ## Configuration
 
-* All vpcConfig configuration parameters are optional
+* All `vpcConfig` configuration parameters are optional
 
 ```
 # add in your serverless.yml
