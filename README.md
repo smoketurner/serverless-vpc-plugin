@@ -5,7 +5,7 @@
 [![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/smoketurner/serverless-vpc-plugin/master/LICENSE)
 [![npm downloads](https://img.shields.io/npm/dt/serverless-vpc-plugin.svg?style=flat)](https://www.npmjs.com/package/serverless-vpc-plugin)
 
-Automatically creates a VPC using all available Availability Zones in a region.
+Automatically creates a Virtual Private Cloud (VPC) using all available Availability Zones (AZ) in a region.
 
 This plugin provisions the following resources:
 
@@ -19,6 +19,8 @@ If the VPC is allocated a /16 subnet, each availability zone within the region w
 * `AWS::EC2::Subnet` "Application" (/21) - default route is either `InternetGateway` or `NatGateway`
 * `AWS::EC2::Subnet` "Public" (/22) - default route set `InternetGateway`
 * `AWS::EC2::Subnet` "Database" (/22) - no default route set in routing table
+
+The subnetting layout was heavily inspired by the now shutdown [Skyliner](https://skyliner.io) platform. 😞
 
 Optionally, this plugin can also create `AWS::EC2::NatGateway` instances in each availability zone which requires provisioning `AWS::EC2::EIP` resources (AWS limits you to 5 per VPC).
 
@@ -75,3 +77,7 @@ custom:
     cidrBlock: '10.0.0.0/16'
     useNatGateway: true
 ```
+
+## Roadmap
+
+- Support specifying the list of availability zones in the `serverless.yml` instead of discoverying all of them
