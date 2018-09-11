@@ -82,7 +82,3 @@ custom:
       - us-east-1b
       - us-east-1c
 ```
-
-## Roadmap
-
-- Support specifying the list of availability zones in the `serverless.yml` instead of discoverying all of them
