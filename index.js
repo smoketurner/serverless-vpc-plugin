@@ -1,4 +1,3 @@
-const AWS = require('aws-sdk');
 const CIDR = require('cidr-split');
 const merge = require('lodash.merge');
 
@@ -75,11 +74,6 @@ class ServerlessVpcPlugin {
    * @return {Array}
    */
   async getZonesPerRegion(region) {
-    const awsCreds = this.serverless.providers.aws.getCredentials();
-
-    AWS.config.update(awsCreds);
-    this.ec2 = new AWS.EC2({ region });
-
     const params = {
       Filters: [
         {
@@ -88,7 +82,7 @@ class ServerlessVpcPlugin {
         },
       ],
     };
-    return this.ec2.describeAvailabilityZones(params).promise().then(
+    return this.provider.request('EC2', 'describeAvailabilityZones', params).then(
       data => data.AvailabilityZones
         .filter(z => z.State === 'available')
         .map(z => z.ZoneName)

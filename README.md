@@ -24,7 +24,7 @@ The subnetting layout was heavily inspired by the now shutdown [Skyliner](https:
 
 Optionally, this plugin can also create `AWS::EC2::NatGateway` instances in each availability zone which requires provisioning `AWS::EC2::EIP` resources (AWS limits you to 5 per VPC).
 
-Any Lambda functions executing with the "Application" subnet will only be able to access `S3` (via the S3 VPC endpoint), `DynamoDB` (via the DynamoDB VPC endpoint), `RDS` (provisioned within the "DB" subnet), `ElastiCache` (provisioned within the "DB" subnet), or `RedShift` (provisioned within the "DB" subnet). If your Lambda functions need to access any other AWS-resource or the Internet, then you *MUST* provision `NatGateway` resources.
+Any Lambda functions executing with the "Application" subnet will only be able to access `S3` (via the S3 VPC endpoint), `DynamoDB` (via the DynamoDB VPC endpoint), `RDS` (provisioned within the "DB" subnet), `ElastiCache` (provisioned within the "DB" subnet), `RedShift` (provisioned within the "DB" subnet), or a `DAX` cluster (provisioned within the "DB" subnet). If your Lambda functions need to access any other AWS service or the Internet, then you *MUST* provision `NatGateway` resources.
 
 This plugin will also provision the following database-related resources:
 
@@ -47,7 +47,7 @@ $ npm install --save-dev serverless-vpc-plugin
 
 * All `vpcConfig` configuration parameters are optional
 
-```
+```yaml
 # add in your serverless.yml
 
 plugins:
@@ -57,13 +57,13 @@ provider:
   vpc:
     securityGroupIds:
       - Ref: LambdaExecutionSecurityGroup
-    subnetIds:
+    subnetIds: # if specifying zones below, include the same number of subnets here
       - Ref: AppSubnet1
       - Ref: AppSubnet2
       - Ref: AppSubnet3
-      - Ref: AppSubnet4
-      - Ref: AppSubnet5
-      - Ref: AppSubnet6
+      #- Ref: AppSubnet4
+      #- Ref: AppSubnet5
+      #- Ref: AppSubnet6
   iamRoleStatements:
     - Effect: Allow
       Action:
@@ -77,7 +77,7 @@ custom:
   vpcConfig:
     cidrBlock: '10.0.0.0/16'
     useNatGateway: true
-    zones: // optionally specify AZs (defaults to auto-discover all availabile AZs)
+    zones: # optionally specify AZs (defaults to auto-discover all availabile AZs)
       - us-east-1a
       - us-east-1b
       - us-east-1c
