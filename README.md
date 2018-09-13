@@ -24,7 +24,7 @@ The subnetting layout was heavily inspired by the now shutdown [Skyliner](https:
 
 Optionally, this plugin can also create `AWS::EC2::NatGateway` instances in each availability zone which requires provisioning `AWS::EC2::EIP` resources (AWS limits you to 5 per VPC).
 
-Any Lambda functions executing with the "Application" subnet will only be able to access `S3` (via the S3 VPC endpoint), `DynamoDB` (via the DynamoDB VPC endpoint), `RDS` (provisioned within the "DB" subnet), `ElastiCache` (provisioned within the "DB" subnet), `RedShift` (provisioned within the "DB" subnet), or a `DAX` cluster (provisioned within the "DB" subnet). If your Lambda functions need to access any other AWS service or the Internet, then you *MUST* provision `NatGateway` resources.
+Any Lambda functions executing with the "Application" subnet will only be able to access `S3` (via the S3 VPC endpoint), `DynamoDB` (via the DynamoDB VPC endpoint), `RDS` (provisioned within the "DB" subnet), `ElastiCache` (provisioned within the "DB" subnet), `RedShift` (provisioned within the "DB" subnet), a `DAX` cluster (provisioned within the "DB" subnet), or a `Neptune` cluster (provisioned with the "DB" subnet). If your Lambda functions need to access any other AWS service or the Internet, then you *MUST* provision `NatGateway` resources.
 
 This plugin will also provision the following database-related resources:
 
@@ -32,6 +32,7 @@ This plugin will also provision the following database-related resources:
 * `AWS::ElastiCache::SubnetGroup`
 * `AWS::Redshift::ClusterSubnetGroup`
 * `AWS::DAX::SubnetGroup`
+* `AWS::Neptune::DBSubnetGroup`
 * `AWS::EC2::VPCEndpoint` for S3
 * `AWS::EC2::VPCEndpoint` for DynamoDB
 

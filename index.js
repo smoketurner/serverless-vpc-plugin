@@ -49,7 +49,7 @@ class ServerlessVpcPlugin {
       this.serverless.cli.log(`WARNING: Number of zones (${numZones} is greater than default EIP limit (${DEFAULT_VPC_EIP_LIMIT}). Please ensure you requested an AWS EIP limit increase.`);
     }
 
-    this.serverless.cli.log(`Generating a VPC in ${region} (${cidrBlock}) across ${numZones} availability zones`);
+    this.serverless.cli.log(`Generating a VPC in ${region} (${cidrBlock}) across ${numZones} availability zones: ${zones}`);
 
     merge(
       this.serverless.service.provider.compiledCloudFormationTemplate.Resources,
@@ -57,14 +57,23 @@ class ServerlessVpcPlugin {
       this.buildInternetGateway(),
       ServerlessVpcPlugin.buildInternetGatewayAttachment(),
       this.buildAvailabilityZones({ cidrBlock, zones, useNatGateway }),
-      this.buildRDSSubnetGroup({ numZones }),
-      ServerlessVpcPlugin.buildElastiCacheSubnetGroup({ numZones }),
-      this.buildRedshiftSubnetGroup({ numZones }),
-      ServerlessVpcPlugin.buildDAXSubnetGroup({ numZones }),
       ServerlessVpcPlugin.buildS3Endpoint({ numZones }),
       ServerlessVpcPlugin.buildDynamoDBEndpoint({ numZones }),
       this.buildLambdaSecurityGroup(),
     );
+
+    if (numZones < 2) {
+      this.serverless.cli.log('WARNING: less than 2 AZs; skipping subnet group provisioning');
+    } else {
+      merge(
+        this.serverless.service.provider.compiledCloudFormationTemplate.Resources,
+        this.buildRDSSubnetGroup({ numZones }),
+        this.buildRedshiftSubnetGroup({ numZones }),
+        this.buildNeptuneSubnetGroup({ numZones }),
+        ServerlessVpcPlugin.buildElastiCacheSubnetGroup({ numZones }),
+        ServerlessVpcPlugin.buildDAXSubnetGroup({ numZones }),
+      );
+    }
   }
 
   /**
@@ -599,6 +608,40 @@ class ServerlessVpcPlugin {
             Ref: 'AWS::StackName',
           },
           SubnetIds: subnetIds,
+        },
+      },
+    };
+  }
+
+  /**
+   * Build an NeptuneSubnetGroup for a given number of zones
+   *
+   * @param {Object} params
+   * @return {Object}
+   */
+  buildNeptuneSubnetGroup({ name = 'NeptuneSubnetGroup', numZones } = {}) {
+    const subnetIds = [];
+    for (let i = 1; i <= numZones; i += 1) {
+      subnetIds.push({ Ref: `DBSubnet${i}` });
+    }
+
+    return {
+      [name]: {
+        Type: 'AWS::Neptune::DBSubnetGroup',
+        Properties: {
+          DBSubnetGroupName: {
+            Ref: 'AWS::StackName',
+          },
+          DBSubnetGroupDescription: {
+            Ref: 'AWS::StackName',
+          },
+          SubnetIds: subnetIds,
+          Tags: [
+            {
+              Key: 'STAGE',
+              Value: this.provider.getStage(),
+            },
+          ],
         },
       },
     };
