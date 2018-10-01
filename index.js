@@ -753,9 +753,9 @@ class ServerlessVpcPlugin {
         endpoint.Properties.VpcEndpointType = 'Interface';
         endpoint.Properties.SubnetIds = subnetIds;
         endpoint.Properties.PrivateDnsEnabled = true;
-        endpoint.Properties.SecurityGroupIds = {
+        endpoint.Properties.SecurityGroupIds = [{
           Ref: 'LambdaExecutionSecurityGroup',
-        };
+        }];
       }
 
       const sanitizedService = service.charAt(0).toUpperCase() + service.slice(1);
