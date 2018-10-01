@@ -33,8 +33,8 @@ This plugin will also provision the following database-related resources:
 * `AWS::Redshift::ClusterSubnetGroup`
 * `AWS::DAX::SubnetGroup`
 * `AWS::Neptune::DBSubnetGroup`
-* `AWS::EC2::VPCEndpoint` for S3
-* `AWS::EC2::VPCEndpoint` for DynamoDB
+* `AWS::EC2::VPCEndpoint` for S3 access
+* `AWS::EC2::VPCEndpoint` for DynamoDB access
 
 to make it easier to create these resources across all of the availability zones.
 
@@ -82,4 +82,11 @@ custom:
       - us-east-1a
       - us-east-1b
       - us-east-1c
+    # by default, s3 and dynamodb endpoints will be available within the VPC
+    # see https://docs.aws.amazon.com/vpc/latest/userguide/vpc-endpoints.html
+    # for a list of available service endpoints to provision within the VPC
+    # (varies per region)
+    services:
+      - kms
+      - secretsmanager
 ```

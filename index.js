@@ -22,6 +22,7 @@ class ServerlessVpcPlugin {
     let cidrBlock = '10.0.0.0/16';
     let useNatGateway = false;
     let zones = [];
+    let services = ['s3', 'dynamodb'];
 
     const { vpcConfig } = this.serverless.service.custom;
 
@@ -34,6 +35,9 @@ class ServerlessVpcPlugin {
       }
       if (vpcConfig.zones && Array.isArray(vpcConfig.zones) && vpcConfig.zones.length > 0) {
         ({ zones } = vpcConfig);
+      }
+      if (vpcConfig.services && Array.isArray(vpcConfig.services) && vpcConfig.services.length > 0) {
+        services = vpcConfig.services.map(s => s.trim().toLowerCase());
       }
     }
 
@@ -49,6 +53,14 @@ class ServerlessVpcPlugin {
       this.serverless.cli.log(`WARNING: Number of zones (${numZones} is greater than default EIP limit (${DEFAULT_VPC_EIP_LIMIT}). Please ensure you requested an AWS EIP limit increase.`);
     }
 
+    if (services.length > 0) {
+      const invalid = await this.validateServices(region, services);
+      if (invalid.length > 0) {
+        this.serverless.cli.log(`WARNING: Requested services are not available in ${region}: ${invalid}`);
+        process.exit(1);
+      }
+    }
+
     this.serverless.cli.log(`Generating a VPC in ${region} (${cidrBlock}) across ${numZones} availability zones: ${zones}`);
 
     merge(
@@ -57,8 +69,7 @@ class ServerlessVpcPlugin {
       this.buildInternetGateway(),
       ServerlessVpcPlugin.buildInternetGatewayAttachment(),
       this.buildAvailabilityZones({ cidrBlock, zones, useNatGateway }),
-      ServerlessVpcPlugin.buildS3Endpoint({ numZones }),
-      ServerlessVpcPlugin.buildDynamoDBEndpoint({ numZones }),
+      this.buildEndpointServices({ services, numZones }),
       this.buildLambdaSecurityGroup(),
     );
 
@@ -97,6 +108,32 @@ class ServerlessVpcPlugin {
         .map(z => z.ZoneName)
         .sort(),
     );
+  }
+
+  /**
+   * Return an array of available VPC endpoint services for a given region.
+   *
+   * @return {Array}
+   */
+  async getVpcEndpointServicesPerRegion() {
+    const params = {
+      MaxResults: 1000,
+    };
+    return this.provider.request('EC2', 'describeVpcEndpointServices', params).then(
+      data => data.ServiceNames.sort(),
+    );
+  }
+
+  /**
+   * Return whether any of the services provided are not available within the provided region.
+   *
+   * @param {String} region
+   * @param {Array} services
+   * @return {Array}
+   */
+  async validateServices(region, services) {
+    const available = await this.getVpcEndpointServicesPerRegion();
+    return services.map(service => `com.amazonaws.${region}.${service}`).filter(service => !available.includes(service));
   }
 
   /**
@@ -212,7 +249,7 @@ class ServerlessVpcPlugin {
    * @param {Boolean} useNatGateway Whether to create NAT Gateways or not
    * @return {Object}
    */
-  buildAvailabilityZones({ cidrBlock, zones, useNatGateway = true } = {}) {
+  buildAvailabilityZones({ cidrBlock, zones = [], useNatGateway = true } = {}) {
     const azCidrBlocks = ServerlessVpcPlugin.splitVpc(cidrBlock); // VPC subnet is a /16
     const resources = {};
 
@@ -498,7 +535,11 @@ class ServerlessVpcPlugin {
    * @param {Objects} params
    * @return {Object}
    */
-  buildRDSSubnetGroup({ name = 'RDSSubnetGroup', numZones } = {}) {
+  buildRDSSubnetGroup({ name = 'RDSSubnetGroup', numZones = 0 } = {}) {
+    if (numZones < 1) {
+      return {};
+    }
+
     const subnetIds = [];
     for (let i = 1; i <= numZones; i += 1) {
       subnetIds.push({ Ref: `DBSubnet${i}` });
@@ -532,7 +573,11 @@ class ServerlessVpcPlugin {
    * @param {Object} params
    * @return {Object}
    */
-  static buildElastiCacheSubnetGroup({ name = 'ElastiCacheSubnetGroup', numZones } = {}) {
+  static buildElastiCacheSubnetGroup({ name = 'ElastiCacheSubnetGroup', numZones = 0 } = {}) {
+    if (numZones < 1) {
+      return {};
+    }
+
     const subnetIds = [];
     for (let i = 1; i <= numZones; i += 1) {
       subnetIds.push({ Ref: `DBSubnet${i}` });
@@ -560,7 +605,11 @@ class ServerlessVpcPlugin {
    * @param {Object} params
    * @return {Object}
    */
-  buildRedshiftSubnetGroup({ name = 'RedshiftSubnetGroup', numZones } = {}) {
+  buildRedshiftSubnetGroup({ name = 'RedshiftSubnetGroup', numZones = 0 } = {}) {
+    if (numZones < 1) {
+      return {};
+    }
+
     const subnetIds = [];
     for (let i = 1; i <= numZones; i += 1) {
       subnetIds.push({ Ref: `DBSubnet${i}` });
@@ -591,7 +640,11 @@ class ServerlessVpcPlugin {
    * @param {Object} params
    * @return {Object}
    */
-  static buildDAXSubnetGroup({ name = 'DAXSubnetGroup', numZones } = {}) {
+  static buildDAXSubnetGroup({ name = 'DAXSubnetGroup', numZones = 0 } = {}) {
+    if (numZones < 1) {
+      return {};
+    }
+
     const subnetIds = [];
     for (let i = 1; i <= numZones; i += 1) {
       subnetIds.push({ Ref: `DBSubnet${i}` });
@@ -619,7 +672,11 @@ class ServerlessVpcPlugin {
    * @param {Object} params
    * @return {Object}
    */
-  buildNeptuneSubnetGroup({ name = 'NeptuneSubnetGroup', numZones } = {}) {
+  buildNeptuneSubnetGroup({ name = 'NeptuneSubnetGroup', numZones = 0 } = {}) {
+    if (numZones < 1) {
+      return {};
+    }
+
     const subnetIds = [];
     for (let i = 1; i <= numZones; i += 1) {
       subnetIds.push({ Ref: `DBSubnet${i}` });
@@ -648,22 +705,28 @@ class ServerlessVpcPlugin {
   }
 
   /**
-   * Build an S3Endpoint for a given number of zones
+   * Build VPC endpoints for a given number of services and zones
    *
    * @param {Object} params
    * @return {Object}
    */
-  static buildS3Endpoint({ name = 'S3Endpoint', numZones } = {}) {
+  static buildEndpointServices({ services = [], numZones = 0 } = {}) {
+    if (numZones < 1) {
+      return {};
+    }
+
+    const subnetIds = [];
     const routeTableIds = [];
     for (let i = 1; i <= numZones; i += 1) {
+      subnetIds.push({ Ref: `AppSubnet${i}` });
       routeTableIds.push({ Ref: `AppRouteTable${i}` });
     }
 
-    return {
-      [name]: {
+    const resources = {};
+    services.forEach((service) => {
+      const endpoint = {
         Type: 'AWS::EC2::VPCEndpoint',
         Properties: {
-          RouteTableIds: routeTableIds,
           ServiceName: {
             'Fn::Join': [
               '.',
@@ -672,7 +735,7 @@ class ServerlessVpcPlugin {
                 {
                   Ref: 'AWS::Region',
                 },
-                's3',
+                service,
               ],
             ],
           },
@@ -680,45 +743,26 @@ class ServerlessVpcPlugin {
             Ref: 'VPC',
           },
         },
-      },
-    };
-  }
+      };
 
-  /**
-   * Build a DynamoDBEndpoint for a given number of zones
-   *
-   * @param {Object} params
-   * @return {Object}
-   */
-  static buildDynamoDBEndpoint({ name = 'DynamoDBEndpoint', numZones } = {}) {
-    const routeTableIds = [];
-    for (let i = 1; i <= numZones; i += 1) {
-      routeTableIds.push({ Ref: `AppRouteTable${i}` });
-    }
+      // @see https://docs.aws.amazon.com/vpc/latest/userguide/vpc-endpoints.html
+      if (service === 's3' || service === 'dynamodb') {
+        endpoint.Properties.VpcEndpointType = 'Gateway';
+        endpoint.Properties.RouteTableIds = routeTableIds;
+      } else {
+        endpoint.Properties.VpcEndpointType = 'Interface';
+        endpoint.Properties.SubnetIds = subnetIds;
+        endpoint.Properties.PrivateDnsEnabled = true;
+        endpoint.Properties.SecurityGroupIds = {
+          Ref: 'LambdaExecutionSecurityGroup',
+        };
+      }
 
-    return {
-      [name]: {
-        Type: 'AWS::EC2::VPCEndpoint',
-        Properties: {
-          RouteTableIds: routeTableIds,
-          ServiceName: {
-            'Fn::Join': [
-              '.',
-              [
-                'com.amazonaws',
-                {
-                  Ref: 'AWS::Region',
-                },
-                'dynamodb',
-              ],
-            ],
-          },
-          VpcId: {
-            Ref: 'VPC',
-          },
-        },
-      },
-    };
+      const sanitizedService = service.charAt(0).toUpperCase() + service.slice(1);
+      resources[`${sanitizedService}VPCEndpoint`] = endpoint;
+    });
+
+    return resources;
   }
 
   /**
