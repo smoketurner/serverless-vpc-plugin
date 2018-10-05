@@ -55,23 +55,28 @@ class ServerlessVpcPlugin {
 
     this.serverless.cli.log(`Generating a VPC in ${region} (${cidrBlock}) across ${numZones} availability zones: ${zones}`);
 
-    if (services.length > 0) {
-      const invalid = await this.validateServices(region, services);
-      if (invalid.length > 0) {
-        throw new Error(`WARNING: Requested services are not available in ${region}: ${invalid.join(', ')}`);
-      }
-      this.serverless.cli.log(`Provisioning VPC endpoints for: ${services.join(', ')}`);
-    }
-
     merge(
       this.serverless.service.provider.compiledCloudFormationTemplate.Resources,
       this.buildVpc({ cidrBlock }),
       this.buildInternetGateway(),
       ServerlessVpcPlugin.buildInternetGatewayAttachment(),
       this.buildAvailabilityZones({ cidrBlock, zones, useNatGateway }),
-      this.buildEndpointServices({ services, numZones }),
       this.buildLambdaSecurityGroup(),
     );
+
+    if (services.length > 0) {
+      const invalid = await this.validateServices(region, services);
+      if (invalid.length > 0) {
+        throw new Error(`WARNING: Requested services are not available in ${region}: ${invalid.join(', ')}`);
+      }
+      this.serverless.cli.log(`Provisioning VPC endpoints for: ${services.join(', ')}`);
+
+      merge(
+        this.serverless.service.provider.compiledCloudFormationTemplate.Resources,
+        ServerlessVpcPlugin.buildEndpointServices({ services, numZones }),
+        this.buildLambdaVPCEndpointSecurityGroup(),
+      );
+    }
 
     if (numZones < 2) {
       this.serverless.cli.log('WARNING: less than 2 AZs; skipping subnet group provisioning');
@@ -710,7 +715,7 @@ class ServerlessVpcPlugin {
    * @param {Object} params
    * @return {Object}
    */
-  buildEndpointServices({ services = [], numZones = 0 } = {}) {
+  static buildEndpointServices({ services = [], numZones = 0 } = {}) {
     if (numZones < 1) {
       return {};
     }
@@ -724,88 +729,59 @@ class ServerlessVpcPlugin {
 
     const resources = {};
     services.forEach((service) => {
-      const endpoint = {
-        Type: 'AWS::EC2::VPCEndpoint',
-        Properties: {
-          ServiceName: {
-            'Fn::Join': [
-              '.',
-              [
-                'com.amazonaws',
-                {
-                  Ref: 'AWS::Region',
-                },
-                service,
-              ],
-            ],
-          },
-          VpcId: {
-            Ref: 'VPC',
-          },
-        },
-      };
-
-      // @see https://docs.aws.amazon.com/vpc/latest/userguide/vpc-endpoints.html
-      if (service === 's3' || service === 'dynamodb') {
-        endpoint.Properties.VpcEndpointType = 'Gateway';
-        endpoint.Properties.RouteTableIds = routeTableIds;
-      } else {
-        endpoint.Properties.VpcEndpointType = 'Interface';
-        endpoint.Properties.SubnetIds = subnetIds;
-        endpoint.Properties.PrivateDnsEnabled = true;
-        endpoint.Properties.SecurityGroupIds = [{
-          Ref: 'LambdaEndpointSecurityGroup',
-        }];
-      }
-
-      // upper cases the first letter of the service (ex. secretsmanager -> Secretsmanager)
-      const sanitizedService = service.charAt(0).toUpperCase() + service.slice(1);
-      resources[`${sanitizedService}VPCEndpoint`] = endpoint;
+      merge(resources, ServerlessVpcPlugin.buildVPCEndpoint({ service, routeTableIds, subnetIds }));
     });
 
-    const securitygroup = {
-      Type: 'AWS::EC2::SecurityGroup',
+    return resources;
+  }
+
+  /**
+   * Build a VPCEndpoint
+   *
+   * @param {Object} params
+   * @return {Object}
+   */
+  static buildVPCEndpoint({ service, routeTableIds = [], subnetIds = [] } = {}) {
+    const endpoint = {
+      Type: 'AWS::EC2::VPCEndpoint',
       Properties: {
-        GroupDescription: 'Lambda access to VPC endpoints',
+        ServiceName: {
+          'Fn::Join': [
+            '.',
+            [
+              'com.amazonaws',
+              {
+                Ref: 'AWS::Region',
+              },
+              service,
+            ],
+          ],
+        },
         VpcId: {
           Ref: 'VPC',
         },
-        SecurityGroupIngress: [
-          {
-            SourceSecurityGroupId: {
-              Ref: 'LambdaExecutionSecurityGroup',
-            },
-            IpProtocol: 'tcp',
-            FromPort: 443,
-            ToPort: 443,
-          },
-        ],
-        Tags: [
-          {
-            Key: 'STAGE',
-            Value: this.provider.getStage(),
-          },
-          {
-            Key: 'Name',
-            Value: {
-              'Fn::Join': [
-                '-',
-                [
-                  {
-                    Ref: 'AWS::StackName',
-                  },
-                  'lambda-endpoint',
-                ],
-              ],
-            },
-          },
-        ],
       },
     };
 
-    resources.LambdaEndpointSecurityGroup = securitygroup;
+    // @see https://docs.aws.amazon.com/vpc/latest/userguide/vpc-endpoints.html
+    if (service === 's3' || service === 'dynamodb') {
+      endpoint.Properties.VpcEndpointType = 'Gateway';
+      endpoint.Properties.RouteTableIds = routeTableIds;
+    } else {
+      endpoint.Properties.VpcEndpointType = 'Interface';
+      endpoint.Properties.SubnetIds = subnetIds;
+      endpoint.Properties.PrivateDnsEnabled = true;
+      endpoint.Properties.SecurityGroupIds = [{
+        Ref: 'LambdaEndpointSecurityGroup',
+      }];
+    }
 
-    return resources;
+    const sanitizedService = service.charAt(0).toUpperCase() + service.slice(1);
+    const name = `${sanitizedService}VPCEndpoint`;
+
+    return {
+      [name]: endpoint,
+    };
   }
 
   /**
@@ -838,6 +814,56 @@ class ServerlessVpcPlugin {
                       Ref: 'AWS::StackName',
                     },
                     'lambda-exec',
+                  ],
+                ],
+              },
+            },
+          ],
+        },
+      },
+    };
+  }
+
+  /**
+   * Build a SecurityGroup to allow the Lambda's access to VPC endpoints over HTTPS.
+   *
+   * @param {Object} params
+   * @return {Object}
+   */
+  buildLambdaVPCEndpointSecurityGroup({ name = 'LambdaEndpointSecurityGroup' } = {}) {
+    return {
+      [name]: {
+        Type: 'AWS::EC2::SecurityGroup',
+        Properties: {
+          GroupDescription: 'Lambda access to VPC endpoints',
+          VpcId: {
+            Ref: 'VPC',
+          },
+          SecurityGroupIngress: [
+            {
+              SourceSecurityGroupId: {
+                Ref: 'LambdaExecutionSecurityGroup',
+              },
+              IpProtocol: 'tcp',
+              FromPort: 443,
+              ToPort: 443,
+            },
+          ],
+          Tags: [
+            {
+              Key: 'STAGE',
+              Value: this.provider.getStage(),
+            },
+            {
+              Key: 'Name',
+              Value: {
+                'Fn::Join': [
+                  '-',
+                  [
+                    {
+                      Ref: 'AWS::StackName',
+                    },
+                    'lambda-endpoint',
                   ],
                 ],
               },
