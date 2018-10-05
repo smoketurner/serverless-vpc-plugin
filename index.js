@@ -391,7 +391,6 @@ class ServerlessVpcPlugin {
    */
   buildNatGateway(position, zone) {
     const cfName = `NatGateway${position}`;
-
     return {
       [cfName]: {
         Type: 'AWS::EC2::NatGateway',
@@ -482,7 +481,6 @@ class ServerlessVpcPlugin {
    */
   static buildRouteTableAssociation(name, position) {
     const cfName = `${name}RouteTableAssociation${position}`;
-
     return {
       [cfName]: {
         Type: 'AWS::EC2::SubnetRouteTableAssociation',
@@ -507,31 +505,30 @@ class ServerlessVpcPlugin {
   static buildRoute({
     name, position, NatGatewayId = null, GatewayId = null,
   } = {}) {
-    const cfName = `${name}Route${position}`;
-
     const route = {
-      [cfName]: {
-        Type: 'AWS::EC2::Route',
-        Properties: {
-          DestinationCidrBlock: '0.0.0.0/0',
-          RouteTableId: {
-            Ref: `${name}RouteTable${position}`,
-          },
+      Type: 'AWS::EC2::Route',
+      Properties: {
+        DestinationCidrBlock: '0.0.0.0/0',
+        RouteTableId: {
+          Ref: `${name}RouteTable${position}`,
         },
       },
     };
 
     if (NatGatewayId) {
-      route[cfName].Properties.NatGatewayId = {
+      route.Properties.NatGatewayId = {
         Ref: NatGatewayId,
       };
     } else if (GatewayId) {
-      route[cfName].Properties.GatewayId = {
+      route.Properties.GatewayId = {
         Ref: GatewayId,
       };
     }
 
-    return route;
+    const cfName = `${name}Route${position}`;
+    return {
+      [cfName]: route,
+    };
   }
 
   /**
@@ -716,6 +713,9 @@ class ServerlessVpcPlugin {
    * @return {Object}
    */
   static buildEndpointServices({ services = [], numZones = 0 } = {}) {
+    if (!services || services.length < 1) {
+      return {};
+    }
     if (numZones < 1) {
       return {};
     }
@@ -777,10 +777,10 @@ class ServerlessVpcPlugin {
     }
 
     const sanitizedService = service.charAt(0).toUpperCase() + service.slice(1);
-    const name = `${sanitizedService}VPCEndpoint`;
+    const cfName = `${sanitizedService}VPCEndpoint`;
 
     return {
-      [name]: endpoint,
+      [cfName]: endpoint,
     };
   }
 
