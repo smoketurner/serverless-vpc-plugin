@@ -53,15 +53,15 @@ class ServerlessVpcPlugin {
       this.serverless.cli.log(`WARNING: Number of zones (${numZones} is greater than default EIP limit (${DEFAULT_VPC_EIP_LIMIT}). Please ensure you requested an AWS EIP limit increase.`);
     }
 
+    this.serverless.cli.log(`Generating a VPC in ${region} (${cidrBlock}) across ${numZones} availability zones: ${zones}`);
+
     if (services.length > 0) {
       const invalid = await this.validateServices(region, services);
       if (invalid.length > 0) {
-        this.serverless.cli.log(`WARNING: Requested services are not available in ${region}: ${invalid}`);
-        process.exit(1);
+        throw new Error(`WARNING: Requested services are not available in ${region}: ${invalid.join(', ')}`);
       }
+      this.serverless.cli.log(`Provisioning VPC endpoints for: ${services.join(', ')}`);
     }
-
-    this.serverless.cli.log(`Generating a VPC in ${region} (${cidrBlock}) across ${numZones} availability zones: ${zones}`);
 
     merge(
       this.serverless.service.provider.compiledCloudFormationTemplate.Resources,
@@ -125,7 +125,7 @@ class ServerlessVpcPlugin {
   }
 
   /**
-   * Return whether any of the services provided are not available within the provided region.
+   * Return an array of provided services that are not available within the provided region.
    *
    * @param {String} region
    * @param {Array} services
@@ -758,6 +758,7 @@ class ServerlessVpcPlugin {
         }];
       }
 
+      // upper cases the first letter of the service (ex. secretsmanager -> Secretsmanager)
       const sanitizedService = service.charAt(0).toUpperCase() + service.slice(1);
       resources[`${sanitizedService}VPCEndpoint`] = endpoint;
     });
