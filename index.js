@@ -754,7 +754,7 @@ class ServerlessVpcPlugin {
         endpoint.Properties.SubnetIds = subnetIds;
         endpoint.Properties.PrivateDnsEnabled = true;
         endpoint.Properties.SecurityGroupIds = [{
-          Ref: 'LambdaExecutionSecurityGroup',
+          Ref: 'LambdaEndpointSecurityGroup',
         }];
       }
 
@@ -762,6 +762,48 @@ class ServerlessVpcPlugin {
       const sanitizedService = service.charAt(0).toUpperCase() + service.slice(1);
       resources[`${sanitizedService}VPCEndpoint`] = endpoint;
     });
+
+    const securitygroup = {
+      Type: 'AWS::EC2::SecurityGroup',
+      Properties: {
+        GroupDescription: 'Lambda access to VPC endpoints',
+        VpcId: {
+          Ref: 'VPC',
+        },
+        SecurityGroupIngress: [
+          {
+            SourceSecurityGroupId: {
+              Ref: 'LambdaExecutionSecurityGroup',
+            },
+            IpProtocol: 'tcp',
+            FromPort: 443,
+            ToPort: 443,
+          },
+        ],
+        Tags: [
+          {
+            Key: 'STAGE',
+            Value: this.provider.getStage(),
+          },
+          {
+            Key: 'Name',
+            Value: {
+              'Fn::Join': [
+                '-',
+                [
+                  {
+                    Ref: 'AWS::StackName',
+                  },
+                  'lambda-endpoint',
+                ],
+              ],
+            },
+          },
+        ],
+      },
+    };
+
+    resources.LambdaEndpointSecurityGroup = securitygroup;
 
     return resources;
   }
