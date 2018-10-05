@@ -69,7 +69,7 @@ class ServerlessVpcPlugin {
       this.buildInternetGateway(),
       ServerlessVpcPlugin.buildInternetGatewayAttachment(),
       this.buildAvailabilityZones({ cidrBlock, zones, useNatGateway }),
-      ServerlessVpcPlugin.buildEndpointServices({ services, numZones }),
+      this.buildEndpointServices({ services, numZones }),
       this.buildLambdaSecurityGroup(),
     );
 
@@ -710,7 +710,7 @@ class ServerlessVpcPlugin {
    * @param {Object} params
    * @return {Object}
    */
-  static buildEndpointServices({ services = [], numZones = 0 } = {}) {
+  buildEndpointServices({ services = [], numZones = 0 } = {}) {
     if (numZones < 1) {
       return {};
     }
