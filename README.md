@@ -5,12 +5,12 @@
 [![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/smoketurner/serverless-vpc-plugin/master/LICENSE)
 [![npm downloads](https://img.shields.io/npm/dt/serverless-vpc-plugin.svg?style=flat)](https://www.npmjs.com/package/serverless-vpc-plugin)
 
-Automatically creates a Virtual Private Cloud (VPC) using all available Availability Zones (AZ) in a region.
+Automatically creates an AWS Virtual Private Cloud (VPC) using all available Availability Zones (AZ) in a region.
 
 This plugin provisions the following resources:
 
 * `AWS::EC2::VPC`
-* `AWS::EC2::InternetGateway` (for outbound public internet access)
+* `AWS::EC2::InternetGateway` (for outbound internet access)
 * `AWS::EC2::VPCGatewayAttachment` (to attach the `InternetGateway` to the VPC)
 * `AWS::EC2::SecurityGroup` (to execute Lambda functions)
 
@@ -22,19 +22,28 @@ If the VPC is allocated a /16 subnet, each availability zone within the region w
 
 The subnetting layout was heavily inspired by the now shutdown [Skyliner](https://skyliner.io) platform. 😞
 
-Optionally, this plugin can also create `AWS::EC2::NatGateway` instances in each availability zone which requires provisioning `AWS::EC2::EIP` resources (AWS limits you to 5 per VPC).
+Optionally, this plugin can also create `AWS::EC2::NatGateway` instances in each availability zone which requires provisioning `AWS::EC2::EIP` resources (AWS limits you to 5 per VPC, so if you want to provision your VPC across all 6 us-east availability zones, you'll need to request an VPC EIP limit increase from AWS).
 
-Any Lambda functions executing with the "Application" subnet will only be able to access `S3` (via the S3 VPC endpoint), `DynamoDB` (via the DynamoDB VPC endpoint), `RDS` (provisioned within the "DB" subnet), `ElastiCache` (provisioned within the "DB" subnet), `RedShift` (provisioned within the "DB" subnet), a `DAX` cluster (provisioned within the "DB" subnet), or a `Neptune` cluster (provisioned with the "DB" subnet). If your Lambda functions need to access any other AWS service or the Internet, then you *MUST* provision `NatGateway` resources.
+Any Lambda functions executing with the "Application" subnet will only be able to access:
+* S3 (via an S3 VPC endpoint)
+* DynamoDB (via an DynamoDB VPC endpoint)
+* RDS instances (provisioned within the "DB" subnet)
+* ElastiCache instances (provisioned within the "DB" subnet)
+* RedShift (provisioned within the "DB" subnet),
+* DAX clusters (provisioned within the "DB" subnet)
+* Neptune clusters (provisioned with the "DB" subnet)
 
-This plugin will also provision the following database-related resources:
+If your Lambda functions need to access the internet, then you *MUST* provision `NatGateway` resources.
+
+By default, `AWS::EC2::VPCEndpoint` "Gateway" endpoints for S3 and DynamoDB will be provisioned within each availability zone to provide internal access to these services (there is no additional charge for using Gateway Type VPC endpoints). You can selectively control which `AWS::EC2::VPCEndpoint` "Interface" endpoints are available within your VPC using the `services` configuration option below. Not all AWS services are available in every region, so the plugin will query AWS to validate the services you have selected and notify you if any changes are required (there is an additional charge for using Interface Type VPC endpoints).
+
+If you specificy more then one availability zone, this plugin will also provision the following database-related resources:
 
 * `AWS::RDS::DBSubnetGroup`
 * `AWS::ElastiCache::SubnetGroup`
 * `AWS::Redshift::ClusterSubnetGroup`
 * `AWS::DAX::SubnetGroup`
 * `AWS::Neptune::DBSubnetGroup`
-* `AWS::EC2::VPCEndpoint` for S3 access
-* `AWS::EC2::VPCEndpoint` for DynamoDB access
 
 to make it easier to create these resources across all of the availability zones.
 
@@ -57,7 +66,7 @@ plugins:
 provider:
   vpc:
     securityGroupIds:
-      - Ref: LambdaExecutionSecurityGroup
+      - Ref: LambdaExecutionSecurityGroup # this plugin will create this security group for you
     subnetIds: # if specifying zones below, include the same number of subnets here
       - Ref: AppSubnet1
       - Ref: AppSubnet2
@@ -77,7 +86,7 @@ provider:
 custom:
   vpcConfig:
     cidrBlock: '10.0.0.0/16'
-    useNatGateway: true
+    useNatGateway: true # optionally add NatGateway instances in the App subnets
     zones: # optionally specify AZs (defaults to auto-discover all availabile AZs)
       - us-east-1a
       - us-east-1b
