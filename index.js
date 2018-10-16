@@ -776,8 +776,9 @@ class ServerlessVpcPlugin {
       }];
     }
 
-    const sanitizedService = service.charAt(0).toUpperCase() + service.slice(1);
-    const cfName = `${sanitizedService}VPCEndpoint`;
+    const parts = service.split(/[-_.]/g);
+    parts.push('VPCEndpoint');
+    const cfName = parts.map(part => part.charAt(0).toUpperCase() + part.slice(1)).join('');
 
     return {
       [cfName]: endpoint,
