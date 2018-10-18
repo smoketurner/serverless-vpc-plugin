@@ -85,7 +85,6 @@ class ServerlessVpcPlugin {
         this.serverless.service.provider.compiledCloudFormationTemplate.Resources,
         this.buildRDSSubnetGroup({ numZones }),
         this.buildRedshiftSubnetGroup({ numZones }),
-        this.buildNeptuneSubnetGroup({ numZones }),
         ServerlessVpcPlugin.buildElastiCacheSubnetGroup({ numZones }),
         ServerlessVpcPlugin.buildDAXSubnetGroup({ numZones }),
       );
@@ -555,15 +554,7 @@ class ServerlessVpcPlugin {
             Ref: 'AWS::StackName',
           },
           DBSubnetGroupDescription: {
-            'Fn::Join': [
-              '-',
-              [
-                {
-                  Ref: 'AWS::StackName',
-                },
-                'db',
-              ],
-            ],
+            Ref: 'AWS::StackName',
           },
           SubnetIds: subnetIds,
           Tags: [
@@ -597,16 +588,11 @@ class ServerlessVpcPlugin {
       [name]: {
         Type: 'AWS::ElastiCache::SubnetGroup',
         Properties: {
+          CacheSubnetGroupName: {
+            Ref: 'AWS::StackName',
+          },
           Description: {
-            'Fn::Join': [
-              '-',
-              [
-                {
-                  Ref: 'AWS::StackName',
-                },
-                'db',
-              ],
-            ],
+            Ref: 'AWS::StackName',
           },
           SubnetIds: subnetIds,
         },
@@ -635,15 +621,7 @@ class ServerlessVpcPlugin {
         Type: 'AWS::Redshift::ClusterSubnetGroup',
         Properties: {
           Description: {
-            'Fn::Join': [
-              '-',
-              [
-                {
-                  Ref: 'AWS::StackName',
-                },
-                'db',
-              ],
-            ],
+            Ref: 'AWS::StackName',
           },
           SubnetIds: subnetIds,
           Tags: [
@@ -677,61 +655,13 @@ class ServerlessVpcPlugin {
       [name]: {
         Type: 'AWS::DAX::SubnetGroup',
         Properties: {
+          SubnetGroupName: {
+            Ref: 'AWS::StackName',
+          },
           Description: {
-            'Fn::Join': [
-              '-',
-              [
-                {
-                  Ref: 'AWS::StackName',
-                },
-                'db',
-              ],
-            ],
+            Ref: 'AWS::StackName',
           },
           SubnetIds: subnetIds,
-        },
-      },
-    };
-  }
-
-  /**
-   * Build an NeptuneSubnetGroup for a given number of zones
-   *
-   * @param {Object} params
-   * @return {Object}
-   */
-  buildNeptuneSubnetGroup({ name = 'NeptuneSubnetGroup', numZones = 0 } = {}) {
-    if (numZones < 1) {
-      return {};
-    }
-
-    const subnetIds = [];
-    for (let i = 1; i <= numZones; i += 1) {
-      subnetIds.push({ Ref: `DBSubnet${i}` });
-    }
-
-    return {
-      [name]: {
-        Type: 'AWS::Neptune::DBSubnetGroup',
-        Properties: {
-          DBSubnetGroupDescription: {
-            'Fn::Join': [
-              '-',
-              [
-                {
-                  Ref: 'AWS::StackName',
-                },
-                'db',
-              ],
-            ],
-          },
-          SubnetIds: subnetIds,
-          Tags: [
-            {
-              Key: 'STAGE',
-              Value: this.provider.getStage(),
-            },
-          ],
         },
       },
     };

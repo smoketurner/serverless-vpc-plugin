@@ -43,7 +43,6 @@ If you specificy more then one availability zone, this plugin will also provisio
 * `AWS::ElastiCache::SubnetGroup`
 * `AWS::Redshift::ClusterSubnetGroup`
 * `AWS::DAX::SubnetGroup`
-* `AWS::Neptune::DBSubnetGroup`
 
 to make it easier to create these resources across all of the availability zones.
 
