@@ -551,6 +551,9 @@ class ServerlessVpcPlugin {
       [name]: {
         Type: 'AWS::RDS::DBSubnetGroup',
         Properties: {
+          DBSubnetGroupName: {
+            Ref: 'AWS::StackName',
+          },
           DBSubnetGroupDescription: {
             'Fn::Join': [
               '-',
