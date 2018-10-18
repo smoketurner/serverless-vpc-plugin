@@ -552,10 +552,26 @@ class ServerlessVpcPlugin {
         Type: 'AWS::RDS::DBSubnetGroup',
         Properties: {
           DBSubnetGroupName: {
-            Ref: 'AWS::StackName',
+            'Fn::Join': [
+              '-',
+              [
+                {
+                  Ref: 'AWS::StackName',
+                },
+                'db',
+              ],
+            ],
           },
           DBSubnetGroupDescription: {
-            Ref: 'AWS::StackName',
+            'Fn::Join': [
+              '-',
+              [
+                {
+                  Ref: 'AWS::StackName',
+                },
+                'db',
+              ],
+            ],
           },
           SubnetIds: subnetIds,
           Tags: [
@@ -590,10 +606,26 @@ class ServerlessVpcPlugin {
         Type: 'AWS::ElastiCache::SubnetGroup',
         Properties: {
           CacheSubnetGroupName: {
-            Ref: 'AWS::StackName',
+            'Fn::Join': [
+              '-',
+              [
+                {
+                  Ref: 'AWS::StackName',
+                },
+                'db',
+              ],
+            ],
           },
           Description: {
-            Ref: 'AWS::StackName',
+            'Fn::Join': [
+              '-',
+              [
+                {
+                  Ref: 'AWS::StackName',
+                },
+                'db',
+              ],
+            ],
           },
           SubnetIds: subnetIds,
         },
@@ -622,7 +654,15 @@ class ServerlessVpcPlugin {
         Type: 'AWS::Redshift::ClusterSubnetGroup',
         Properties: {
           Description: {
-            Ref: 'AWS::StackName',
+            'Fn::Join': [
+              '-',
+              [
+                {
+                  Ref: 'AWS::StackName',
+                },
+                'db',
+              ],
+            ],
           },
           SubnetIds: subnetIds,
           Tags: [
@@ -657,10 +697,26 @@ class ServerlessVpcPlugin {
         Type: 'AWS::DAX::SubnetGroup',
         Properties: {
           SubnetGroupName: {
-            Ref: 'AWS::StackName',
+            'Fn::Join': [
+              '-',
+              [
+                {
+                  Ref: 'AWS::StackName',
+                },
+                'db',
+              ],
+            ],
           },
           Description: {
-            Ref: 'AWS::StackName',
+            'Fn::Join': [
+              '-',
+              [
+                {
+                  Ref: 'AWS::StackName',
+                },
+                'db',
+              ],
+            ],
           },
           SubnetIds: subnetIds,
         },
@@ -689,10 +745,26 @@ class ServerlessVpcPlugin {
         Type: 'AWS::Neptune::DBSubnetGroup',
         Properties: {
           DBSubnetGroupName: {
-            Ref: 'AWS::StackName',
+            'Fn::Join': [
+              '-',
+              [
+                {
+                  Ref: 'AWS::StackName',
+                },
+                'db',
+              ],
+            ],
           },
           DBSubnetGroupDescription: {
-            Ref: 'AWS::StackName',
+            'Fn::Join': [
+              '-',
+              [
+                {
+                  Ref: 'AWS::StackName',
+                },
+                'db',
+              ],
+            ],
           },
           SubnetIds: subnetIds,
           Tags: [
