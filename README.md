@@ -37,7 +37,7 @@ If your Lambda functions need to access the internet, then you *MUST* provision 
 
 By default, `AWS::EC2::VPCEndpoint` "Gateway" endpoints for S3 and DynamoDB will be provisioned within each availability zone to provide internal access to these services (there is no additional charge for using Gateway Type VPC endpoints). You can selectively control which `AWS::EC2::VPCEndpoint` "Interface" endpoints are available within your VPC using the `services` configuration option below. Not all AWS services are available in every region, so the plugin will query AWS to validate the services you have selected and notify you if any changes are required (there is an additional charge for using Interface Type VPC endpoints).
 
-If you specificy more then one availability zone, this plugin will also provision the following database-related resources:
+If you specify more then one availability zone, this plugin will also provision the following database-related resources:
 
 * `AWS::RDS::DBSubnetGroup`
 * `AWS::ElastiCache::SubnetGroup`
