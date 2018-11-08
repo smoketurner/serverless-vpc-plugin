@@ -23,6 +23,7 @@ class ServerlessVpcPlugin {
     let useNatGateway = false;
     let zones = [];
     let services = ['s3', 'dynamodb'];
+    let skipDbCreation = false;
 
     const { vpcConfig } = this.serverless.service.custom;
 
@@ -38,6 +39,9 @@ class ServerlessVpcPlugin {
       }
       if (vpcConfig.services && Array.isArray(vpcConfig.services) && vpcConfig.services.length > 0) {
         services = vpcConfig.services.map(s => s.trim().toLowerCase());
+      }
+      if ('skipDbCreation' in vpcConfig && typeof vpcConfig.skipDbCreation === 'boolean') {
+        ({ skipDbCreation } = vpcConfig);
       }
     }
 
@@ -60,7 +64,7 @@ class ServerlessVpcPlugin {
       this.buildVpc({ cidrBlock }),
       this.buildInternetGateway(),
       ServerlessVpcPlugin.buildInternetGatewayAttachment(),
-      this.buildAvailabilityZones({ cidrBlock, zones, useNatGateway }),
+      this.buildAvailabilityZones({ cidrBlock, zones, useNatGateway, skipDbCreation }),
       this.buildLambdaSecurityGroup(),
     );
 
@@ -78,16 +82,18 @@ class ServerlessVpcPlugin {
       );
     }
 
-    if (numZones < 2) {
-      this.serverless.cli.log('WARNING: less than 2 AZs; skipping subnet group provisioning');
-    } else {
-      merge(
-        this.serverless.service.provider.compiledCloudFormationTemplate.Resources,
-        this.buildRDSSubnetGroup({ numZones }),
-        this.buildRedshiftSubnetGroup({ numZones }),
-        ServerlessVpcPlugin.buildElastiCacheSubnetGroup({ numZones }),
-        ServerlessVpcPlugin.buildDAXSubnetGroup({ numZones }),
-      );
+    if (!skipDbCreation) {
+      if (numZones < 2) {
+        this.serverless.cli.log('WARNING: less than 2 AZs; skipping subnet group provisioning');
+      } else {
+        merge(
+          this.serverless.service.provider.compiledCloudFormationTemplate.Resources,
+          this.buildRDSSubnetGroup({ numZones }),
+          this.buildRedshiftSubnetGroup({ numZones }),
+          ServerlessVpcPlugin.buildElastiCacheSubnetGroup({ numZones }),
+          ServerlessVpcPlugin.buildDAXSubnetGroup({ numZones }),
+        );
+      }
     }
   }
 
@@ -251,9 +257,15 @@ class ServerlessVpcPlugin {
    * @param {String} cidrBlock VPC CIDR Block
    * @param {Array} zones Array of availability zones
    * @param {Boolean} useNatGateway Whether to create NAT Gateways or not
+   * @param {Boolean} skipDbCreation Whether to skip creating the DBSubnet or not
    * @return {Object}
    */
-  buildAvailabilityZones({ cidrBlock, zones = [], useNatGateway = true } = {}) {
+  buildAvailabilityZones({
+    cidrBlock,
+    zones = [],
+    useNatGateway = true,
+    skipDbCreation = false,
+  } = {}) {
     const azCidrBlocks = ServerlessVpcPlugin.splitVpc(cidrBlock); // VPC subnet is a /16
     const resources = {};
 
@@ -306,12 +318,17 @@ class ServerlessVpcPlugin {
           position,
           GatewayId: 'InternetGateway',
         }),
-
-        // DB Subnet
-        this.buildSubnet('DB', position, zone, subnets[2]),
-        this.buildRouteTable('DB', position, zone),
-        ServerlessVpcPlugin.buildRouteTableAssociation('DB', position),
       );
+
+      if (!skipDbCreation) {
+        // DB Subnet
+        merge(
+          resources,
+          this.buildSubnet('DB', position, zone, subnets[2]),
+          this.buildRouteTable('DB', position, zone),
+          ServerlessVpcPlugin.buildRouteTableAssociation('DB', position),
+        );
+      }
     });
 
     return resources;
