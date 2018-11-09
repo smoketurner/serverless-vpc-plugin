@@ -86,6 +86,7 @@ custom:
   vpcConfig:
     cidrBlock: '10.0.0.0/16'
     useNatGateway: true # optionally add NatGateway instances in the App subnets
+    skipDbCreation: false # whether to skip creating the DBSubnet's
     zones: # optionally specify AZs (defaults to auto-discover all availabile AZs)
       - us-east-1a
       - us-east-1b
