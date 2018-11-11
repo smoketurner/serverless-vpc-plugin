@@ -649,7 +649,7 @@ describe('ServerlessVpcPlugin', () => {
 
     it('throws an error if no gateway provided', () => {
       expect(() => {
-        ServerlessVpcPlugin.buildRoute({name: 'App', position: 1 });
+        ServerlessVpcPlugin.buildRoute({ name: 'App', position: 1 });
       }).toThrow('Unable to create route: either NatGatewayId or GatewayId must be provided');
     });
   });
