@@ -701,7 +701,7 @@ class ServerlessVpcPlugin {
    * @return {Object}
    */
   static buildEndpointServices({ services = [], numZones = 0 } = {}) {
-    if (!services || services.length < 1) {
+    if (!Array.isArray(services) || services.length < 1) {
       return {};
     }
     if (numZones < 1) {
@@ -717,7 +717,9 @@ class ServerlessVpcPlugin {
 
     const resources = {};
     services.forEach((service) => {
-      merge(resources, ServerlessVpcPlugin.buildVPCEndpoint({ service, routeTableIds, subnetIds }));
+      merge(resources, ServerlessVpcPlugin.buildVPCEndpoint({
+        service, routeTableIds, subnetIds,
+      }));
     });
 
     return resources;

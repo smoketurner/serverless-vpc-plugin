@@ -724,4 +724,602 @@ describe('ServerlessVpcPlugin', () => {
       expect(actual).toEqual(expected);
     });
   });
+
+  describe('#buildElastiCacheSubnetGroup', () => {
+    it('skips building an ElastiCache subnet group with no zones', () => {
+      const actual = ServerlessVpcPlugin.buildElastiCacheSubnetGroup();
+      expect(actual).toEqual({});
+    });
+
+    it('builds an ElastiCache subnet group', () => {
+      const expected = {
+        ElastiCacheSubnetGroup: {
+          Type: 'AWS::ElastiCache::SubnetGroup',
+          Properties: {
+            CacheSubnetGroupName: {
+              Ref: 'AWS::StackName',
+            },
+            Description: {
+              Ref: 'AWS::StackName',
+            },
+            SubnetIds: [
+              {
+                Ref: 'DBSubnet1',
+              },
+              {
+                Ref: 'DBSubnet2',
+              },
+            ],
+          },
+        },
+      };
+      const actual = ServerlessVpcPlugin.buildElastiCacheSubnetGroup({ numZones: 2 });
+      expect(actual).toEqual(expected);
+    });
+
+    it('builds an ElastiCache subnet group with a custom name', () => {
+      const expected = {
+        MyElastiCacheSubnetGroup: {
+          Type: 'AWS::ElastiCache::SubnetGroup',
+          Properties: {
+            CacheSubnetGroupName: {
+              Ref: 'AWS::StackName',
+            },
+            Description: {
+              Ref: 'AWS::StackName',
+            },
+            SubnetIds: [
+              {
+                Ref: 'DBSubnet1',
+              },
+              {
+                Ref: 'DBSubnet2',
+              },
+            ],
+          },
+        },
+      };
+      const actual = ServerlessVpcPlugin.buildElastiCacheSubnetGroup({
+        name: 'MyElastiCacheSubnetGroup', numZones: 2,
+      });
+      expect(actual).toEqual(expected);
+    });
+  });
+
+  describe('#buildRedshiftSubnetGroup', () => {
+    it('skips building a Redshift subnet group with no zones', () => {
+      const actual = plugin.buildRedshiftSubnetGroup();
+      expect(actual).toEqual({});
+    });
+
+    it('builds an Redshift subnet group', () => {
+      const expected = {
+        RedshiftSubnetGroup: {
+          Type: 'AWS::Redshift::ClusterSubnetGroup',
+          Properties: {
+            Description: {
+              Ref: 'AWS::StackName',
+            },
+            SubnetIds: [
+              {
+                Ref: 'DBSubnet1',
+              },
+              {
+                Ref: 'DBSubnet2',
+              },
+            ],
+            Tags: [
+              {
+                Key: 'STAGE',
+                Value: 'dev',
+              },
+            ],
+          },
+        },
+      };
+      const actual = plugin.buildRedshiftSubnetGroup({ numZones: 2 });
+      expect(actual).toEqual(expected);
+    });
+
+    it('builds an Redshift subnet group with a custom name', () => {
+      const expected = {
+        MyRedshiftSubnetGroup: {
+          Type: 'AWS::Redshift::ClusterSubnetGroup',
+          Properties: {
+            Description: {
+              Ref: 'AWS::StackName',
+            },
+            SubnetIds: [
+              {
+                Ref: 'DBSubnet1',
+              },
+              {
+                Ref: 'DBSubnet2',
+              },
+            ],
+            Tags: [
+              {
+                Key: 'STAGE',
+                Value: 'dev',
+              },
+            ],
+          },
+        },
+      };
+      const actual = plugin.buildRedshiftSubnetGroup({
+        name: 'MyRedshiftSubnetGroup', numZones: 2,
+      });
+      expect(actual).toEqual(expected);
+    });
+  });
+
+  describe('#buildDAXSubnetGroup', () => {
+    it('skips building an DAX subnet group with no zones', () => {
+      const actual = ServerlessVpcPlugin.buildDAXSubnetGroup();
+      expect(actual).toEqual({});
+    });
+
+    it('builds an DAX subnet group', () => {
+      const expected = {
+        DAXSubnetGroup: {
+          Type: 'AWS::DAX::SubnetGroup',
+          Properties: {
+            SubnetGroupName: {
+              Ref: 'AWS::StackName',
+            },
+            Description: {
+              Ref: 'AWS::StackName',
+            },
+            SubnetIds: [
+              {
+                Ref: 'DBSubnet1',
+              },
+              {
+                Ref: 'DBSubnet2',
+              },
+            ],
+          },
+        },
+      };
+      const actual = ServerlessVpcPlugin.buildDAXSubnetGroup({ numZones: 2 });
+      expect(actual).toEqual(expected);
+    });
+
+    it('builds an DAX subnet group with a custom name', () => {
+      const expected = {
+        MyDAXSubnetGroup: {
+          Type: 'AWS::DAX::SubnetGroup',
+          Properties: {
+            SubnetGroupName: {
+              Ref: 'AWS::StackName',
+            },
+            Description: {
+              Ref: 'AWS::StackName',
+            },
+            SubnetIds: [
+              {
+                Ref: 'DBSubnet1',
+              },
+              {
+                Ref: 'DBSubnet2',
+              },
+            ],
+          },
+        },
+      };
+      const actual = ServerlessVpcPlugin.buildDAXSubnetGroup({
+        name: 'MyDAXSubnetGroup', numZones: 2,
+      });
+      expect(actual).toEqual(expected);
+    });
+  });
+
+  describe('#buildEndpointServices', () => {
+    it('skips building endpoints if none provided', () => {
+      const actual = ServerlessVpcPlugin.buildEndpointServices();
+      expect(actual).toEqual({});
+    });
+
+    it('builds an S3 VPC Gateway endpoint', () => {
+      const expected = {
+        S3VPCEndpoint: {
+          Type: 'AWS::EC2::VPCEndpoint',
+          Properties: {
+            RouteTableIds: [
+              {
+                Ref: 'AppRouteTable1',
+              },
+            ],
+            ServiceName: {
+              'Fn::Join': [
+                '.',
+                [
+                  'com.amazonaws',
+                  {
+                    Ref: 'AWS::Region',
+                  },
+                  's3',
+                ],
+              ],
+            },
+            VpcEndpointType: 'Gateway',
+            VpcId: {
+              Ref: 'VPC',
+            },
+          },
+        },
+      };
+      const actual = ServerlessVpcPlugin.buildEndpointServices({
+        services: ['s3'], numZones: 1,
+      });
+      expect(actual).toEqual(expected);
+    });
+
+    it('builds an DynamoDB VPC Gateway endpoint', () => {
+      const expected = {
+        DynamodbVPCEndpoint: {
+          Type: 'AWS::EC2::VPCEndpoint',
+          Properties: {
+            RouteTableIds: [
+              {
+                Ref: 'AppRouteTable1',
+              },
+            ],
+            ServiceName: {
+              'Fn::Join': [
+                '.',
+                [
+                  'com.amazonaws',
+                  {
+                    Ref: 'AWS::Region',
+                  },
+                  'dynamodb',
+                ],
+              ],
+            },
+            VpcEndpointType: 'Gateway',
+            VpcId: {
+              Ref: 'VPC',
+            },
+          },
+        },
+      };
+      const actual = ServerlessVpcPlugin.buildEndpointServices({
+        services: ['dynamodb'], numZones: 1,
+      });
+      expect(actual).toEqual(expected);
+    });
+
+    it('builds an KMS VPC Interface endpoint', () => {
+      const expected = {
+        KmsVPCEndpoint: {
+          Type: 'AWS::EC2::VPCEndpoint',
+          Properties: {
+            PrivateDnsEnabled: true,
+            SecurityGroupIds: [
+              {
+                Ref: 'LambdaEndpointSecurityGroup',
+              },
+            ],
+            SubnetIds: [
+              {
+                Ref: 'AppSubnet1',
+              },
+            ],
+            ServiceName: {
+              'Fn::Join': [
+                '.',
+                [
+                  'com.amazonaws',
+                  {
+                    Ref: 'AWS::Region',
+                  },
+                  'kms',
+                ],
+              ],
+            },
+            VpcEndpointType: 'Interface',
+            VpcId: {
+              Ref: 'VPC',
+            },
+          },
+        },
+      };
+      const actual = ServerlessVpcPlugin.buildEndpointServices({
+        services: ['kms'], numZones: 1,
+      });
+      expect(actual).toEqual(expected);
+    });
+
+    it('builds an SageMaker Runtime FIPS VPC Interface endpoint', () => {
+      const expected = {
+        SagemakerRuntimeFipsVPCEndpoint: {
+          Type: 'AWS::EC2::VPCEndpoint',
+          Properties: {
+            PrivateDnsEnabled: true,
+            SecurityGroupIds: [
+              {
+                Ref: 'LambdaEndpointSecurityGroup',
+              },
+            ],
+            SubnetIds: [
+              {
+                Ref: 'AppSubnet1',
+              },
+            ],
+            ServiceName: {
+              'Fn::Join': [
+                '.',
+                [
+                  'com.amazonaws',
+                  {
+                    Ref: 'AWS::Region',
+                  },
+                  'sagemaker.runtime-fips',
+                ],
+              ],
+            },
+            VpcEndpointType: 'Interface',
+            VpcId: {
+              Ref: 'VPC',
+            },
+          },
+        },
+      };
+      const actual = ServerlessVpcPlugin.buildEndpointServices({
+        services: ['sagemaker.runtime-fips'], numZones: 1,
+      });
+      expect(actual).toEqual(expected);
+    });
+  });
+
+  describe('#buildVPCEndpoint', () => {
+    it('builds an S3 VPC Gateway endpoint', () => {
+      const expected = {
+        S3VPCEndpoint: {
+          Type: 'AWS::EC2::VPCEndpoint',
+          Properties: {
+            RouteTableIds: [
+              {
+                Ref: 'AppRouteTable1',
+              },
+            ],
+            ServiceName: {
+              'Fn::Join': [
+                '.',
+                [
+                  'com.amazonaws',
+                  {
+                    Ref: 'AWS::Region',
+                  },
+                  's3',
+                ],
+              ],
+            },
+            VpcEndpointType: 'Gateway',
+            VpcId: {
+              Ref: 'VPC',
+            },
+          },
+        },
+      };
+      const actual = ServerlessVpcPlugin.buildVPCEndpoint({
+        service: 's3', routeTableIds: [{ Ref: 'AppRouteTable1' }],
+      });
+      expect(actual).toEqual(expected);
+    });
+
+    it('builds an SageMaker Runtime FIPS VPC Interface endpoint', () => {
+      const expected = {
+        SagemakerRuntimeFipsVPCEndpoint: {
+          Type: 'AWS::EC2::VPCEndpoint',
+          Properties: {
+            PrivateDnsEnabled: true,
+            SecurityGroupIds: [
+              {
+                Ref: 'LambdaEndpointSecurityGroup',
+              },
+            ],
+            SubnetIds: [
+              {
+                Ref: 'AppSubnet1',
+              },
+            ],
+            ServiceName: {
+              'Fn::Join': [
+                '.',
+                [
+                  'com.amazonaws',
+                  {
+                    Ref: 'AWS::Region',
+                  },
+                  'sagemaker.runtime-fips',
+                ],
+              ],
+            },
+            VpcEndpointType: 'Interface',
+            VpcId: {
+              Ref: 'VPC',
+            },
+          },
+        },
+      };
+      const actual = ServerlessVpcPlugin.buildVPCEndpoint({
+        service: 'sagemaker.runtime-fips', subnetIds: [{ Ref: 'AppSubnet1' }],
+      });
+      expect(actual).toEqual(expected);
+    });
+  });
+
+  describe('#buildLambdaSecurityGroup', () => {
+    it('builds a Lambda security group with no options', () => {
+      const expected = {
+        LambdaExecutionSecurityGroup: {
+          Type: 'AWS::EC2::SecurityGroup',
+          Properties: {
+            GroupDescription: 'Lambda Execution Group',
+            VpcId: {
+              Ref: 'VPC',
+            },
+            Tags: [
+              {
+                Key: 'STAGE',
+                Value: 'dev',
+              },
+              {
+                Key: 'Name',
+                Value: {
+                  'Fn::Join': [
+                    '-',
+                    [
+                      {
+                        Ref: 'AWS::StackName',
+                      },
+                      'lambda-exec',
+                    ],
+                  ],
+                },
+              },
+            ],
+          },
+        },
+      };
+      const actual = plugin.buildLambdaSecurityGroup();
+      expect(actual).toEqual(expected);
+    });
+
+    it('builds a Lambda security group with a custom name', () => {
+      const expected = {
+        MyLambdaExecutionSecurityGroup: {
+          Type: 'AWS::EC2::SecurityGroup',
+          Properties: {
+            GroupDescription: 'Lambda Execution Group',
+            VpcId: {
+              Ref: 'VPC',
+            },
+            Tags: [
+              {
+                Key: 'STAGE',
+                Value: 'dev',
+              },
+              {
+                Key: 'Name',
+                Value: {
+                  'Fn::Join': [
+                    '-',
+                    [
+                      {
+                        Ref: 'AWS::StackName',
+                      },
+                      'lambda-exec',
+                    ],
+                  ],
+                },
+              },
+            ],
+          },
+        },
+      };
+      const actual = plugin.buildLambdaSecurityGroup({
+        name: 'MyLambdaExecutionSecurityGroup',
+      });
+      expect(actual).toEqual(expected);
+    });
+  });
+
+  describe('#buildLambdaVPCEndpointSecurityGroup', () => {
+    it('builds a Lambda endpoint security group with no options', () => {
+      const expected = {
+        LambdaEndpointSecurityGroup: {
+          Type: 'AWS::EC2::SecurityGroup',
+          Properties: {
+            GroupDescription: 'Lambda access to VPC endpoints',
+            VpcId: {
+              Ref: 'VPC',
+            },
+            SecurityGroupIngress: [
+              {
+                SourceSecurityGroupId: {
+                  Ref: 'LambdaExecutionSecurityGroup',
+                },
+                IpProtocol: 'tcp',
+                FromPort: 443,
+                ToPort: 443,
+              },
+            ],
+            Tags: [
+              {
+                Key: 'STAGE',
+                Value: 'dev',
+              },
+              {
+                Key: 'Name',
+                Value: {
+                  'Fn::Join': [
+                    '-',
+                    [
+                      {
+                        Ref: 'AWS::StackName',
+                      },
+                      'lambda-endpoint',
+                    ],
+                  ],
+                },
+              },
+            ],
+          },
+        },
+      };
+      const actual = plugin.buildLambdaVPCEndpointSecurityGroup();
+      expect(actual).toEqual(expected);
+    });
+
+    it('builds a Lambda security group with a custom name', () => {
+      const expected = {
+        MyLambdaEndpointSecurityGroup: {
+          Type: 'AWS::EC2::SecurityGroup',
+          Properties: {
+            GroupDescription: 'Lambda access to VPC endpoints',
+            VpcId: {
+              Ref: 'VPC',
+            },
+            SecurityGroupIngress: [
+              {
+                SourceSecurityGroupId: {
+                  Ref: 'LambdaExecutionSecurityGroup',
+                },
+                IpProtocol: 'tcp',
+                FromPort: 443,
+                ToPort: 443,
+              },
+            ],
+            Tags: [
+              {
+                Key: 'STAGE',
+                Value: 'dev',
+              },
+              {
+                Key: 'Name',
+                Value: {
+                  'Fn::Join': [
+                    '-',
+                    [
+                      {
+                        Ref: 'AWS::StackName',
+                      },
+                      'lambda-endpoint',
+                    ],
+                  ],
+                },
+              },
+            ],
+          },
+        },
+      };
+      const actual = plugin.buildLambdaVPCEndpointSecurityGroup({
+        name: 'MyLambdaEndpointSecurityGroup',
+      });
+      expect(actual).toEqual(expected);
+    });
+  });
 });
