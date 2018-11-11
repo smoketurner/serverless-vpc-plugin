@@ -270,7 +270,7 @@ class ServerlessVpcPlugin {
     useNatGateway = true,
     skipDbCreation = false,
   } = {}) {
-    if (!zones || zones.length < 1) {
+    if (!Array.isArray(zones) || zones.length < 1) {
       return {};
     }
 
@@ -547,6 +547,8 @@ class ServerlessVpcPlugin {
       route.Properties.GatewayId = {
         Ref: GatewayId,
       };
+    } else {
+      throw new Error('Unable to create route: either NatGatewayId or GatewayId must be provided');
     }
 
     const cfName = `${name}Route${position}`;

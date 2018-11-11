@@ -1,0 +1,168 @@
+{
+  "AppRoute1": {
+    "Type": "AWS::EC2::Route",
+    "Properties": {
+      "DestinationCidrBlock": "0.0.0.0/0",
+      "GatewayId": {
+        "Ref": "InternetGateway"
+      },
+      "RouteTableId": {
+        "Ref": "AppRouteTable1"
+      }
+    }
+  },
+  "AppRouteTable1": {
+    "Type": "AWS::EC2::RouteTable",
+    "Properties": {
+      "VpcId": {
+        "Ref": "VPC"
+      },
+      "Tags": [
+        {
+          "Key": "STAGE",
+          "Value": "dev"
+        },
+        {
+          "Key": "Name",
+          "Value": {
+            "Fn::Join": [
+              "-",
+              [
+                {
+                  "Ref": "AWS::StackName"
+                },
+                "app",
+                "us-east-1a"
+              ]
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "AppRouteTableAssociation1": {
+    "Type": "AWS::EC2::SubnetRouteTableAssociation",
+    "Properties": {
+      "RouteTableId": {
+        "Ref": "AppRouteTable1"
+      },
+      "SubnetId": {
+        "Ref": "AppSubnet1"
+      }
+    }
+  },
+  "AppSubnet1": {
+    "Type": "AWS::EC2::Subnet",
+    "Properties": {
+      "AvailabilityZone": "us-east-1a",
+      "CidrBlock": "10.0.0.0/21",
+      "Tags": [
+        {
+          "Key": "STAGE",
+          "Value": "dev"
+        },
+        {
+          "Key": "Name",
+          "Value": {
+            "Fn::Join": [
+              "-",
+              [
+                {
+                  "Ref": "AWS::StackName"
+                },
+                "app",
+                "us-east-1a"
+              ]
+            ]
+          }
+        }
+      ],
+      "VpcId": {
+        "Ref": "VPC"
+      }
+    }
+  },
+  "PublicRoute1": {
+    "Type": "AWS::EC2::Route",
+    "Properties": {
+      "DestinationCidrBlock": "0.0.0.0/0",
+      "GatewayId": {
+        "Ref": "InternetGateway"
+      },
+      "RouteTableId": {
+        "Ref": "PublicRouteTable1"
+      }
+    }
+  },
+  "PublicRouteTable1": {
+    "Type": "AWS::EC2::RouteTable",
+    "Properties": {
+      "VpcId": {
+        "Ref": "VPC"
+      },
+      "Tags": [
+        {
+          "Key": "STAGE",
+          "Value": "dev"
+        },
+        {
+          "Key": "Name",
+          "Value": {
+            "Fn::Join": [
+              "-",
+              [
+                {
+                  "Ref": "AWS::StackName"
+                },
+                "public",
+                "us-east-1a"
+              ]
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "PublicRouteTableAssociation1": {
+    "Type": "AWS::EC2::SubnetRouteTableAssociation",
+    "Properties": {
+      "RouteTableId": {
+        "Ref": "PublicRouteTable1"
+      },
+      "SubnetId": {
+        "Ref": "PublicSubnet1"
+      }
+    }
+  },
+  "PublicSubnet1": {
+    "Type": "AWS::EC2::Subnet",
+    "Properties": {
+      "AvailabilityZone": "us-east-1a",
+      "CidrBlock": "10.0.8.0/22",
+      "Tags": [
+        {
+          "Key": "STAGE",
+          "Value": "dev"
+        },
+        {
+          "Key": "Name",
+          "Value": {
+            "Fn::Join": [
+              "-",
+              [
+                {
+                  "Ref": "AWS::StackName"
+                },
+                "public",
+                "us-east-1a"
+              ]
+            ]
+          }
+        }
+      ],
+      "VpcId": {
+        "Ref": "VPC"
+      }
+    }
+  }
+}
