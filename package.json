@@ -5,7 +5,7 @@
     "node": ">=8.0"
   },
   "description": "Serverless Plugin to generate a VPC",
-  "author": "Smoke Turner, LLC",
+  "author": "Smoke Turner, LLC <github@smoketurner.com>",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -21,14 +21,23 @@
     "amazon web services",
     "serverless.com"
   ],
-  "main": "index.js",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "jest --config jest-config.json",
+    "lint": "eslint ."
+  },
   "dependencies": {
     "cidr-split": "0.1.2",
     "lodash.merge": "4.6.1"
   },
   "devDependencies": {
-    "eslint": "5.8.0",
+    "aws-sdk": "2.353.0",
+    "aws-sdk-mock": "4.2.0",
+    "eslint": "5.9.0",
     "eslint-config-airbnb-base": "13.1.0",
-    "eslint-plugin-import": "2.14.0"
+    "eslint-plugin-import": "2.14.0",
+    "eslint-plugin-jest": "22.0.0",
+    "jest": "23.6.0",
+    "serverless": "1.32.0"
   }
 }

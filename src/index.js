@@ -37,7 +37,9 @@ class ServerlessVpcPlugin {
       if (vpcConfig.zones && Array.isArray(vpcConfig.zones) && vpcConfig.zones.length > 0) {
         ({ zones } = vpcConfig);
       }
-      if (vpcConfig.services && Array.isArray(vpcConfig.services) && vpcConfig.services.length > 0) {
+      if (vpcConfig.services
+          && Array.isArray(vpcConfig.services)
+          && vpcConfig.services.length > 0) {
         services = vpcConfig.services.map(s => s.trim().toLowerCase());
       }
       if ('skipDbCreation' in vpcConfig && typeof vpcConfig.skipDbCreation === 'boolean') {
@@ -64,7 +66,9 @@ class ServerlessVpcPlugin {
       this.buildVpc({ cidrBlock }),
       this.buildInternetGateway(),
       ServerlessVpcPlugin.buildInternetGatewayAttachment(),
-      this.buildAvailabilityZones({ cidrBlock, zones, useNatGateway, skipDbCreation }),
+      this.buildAvailabilityZones({
+        cidrBlock, zones, useNatGateway, skipDbCreation,
+      }),
       this.buildLambdaSecurityGroup(),
     );
 
@@ -266,6 +270,10 @@ class ServerlessVpcPlugin {
     useNatGateway = true,
     skipDbCreation = false,
   } = {}) {
+    if (!zones || zones.length < 1) {
+      return {};
+    }
+
     const azCidrBlocks = ServerlessVpcPlugin.splitVpc(cidrBlock); // VPC subnet is a /16
     const resources = {};
 
