@@ -37,7 +37,9 @@ class ServerlessVpcPlugin {
       if (vpcConfig.zones && Array.isArray(vpcConfig.zones) && vpcConfig.zones.length > 0) {
         ({ zones } = vpcConfig);
       }
-      if (vpcConfig.services && Array.isArray(vpcConfig.services) && vpcConfig.services.length > 0) {
+      if (vpcConfig.services
+          && Array.isArray(vpcConfig.services)
+          && vpcConfig.services.length > 0) {
         services = vpcConfig.services.map(s => s.trim().toLowerCase());
       }
       if ('skipDbCreation' in vpcConfig && typeof vpcConfig.skipDbCreation === 'boolean') {
@@ -64,7 +66,9 @@ class ServerlessVpcPlugin {
       this.buildVpc({ cidrBlock }),
       this.buildInternetGateway(),
       ServerlessVpcPlugin.buildInternetGatewayAttachment(),
-      this.buildAvailabilityZones({ cidrBlock, zones, useNatGateway, skipDbCreation }),
+      this.buildAvailabilityZones({
+        cidrBlock, zones, useNatGateway, skipDbCreation,
+      }),
       this.buildLambdaSecurityGroup(),
     );
 
@@ -266,6 +270,10 @@ class ServerlessVpcPlugin {
     useNatGateway = true,
     skipDbCreation = false,
   } = {}) {
+    if (!Array.isArray(zones) || zones.length < 1) {
+      return {};
+    }
+
     const azCidrBlocks = ServerlessVpcPlugin.splitVpc(cidrBlock); // VPC subnet is a /16
     const resources = {};
 
@@ -539,6 +547,8 @@ class ServerlessVpcPlugin {
       route.Properties.GatewayId = {
         Ref: GatewayId,
       };
+    } else {
+      throw new Error('Unable to create route: either NatGatewayId or GatewayId must be provided');
     }
 
     const cfName = `${name}Route${position}`;
@@ -691,7 +701,7 @@ class ServerlessVpcPlugin {
    * @return {Object}
    */
   static buildEndpointServices({ services = [], numZones = 0 } = {}) {
-    if (!services || services.length < 1) {
+    if (!Array.isArray(services) || services.length < 1) {
       return {};
     }
     if (numZones < 1) {
@@ -707,7 +717,9 @@ class ServerlessVpcPlugin {
 
     const resources = {};
     services.forEach((service) => {
-      merge(resources, ServerlessVpcPlugin.buildVPCEndpoint({ service, routeTableIds, subnetIds }));
+      merge(resources, ServerlessVpcPlugin.buildVPCEndpoint({
+        service, routeTableIds, subnetIds,
+      }));
     });
 
     return resources;
