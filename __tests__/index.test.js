@@ -1,7 +1,4 @@
 const AWS = require('aws-sdk-mock');
-const AWS_SDK = require('aws-sdk');
-
-AWS.setSDKInstance(AWS_SDK);
 
 const Serverless = require('serverless');
 const AwsProvider = require('serverless/lib/plugins/aws/provider/awsProvider');
@@ -28,15 +25,9 @@ describe('ServerlessVpcPlugin', () => {
       region: 'us-east-1',
     };
     serverless = new Serverless(options);
-
     const provider = new AwsProvider(serverless, options);
-    provider.sdk = AWS_SDK;
-
     serverless.setProvider('aws', provider);
     serverless.service.provider = { name: 'aws', stage: 'dev' };
-    serverless.service.service = 'test';
-    serverless.processedInput = { options: {} };
-    serverless.cli = { log: () => {} };
 
     plugin = new ServerlessVpcPlugin(serverless);
   });
@@ -116,10 +107,10 @@ describe('ServerlessVpcPlugin', () => {
       const mockCallback = jest.fn((params, callback) => {
         const data = {
           ServiceNames: [
-            'dynamodb',
-            's3',
-            'kms',
-            'kinesis',
+            'com.amazonaws.us-east-1.dynamodb',
+            'com.amazonaws.us-east-1.s3',
+            'com.amazonaws.us-east-1.kms',
+            'com.amazonaws.us-east-1.kinesis-streams',
           ],
         };
         return callback(null, data);
@@ -129,7 +120,7 @@ describe('ServerlessVpcPlugin', () => {
 
       const actual = await plugin.getVpcEndpointServicesPerRegion('us-east-1');
 
-      const expected = ['dynamodb', 'kinesis', 'kms', 's3'];
+      const expected = ['dynamodb', 'kinesis-streams', 'kms', 's3'];
 
       expect(mockCallback).toHaveBeenCalled();
       expect(actual).toEqual(expected);
