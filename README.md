@@ -49,7 +49,7 @@ to make it easier to create these resources across all of the availability zones
 ## Installation
 
 ```
-$ npm install --save-dev serverless-vpc-plugin
+$ npx sls plugin install -n serverless-vpc-plugin
 ```
 
 ## Configuration
