@@ -667,8 +667,8 @@ describe('ServerlessVpcPlugin', () => {
           },
         },
       };
-      const actual = ServerlessVpcPlugin.buildRoute({
-        name: 'App', position: 1, NatGatewayId: 'NatGateway1',
+      const actual = ServerlessVpcPlugin.buildRoute('App', 1, {
+        NatGatewayId: 'NatGateway1',
       });
       expect(actual).toEqual(expected);
     });
@@ -688,15 +688,15 @@ describe('ServerlessVpcPlugin', () => {
           },
         },
       };
-      const actual = ServerlessVpcPlugin.buildRoute({
-        name: 'App', position: 1, GatewayId: 'InternetGateway',
+      const actual = ServerlessVpcPlugin.buildRoute('App', 1, {
+        GatewayId: 'InternetGateway',
       });
       expect(actual).toEqual(expected);
     });
 
     it('throws an error if no gateway provided', () => {
       expect(() => {
-        ServerlessVpcPlugin.buildRoute({ name: 'App', position: 1 });
+        ServerlessVpcPlugin.buildRoute('App', 1);
       }).toThrow('Unable to create route: either NatGatewayId or GatewayId must be provided');
     });
   });

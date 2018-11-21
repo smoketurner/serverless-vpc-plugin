@@ -348,11 +348,8 @@ class ServerlessVpcPlugin {
 
     zones.forEach((zone, index) => {
       const position = index + 1;
-      const params = {
-        name: APP_SUBNET,
-        position,
-      };
 
+      const params = {};
       if (numNatGateway > 0) {
         params.NatGatewayId = `NatGateway${(index % numNatGateway) + 1}`;
       } else {
@@ -366,15 +363,13 @@ class ServerlessVpcPlugin {
         this.buildSubnet(APP_SUBNET, position, zone, subnets.get(zone).get(APP_SUBNET)),
         this.buildRouteTable(APP_SUBNET, position, zone),
         ServerlessVpcPlugin.buildRouteTableAssociation(APP_SUBNET, position),
-        ServerlessVpcPlugin.buildRoute(params),
+        ServerlessVpcPlugin.buildRoute(APP_SUBNET, position, params),
 
         // Public Subnet
         this.buildSubnet(PUBLIC_SUBNET, position, zone, subnets.get(zone).get(PUBLIC_SUBNET)),
         this.buildRouteTable(PUBLIC_SUBNET, position, zone),
         ServerlessVpcPlugin.buildRouteTableAssociation(PUBLIC_SUBNET, position),
-        ServerlessVpcPlugin.buildRoute({
-          name: PUBLIC_SUBNET,
-          position,
+        ServerlessVpcPlugin.buildRoute(PUBLIC_SUBNET, position, {
           GatewayId: 'InternetGateway',
         }),
       );
@@ -396,10 +391,10 @@ class ServerlessVpcPlugin {
   /**
    * Create a subnet
    *
-   * @param {String} name
-   * @param {Number} position
-   * @param {String} zone
-   * @param {String} cidrBlock
+   * @param {String} name Name of subnet
+   * @param {Number} position Subnet position
+   * @param {String} zone Availability zone
+   * @param {String} cidrBlock Subnet CIDR block
    * @return {Object}
    */
   buildSubnet(name, position, zone, cidrBlock) {
@@ -574,11 +569,13 @@ class ServerlessVpcPlugin {
   /**
    * Build a Route for a NatGateway or InternetGateway
    *
+   * @param {String} name
+   * @param {Number} position
    * @param {Object} params
    * @return {Object}
    */
-  static buildRoute({
-    name, position, NatGatewayId = null, GatewayId = null,
+  static buildRoute(name, position, {
+    NatGatewayId = null, GatewayId = null,
   } = {}) {
     const route = {
       Type: 'AWS::EC2::Route',
@@ -652,7 +649,9 @@ class ServerlessVpcPlugin {
    * @param {Object} params
    * @return {Object}
    */
-  static buildElastiCacheSubnetGroup({ name = 'ElastiCacheSubnetGroup', numZones = 0 } = {}) {
+  static buildElastiCacheSubnetGroup({
+    name = 'ElastiCacheSubnetGroup', numZones = 0,
+  } = {}) {
     if (numZones < 1) {
       return {};
     }
