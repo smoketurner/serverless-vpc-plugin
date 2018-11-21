@@ -31,7 +31,7 @@ class ServerlessVpcPlugin {
       if (vpcConfig.cidrBlock && typeof vpcConfig.cidrBlock === 'string') {
         ({ cidrBlock } = vpcConfig);
       }
-      if ('useNatGateway' in vpcConfig && typeof vpcConfig.useNatGateway === 'boolean') {
+      if ('useNatGateway' in vpcConfig) {
         ({ useNatGateway } = vpcConfig);
       }
       if (vpcConfig.zones && Array.isArray(vpcConfig.zones) && vpcConfig.zones.length > 0) {
@@ -55,8 +55,16 @@ class ServerlessVpcPlugin {
     }
     const numZones = zones.length;
 
-    if (useNatGateway && numZones > DEFAULT_VPC_EIP_LIMIT) {
-      this.serverless.cli.log(`WARNING: Number of zones (${numZones} is greater than default EIP limit (${DEFAULT_VPC_EIP_LIMIT}). Please ensure you requested an AWS EIP limit increase.`);
+    if (useNatGateway) {
+      if (typeof useNatGateway !== 'boolean' || typeof useNatGateway !== 'number') {
+        throw new Error('useNatGateway must be either a boolean or a number');
+      }
+      if (numZones > DEFAULT_VPC_EIP_LIMIT) {
+        this.serverless.cli.log(`WARNING: Number of zones (${numZones} is greater than default EIP limit (${DEFAULT_VPC_EIP_LIMIT}). Please ensure you requested an AWS EIP limit increase.`);
+      }
+      if (typeof useNatGateway === 'boolean') {
+        useNatGateway = (useNatGateway) ? numZones : 0;
+      }
     }
 
     this.serverless.cli.log(`Generating a VPC in ${region} (${cidrBlock}) across ${numZones} availability zones: ${zones}`);
@@ -67,7 +75,7 @@ class ServerlessVpcPlugin {
       this.buildInternetGateway(),
       ServerlessVpcPlugin.buildInternetGatewayAttachment(),
       this.buildAvailabilityZones({
-        cidrBlock, zones, useNatGateway, skipDbCreation,
+        cidrBlock, zones, numNatGateway: useNatGateway, skipDbCreation,
       }),
       this.buildLambdaSecurityGroup(),
     );
@@ -260,14 +268,14 @@ class ServerlessVpcPlugin {
    *
    * @param {String} cidrBlock VPC CIDR Block
    * @param {Array} zones Array of availability zones
-   * @param {Boolean} useNatGateway Whether to create NAT Gateways or not
+   * @param {Number} numNatGateway Number of NAT gateways (and EIPs) to provision
    * @param {Boolean} skipDbCreation Whether to skip creating the DBSubnet or not
    * @return {Object}
    */
   buildAvailabilityZones({
     cidrBlock,
     zones = [],
-    useNatGateway = true,
+    numNatGateway = 0,
     skipDbCreation = false,
   } = {}) {
     if (!Array.isArray(zones) || zones.length < 1) {
@@ -276,6 +284,16 @@ class ServerlessVpcPlugin {
 
     const azCidrBlocks = ServerlessVpcPlugin.splitVpc(cidrBlock); // VPC subnet is a /16
     const resources = {};
+
+    if (numNatGateway > 0) {
+      for (let index = 0; index < numNatGateway; index += 1) {
+        merge(
+          resources,
+          ServerlessVpcPlugin.buildEIP(index + 1),
+          this.buildNatGateway(index + 1, zones[index]),
+        );
+      }
+    }
 
     zones.forEach((zone, index) => {
       const azCidrBlock = azCidrBlocks[index]; // AZ subnet is a /20
@@ -289,21 +307,13 @@ class ServerlessVpcPlugin {
       const publicSubnets = CIDR.fromString(azSubnets[1]).split().map(cidr => cidr.toString());
       subnets = subnets.concat(publicSubnets); // Public and DB subnets are both /22
 
-      if (useNatGateway) {
-        merge(
-          resources,
-          ServerlessVpcPlugin.buildEIP(position),
-          this.buildNatGateway(position, zone),
-        );
-      }
-
       const params = {
         name: 'App',
         position,
       };
 
-      if (useNatGateway) {
-        params.NatGatewayId = `NatGateway${position}`;
+      if (numNatGateway > 0) {
+        params.NatGatewayId = `NatGateway${(index % numNatGateway) + 1}`;
       } else {
         params.GatewayId = 'InternetGateway';
       }

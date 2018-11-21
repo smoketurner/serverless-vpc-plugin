@@ -15,6 +15,9 @@ const vpcMultipleAZNoNatGWDB = require('./fixtures/vpc_multiple_az_no_natgw_db.j
 const vpcMultipleAZNatGWNoDB = require('./fixtures/vpc_multiple_az_natgw_no_db.json');
 const vpcMultipleAZNoNatGWNoDB = require('./fixtures/vpc_multiple_az_no_natgw_no_db.json');
 
+const vpcMultipleAZSingleNatGWNoDB = require('./fixtures/vpc_multiple_az_single_natgw_no_db.json');
+const vpcMultipleAZMultipleNatGWNoDB = require('./fixtures/vpc_multiple_az_multiple_natgw_no_db.json');
+
 describe('ServerlessVpcPlugin', () => {
   let serverless;
   let plugin;
@@ -348,7 +351,7 @@ describe('ServerlessVpcPlugin', () => {
       const actual = plugin.buildAvailabilityZones({
         cidrBlock: '10.0.0.0/16',
         zones: ['us-east-1a'],
-        useNatGateway: true,
+        numNatGateway: 1,
         skipDbCreation: false,
       });
       expect(actual).toEqual(expected);
@@ -360,7 +363,7 @@ describe('ServerlessVpcPlugin', () => {
       const actual = plugin.buildAvailabilityZones({
         cidrBlock: '10.0.0.0/16',
         zones: ['us-east-1a'],
-        useNatGateway: false,
+        numNatGateway: 0,
         skipDbCreation: false,
       });
       expect(actual).toEqual(expected);
@@ -372,7 +375,7 @@ describe('ServerlessVpcPlugin', () => {
       const actual = plugin.buildAvailabilityZones({
         cidrBlock: '10.0.0.0/16',
         zones: ['us-east-1a'],
-        useNatGateway: true,
+        numNatGateway: 1,
         skipDbCreation: true,
       });
       expect(actual).toEqual(expected);
@@ -384,7 +387,7 @@ describe('ServerlessVpcPlugin', () => {
       const actual = plugin.buildAvailabilityZones({
         cidrBlock: '10.0.0.0/16',
         zones: ['us-east-1a'],
-        useNatGateway: false,
+        numNatGateway: 0,
         skipDbCreation: true,
       });
       expect(actual).toEqual(expected);
@@ -396,7 +399,7 @@ describe('ServerlessVpcPlugin', () => {
       const actual = plugin.buildAvailabilityZones({
         cidrBlock: '10.0.0.0/16',
         zones: ['us-east-1a', 'us-east-1b'],
-        useNatGateway: true,
+        numNatGateway: 2,
         skipDbCreation: false,
       });
       expect(actual).toEqual(expected);
@@ -408,7 +411,7 @@ describe('ServerlessVpcPlugin', () => {
       const actual = plugin.buildAvailabilityZones({
         cidrBlock: '10.0.0.0/16',
         zones: ['us-east-1a', 'us-east-1b'],
-        useNatGateway: false,
+        numNatGateway: 0,
         skipDbCreation: false,
       });
       expect(actual).toEqual(expected);
@@ -420,7 +423,7 @@ describe('ServerlessVpcPlugin', () => {
       const actual = plugin.buildAvailabilityZones({
         cidrBlock: '10.0.0.0/16',
         zones: ['us-east-1a', 'us-east-1b'],
-        useNatGateway: true,
+        numNatGateway: 2,
         skipDbCreation: true,
       });
       expect(actual).toEqual(expected);
@@ -432,7 +435,31 @@ describe('ServerlessVpcPlugin', () => {
       const actual = plugin.buildAvailabilityZones({
         cidrBlock: '10.0.0.0/16',
         zones: ['us-east-1a', 'us-east-1b'],
-        useNatGateway: false,
+        numNatGateway: 0,
+        skipDbCreation: true,
+      });
+      expect(actual).toEqual(expected);
+    });
+
+    it('builds multiple AZs with a single NAT Gateway and no DBSubnet', () => {
+      const expected = Object.assign({}, vpcMultipleAZSingleNatGWNoDB);
+
+      const actual = plugin.buildAvailabilityZones({
+        cidrBlock: '10.0.0.0/16',
+        zones: ['us-east-1a', 'us-east-1b'],
+        numNatGateway: 1,
+        skipDbCreation: true,
+      });
+      expect(actual).toEqual(expected);
+    });
+
+    it('builds multiple AZs with a multple NAT Gateways and no DBSubnet', () => {
+      const expected = Object.assign({}, vpcMultipleAZMultipleNatGWNoDB);
+
+      const actual = plugin.buildAvailabilityZones({
+        cidrBlock: '10.0.0.0/16',
+        zones: ['us-east-1a', 'us-east-1b', 'us-east-1c'],
+        numNatGateway: 2,
         skipDbCreation: true,
       });
       expect(actual).toEqual(expected);
