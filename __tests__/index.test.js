@@ -15,6 +15,9 @@ const vpcMultipleAZNoNatGWDB = require('./fixtures/vpc_multiple_az_no_natgw_db.j
 const vpcMultipleAZNatGWNoDB = require('./fixtures/vpc_multiple_az_natgw_no_db.json');
 const vpcMultipleAZNoNatGWNoDB = require('./fixtures/vpc_multiple_az_no_natgw_no_db.json');
 
+const vpcMultipleAZSingleNatGWNoDB = require('./fixtures/vpc_multiple_az_single_natgw_no_db.json');
+const vpcMultipleAZMultipleNatGWNoDB = require('./fixtures/vpc_multiple_az_multiple_natgw_no_db.json');
+
 describe('ServerlessVpcPlugin', () => {
   let serverless;
   let plugin;
@@ -336,6 +339,35 @@ describe('ServerlessVpcPlugin', () => {
     });
   });
 
+  describe('#splitSubnets', () => {
+    it('splits 10.0.0.0/16 separate subnets in each AZ', () => {
+      const zones = ['us-east-1a', 'us-east-1b', 'us-east-1c'];
+      const actual = ServerlessVpcPlugin.splitSubnets('10.0.0.0/16', zones);
+
+      const parts = [
+        ['us-east-1a', new Map([
+          ['App', '10.0.0.0/21'],
+          ['Public', '10.0.8.0/22'],
+          ['DB', '10.0.12.0/22']]),
+        ],
+        ['us-east-1b', new Map([
+          ['App', '10.0.16.0/21'],
+          ['Public', '10.0.24.0/22'],
+          ['DB', '10.0.28.0/22']]),
+        ],
+        ['us-east-1c', new Map([
+          ['App', '10.0.32.0/21'],
+          ['Public', '10.0.40.0/22'],
+          ['DB', '10.0.44.0/22']]),
+        ],
+      ];
+
+      const expected = new Map(parts);
+
+      expect(actual).toEqual(expected);
+    });
+  });
+
   describe('#buildAvailabilityZones', () => {
     it('builds no AZs without options', () => {
       const actual = plugin.buildAvailabilityZones({ cidrBlock: '10.0.0.0/16' });
@@ -348,7 +380,7 @@ describe('ServerlessVpcPlugin', () => {
       const actual = plugin.buildAvailabilityZones({
         cidrBlock: '10.0.0.0/16',
         zones: ['us-east-1a'],
-        useNatGateway: true,
+        numNatGateway: 1,
         skipDbCreation: false,
       });
       expect(actual).toEqual(expected);
@@ -360,7 +392,7 @@ describe('ServerlessVpcPlugin', () => {
       const actual = plugin.buildAvailabilityZones({
         cidrBlock: '10.0.0.0/16',
         zones: ['us-east-1a'],
-        useNatGateway: false,
+        numNatGateway: 0,
         skipDbCreation: false,
       });
       expect(actual).toEqual(expected);
@@ -372,7 +404,7 @@ describe('ServerlessVpcPlugin', () => {
       const actual = plugin.buildAvailabilityZones({
         cidrBlock: '10.0.0.0/16',
         zones: ['us-east-1a'],
-        useNatGateway: true,
+        numNatGateway: 1,
         skipDbCreation: true,
       });
       expect(actual).toEqual(expected);
@@ -384,7 +416,7 @@ describe('ServerlessVpcPlugin', () => {
       const actual = plugin.buildAvailabilityZones({
         cidrBlock: '10.0.0.0/16',
         zones: ['us-east-1a'],
-        useNatGateway: false,
+        numNatGateway: 0,
         skipDbCreation: true,
       });
       expect(actual).toEqual(expected);
@@ -396,7 +428,7 @@ describe('ServerlessVpcPlugin', () => {
       const actual = plugin.buildAvailabilityZones({
         cidrBlock: '10.0.0.0/16',
         zones: ['us-east-1a', 'us-east-1b'],
-        useNatGateway: true,
+        numNatGateway: 2,
         skipDbCreation: false,
       });
       expect(actual).toEqual(expected);
@@ -408,7 +440,7 @@ describe('ServerlessVpcPlugin', () => {
       const actual = plugin.buildAvailabilityZones({
         cidrBlock: '10.0.0.0/16',
         zones: ['us-east-1a', 'us-east-1b'],
-        useNatGateway: false,
+        numNatGateway: 0,
         skipDbCreation: false,
       });
       expect(actual).toEqual(expected);
@@ -420,7 +452,7 @@ describe('ServerlessVpcPlugin', () => {
       const actual = plugin.buildAvailabilityZones({
         cidrBlock: '10.0.0.0/16',
         zones: ['us-east-1a', 'us-east-1b'],
-        useNatGateway: true,
+        numNatGateway: 2,
         skipDbCreation: true,
       });
       expect(actual).toEqual(expected);
@@ -432,7 +464,31 @@ describe('ServerlessVpcPlugin', () => {
       const actual = plugin.buildAvailabilityZones({
         cidrBlock: '10.0.0.0/16',
         zones: ['us-east-1a', 'us-east-1b'],
-        useNatGateway: false,
+        numNatGateway: 0,
+        skipDbCreation: true,
+      });
+      expect(actual).toEqual(expected);
+    });
+
+    it('builds multiple AZs with a single NAT Gateway and no DBSubnet', () => {
+      const expected = Object.assign({}, vpcMultipleAZSingleNatGWNoDB);
+
+      const actual = plugin.buildAvailabilityZones({
+        cidrBlock: '10.0.0.0/16',
+        zones: ['us-east-1a', 'us-east-1b'],
+        numNatGateway: 1,
+        skipDbCreation: true,
+      });
+      expect(actual).toEqual(expected);
+    });
+
+    it('builds multiple AZs with a multple NAT Gateways and no DBSubnet', () => {
+      const expected = Object.assign({}, vpcMultipleAZMultipleNatGWNoDB);
+
+      const actual = plugin.buildAvailabilityZones({
+        cidrBlock: '10.0.0.0/16',
+        zones: ['us-east-1a', 'us-east-1b', 'us-east-1c'],
+        numNatGateway: 2,
         skipDbCreation: true,
       });
       expect(actual).toEqual(expected);
@@ -611,8 +667,8 @@ describe('ServerlessVpcPlugin', () => {
           },
         },
       };
-      const actual = ServerlessVpcPlugin.buildRoute({
-        name: 'App', position: 1, NatGatewayId: 'NatGateway1',
+      const actual = ServerlessVpcPlugin.buildRoute('App', 1, {
+        NatGatewayId: 'NatGateway1',
       });
       expect(actual).toEqual(expected);
     });
@@ -632,15 +688,15 @@ describe('ServerlessVpcPlugin', () => {
           },
         },
       };
-      const actual = ServerlessVpcPlugin.buildRoute({
-        name: 'App', position: 1, GatewayId: 'InternetGateway',
+      const actual = ServerlessVpcPlugin.buildRoute('App', 1, {
+        GatewayId: 'InternetGateway',
       });
       expect(actual).toEqual(expected);
     });
 
     it('throws an error if no gateway provided', () => {
       expect(() => {
-        ServerlessVpcPlugin.buildRoute({ name: 'App', position: 1 });
+        ServerlessVpcPlugin.buildRoute('App', 1);
       }).toThrow('Unable to create route: either NatGatewayId or GatewayId must be provided');
     });
   });
@@ -933,6 +989,22 @@ describe('ServerlessVpcPlugin', () => {
                 ],
               ],
             },
+            PolicyDocument: {
+              Version: '2012-10-17',
+              Statement: [{
+                Effect: 'Allow',
+                Principal: {
+                  AWS: {
+                    'Fn::GetAtt': [
+                      'IamRoleLambdaExecution',
+                      'Arn',
+                    ],
+                  },
+                },
+                Action: 's3:*',
+                Resource: '*',
+              }],
+            },
             VpcEndpointType: 'Gateway',
             VpcId: {
               Ref: 'VPC',
@@ -967,6 +1039,22 @@ describe('ServerlessVpcPlugin', () => {
                   'dynamodb',
                 ],
               ],
+            },
+            PolicyDocument: {
+              Version: '2012-10-17',
+              Statement: [{
+                Effect: 'Allow',
+                Principal: {
+                  AWS: {
+                    'Fn::GetAtt': [
+                      'IamRoleLambdaExecution',
+                      'Arn',
+                    ],
+                  },
+                },
+                Action: 'dynamodb:*',
+                Resource: '*',
+              }],
             },
             VpcEndpointType: 'Gateway',
             VpcId: {
@@ -1087,6 +1175,22 @@ describe('ServerlessVpcPlugin', () => {
                 ],
               ],
             },
+            PolicyDocument: {
+              Version: '2012-10-17',
+              Statement: [{
+                Effect: 'Allow',
+                Principal: {
+                  AWS: {
+                    'Fn::GetAtt': [
+                      'IamRoleLambdaExecution',
+                      'Arn',
+                    ],
+                  },
+                },
+                Action: 's3:*',
+                Resource: '*',
+              }],
+            },
             VpcEndpointType: 'Gateway',
             VpcId: {
               Ref: 'VPC',
@@ -1094,9 +1198,9 @@ describe('ServerlessVpcPlugin', () => {
           },
         },
       };
-      const actual = ServerlessVpcPlugin.buildVPCEndpoint({
-        service: 's3', routeTableIds: [{ Ref: 'AppRouteTable1' }],
-      });
+      const actual = ServerlessVpcPlugin.buildVPCEndpoint(
+        's3', { routeTableIds: [{ Ref: 'AppRouteTable1' }] },
+      );
       expect(actual).toEqual(expected);
     });
 
@@ -1135,9 +1239,9 @@ describe('ServerlessVpcPlugin', () => {
           },
         },
       };
-      const actual = ServerlessVpcPlugin.buildVPCEndpoint({
-        service: 'sagemaker.runtime-fips', subnetIds: [{ Ref: 'AppSubnet1' }],
-      });
+      const actual = ServerlessVpcPlugin.buildVPCEndpoint(
+        'sagemaker.runtime-fips', { subnetIds: [{ Ref: 'AppSubnet1' }] },
+      );
       expect(actual).toEqual(expected);
     });
   });

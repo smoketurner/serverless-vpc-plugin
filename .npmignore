@@ -3,4 +3,6 @@
 .editorconfig
 .gitignore
 .travis.yml
+.vscode/
 jest-config.json
+__tests__/

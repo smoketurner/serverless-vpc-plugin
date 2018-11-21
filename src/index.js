@@ -6,6 +6,12 @@ const merge = require('lodash.merge');
  */
 const DEFAULT_VPC_EIP_LIMIT = 5;
 
+// Subnet name constants
+const APP_SUBNET = 'App';
+const PUBLIC_SUBNET = 'Public';
+const DB_SUBNET = 'DB';
+
+
 class ServerlessVpcPlugin {
   constructor(serverless, options) {
     this.serverless = serverless;
@@ -31,7 +37,7 @@ class ServerlessVpcPlugin {
       if (vpcConfig.cidrBlock && typeof vpcConfig.cidrBlock === 'string') {
         ({ cidrBlock } = vpcConfig);
       }
-      if ('useNatGateway' in vpcConfig && typeof vpcConfig.useNatGateway === 'boolean') {
+      if ('useNatGateway' in vpcConfig) {
         ({ useNatGateway } = vpcConfig);
       }
       if (vpcConfig.zones && Array.isArray(vpcConfig.zones) && vpcConfig.zones.length > 0) {
@@ -55,8 +61,16 @@ class ServerlessVpcPlugin {
     }
     const numZones = zones.length;
 
-    if (useNatGateway && numZones > DEFAULT_VPC_EIP_LIMIT) {
-      this.serverless.cli.log(`WARNING: Number of zones (${numZones} is greater than default EIP limit (${DEFAULT_VPC_EIP_LIMIT}). Please ensure you requested an AWS EIP limit increase.`);
+    if (useNatGateway) {
+      if (typeof useNatGateway !== 'boolean' || typeof useNatGateway !== 'number') {
+        throw new Error('useNatGateway must be either a boolean or a number');
+      }
+      if (numZones > DEFAULT_VPC_EIP_LIMIT) {
+        this.serverless.cli.log(`WARNING: Number of zones (${numZones} is greater than default EIP limit (${DEFAULT_VPC_EIP_LIMIT}). Please ensure you requested an AWS EIP limit increase.`);
+      }
+      if (typeof useNatGateway === 'boolean') {
+        useNatGateway = (useNatGateway) ? numZones : 0;
+      }
     }
 
     this.serverless.cli.log(`Generating a VPC in ${region} (${cidrBlock}) across ${numZones} availability zones: ${zones}`);
@@ -67,7 +81,7 @@ class ServerlessVpcPlugin {
       this.buildInternetGateway(),
       ServerlessVpcPlugin.buildInternetGatewayAttachment(),
       this.buildAvailabilityZones({
-        cidrBlock, zones, useNatGateway, skipDbCreation,
+        cidrBlock, zones, numNatGateway: useNatGateway, skipDbCreation,
       }),
       this.buildLambdaSecurityGroup(),
     );
@@ -235,7 +249,7 @@ class ServerlessVpcPlugin {
   /**
    * Split a /16 CIDR block into /20 CIDR blocks.
    *
-   * @param {String} cidrBlock
+   * @param {String} cidrBlock VPC CIDR block
    * @return {Array}
    */
   static splitVpc(cidrBlock) {
@@ -250,6 +264,48 @@ class ServerlessVpcPlugin {
   }
 
   /**
+   * Splits the /16 VPC CIDR block into /20 subnets per AZ:
+   *
+   * Application subnet = /21
+   * Public subnet = /22
+   * Database subnet = /22
+   *
+   * @param {String} cidrBlock VPC CIDR block
+   * @param {Array} zones Array of availability zones
+   * @return {Map}
+   */
+  static splitSubnets(cidrBlock, zones) {
+    const mapping = new Map();
+
+    if (!cidrBlock || !Array.isArray(zones) || zones.length < 1) {
+      return mapping;
+    }
+
+    const azCidrBlocks = ServerlessVpcPlugin.splitVpc(cidrBlock); // VPC subnet is a /16
+
+    zones.forEach((zone, index) => {
+      const azCidrBlock = azCidrBlocks[index]; // AZ subnet is a /20
+      let subnets = [];
+
+      const azSubnets = CIDR.fromString(azCidrBlock).split().map(cidr => cidr.toString());
+      subnets.push(azSubnets[0]); // Application subnet is a /21
+
+      const publicSubnets = CIDR.fromString(azSubnets[1]).split().map(cidr => cidr.toString());
+      subnets = subnets.concat(publicSubnets); // Public and DB subnets are both /22
+
+      const parts = [
+        [APP_SUBNET, subnets[0]],
+        [PUBLIC_SUBNET, subnets[1]],
+        [DB_SUBNET, subnets[2]],
+      ];
+
+      mapping.set(zone, new Map(parts));
+    });
+
+    return mapping;
+  }
+
+  /**
    * Builds the Availability Zones for the region.
    *
    * 1.) Splits the VPC CIDR Block into /20 subnets, one per AZ.
@@ -260,50 +316,42 @@ class ServerlessVpcPlugin {
    *
    * @param {String} cidrBlock VPC CIDR Block
    * @param {Array} zones Array of availability zones
-   * @param {Boolean} useNatGateway Whether to create NAT Gateways or not
+   * @param {Number} numNatGateway Number of NAT gateways (and EIPs) to provision
    * @param {Boolean} skipDbCreation Whether to skip creating the DBSubnet or not
    * @return {Object}
    */
   buildAvailabilityZones({
     cidrBlock,
     zones = [],
-    useNatGateway = true,
+    numNatGateway = 0,
     skipDbCreation = false,
   } = {}) {
+    if (!cidrBlock) {
+      return {};
+    }
     if (!Array.isArray(zones) || zones.length < 1) {
       return {};
     }
 
-    const azCidrBlocks = ServerlessVpcPlugin.splitVpc(cidrBlock); // VPC subnet is a /16
+    const subnets = ServerlessVpcPlugin.splitSubnets(cidrBlock, zones);
     const resources = {};
 
-    zones.forEach((zone, index) => {
-      const azCidrBlock = azCidrBlocks[index]; // AZ subnet is a /20
-      const position = index + 1;
-
-      let subnets = [];
-
-      const azSubnets = CIDR.fromString(azCidrBlock).split().map(cidr => cidr.toString());
-      subnets.push(azSubnets[0]); // Application subnet is a /21
-
-      const publicSubnets = CIDR.fromString(azSubnets[1]).split().map(cidr => cidr.toString());
-      subnets = subnets.concat(publicSubnets); // Public and DB subnets are both /22
-
-      if (useNatGateway) {
+    if (numNatGateway > 0) {
+      for (let index = 0; index < numNatGateway; index += 1) {
         merge(
           resources,
-          ServerlessVpcPlugin.buildEIP(position),
-          this.buildNatGateway(position, zone),
+          ServerlessVpcPlugin.buildEIP(index + 1),
+          this.buildNatGateway(index + 1, zones[index]),
         );
       }
+    }
 
-      const params = {
-        name: 'App',
-        position,
-      };
+    zones.forEach((zone, index) => {
+      const position = index + 1;
 
-      if (useNatGateway) {
-        params.NatGatewayId = `NatGateway${position}`;
+      const params = {};
+      if (numNatGateway > 0) {
+        params.NatGatewayId = `NatGateway${(index % numNatGateway) + 1}`;
       } else {
         params.GatewayId = 'InternetGateway';
       }
@@ -312,18 +360,16 @@ class ServerlessVpcPlugin {
         resources,
 
         // App Subnet
-        this.buildSubnet('App', position, zone, subnets[0]),
-        this.buildRouteTable('App', position, zone),
-        ServerlessVpcPlugin.buildRouteTableAssociation('App', position),
-        ServerlessVpcPlugin.buildRoute(params),
+        this.buildSubnet(APP_SUBNET, position, zone, subnets.get(zone).get(APP_SUBNET)),
+        this.buildRouteTable(APP_SUBNET, position, zone),
+        ServerlessVpcPlugin.buildRouteTableAssociation(APP_SUBNET, position),
+        ServerlessVpcPlugin.buildRoute(APP_SUBNET, position, params),
 
         // Public Subnet
-        this.buildSubnet('Public', position, zone, subnets[1]),
-        this.buildRouteTable('Public', position, zone),
-        ServerlessVpcPlugin.buildRouteTableAssociation('Public', position),
-        ServerlessVpcPlugin.buildRoute({
-          name: 'Public',
-          position,
+        this.buildSubnet(PUBLIC_SUBNET, position, zone, subnets.get(zone).get(PUBLIC_SUBNET)),
+        this.buildRouteTable(PUBLIC_SUBNET, position, zone),
+        ServerlessVpcPlugin.buildRouteTableAssociation(PUBLIC_SUBNET, position),
+        ServerlessVpcPlugin.buildRoute(PUBLIC_SUBNET, position, {
           GatewayId: 'InternetGateway',
         }),
       );
@@ -332,9 +378,9 @@ class ServerlessVpcPlugin {
         // DB Subnet
         merge(
           resources,
-          this.buildSubnet('DB', position, zone, subnets[2]),
-          this.buildRouteTable('DB', position, zone),
-          ServerlessVpcPlugin.buildRouteTableAssociation('DB', position),
+          this.buildSubnet(DB_SUBNET, position, zone, subnets.get(zone).get(DB_SUBNET)),
+          this.buildRouteTable(DB_SUBNET, position, zone),
+          ServerlessVpcPlugin.buildRouteTableAssociation(DB_SUBNET, position),
         );
       }
     });
@@ -345,10 +391,10 @@ class ServerlessVpcPlugin {
   /**
    * Create a subnet
    *
-   * @param {String} name
-   * @param {Number} position
-   * @param {String} zone
-   * @param {String} cidrBlock
+   * @param {String} name Name of subnet
+   * @param {Number} position Subnet position
+   * @param {String} zone Availability zone
+   * @param {String} cidrBlock Subnet CIDR block
    * @return {Object}
    */
   buildSubnet(name, position, zone, cidrBlock) {
@@ -426,7 +472,7 @@ class ServerlessVpcPlugin {
             ],
           },
           SubnetId: {
-            Ref: `PublicSubnet${position}`,
+            Ref: `${PUBLIC_SUBNET}Subnet${position}`,
           },
           Tags: [
             {
@@ -523,11 +569,13 @@ class ServerlessVpcPlugin {
   /**
    * Build a Route for a NatGateway or InternetGateway
    *
+   * @param {String} name
+   * @param {Number} position
    * @param {Object} params
    * @return {Object}
    */
-  static buildRoute({
-    name, position, NatGatewayId = null, GatewayId = null,
+  static buildRoute(name, position, {
+    NatGatewayId = null, GatewayId = null,
   } = {}) {
     const route = {
       Type: 'AWS::EC2::Route',
@@ -570,7 +618,7 @@ class ServerlessVpcPlugin {
 
     const subnetIds = [];
     for (let i = 1; i <= numZones; i += 1) {
-      subnetIds.push({ Ref: `DBSubnet${i}` });
+      subnetIds.push({ Ref: `${DB_SUBNET}Subnet${i}` });
     }
 
     return {
@@ -601,14 +649,16 @@ class ServerlessVpcPlugin {
    * @param {Object} params
    * @return {Object}
    */
-  static buildElastiCacheSubnetGroup({ name = 'ElastiCacheSubnetGroup', numZones = 0 } = {}) {
+  static buildElastiCacheSubnetGroup({
+    name = 'ElastiCacheSubnetGroup', numZones = 0,
+  } = {}) {
     if (numZones < 1) {
       return {};
     }
 
     const subnetIds = [];
     for (let i = 1; i <= numZones; i += 1) {
-      subnetIds.push({ Ref: `DBSubnet${i}` });
+      subnetIds.push({ Ref: `${DB_SUBNET}Subnet${i}` });
     }
 
     return {
@@ -640,7 +690,7 @@ class ServerlessVpcPlugin {
 
     const subnetIds = [];
     for (let i = 1; i <= numZones; i += 1) {
-      subnetIds.push({ Ref: `DBSubnet${i}` });
+      subnetIds.push({ Ref: `${DB_SUBNET}Subnet${i}` });
     }
 
     return {
@@ -675,7 +725,7 @@ class ServerlessVpcPlugin {
 
     const subnetIds = [];
     for (let i = 1; i <= numZones; i += 1) {
-      subnetIds.push({ Ref: `DBSubnet${i}` });
+      subnetIds.push({ Ref: `${DB_SUBNET}Subnet${i}` });
     }
 
     return {
@@ -711,15 +761,15 @@ class ServerlessVpcPlugin {
     const subnetIds = [];
     const routeTableIds = [];
     for (let i = 1; i <= numZones; i += 1) {
-      subnetIds.push({ Ref: `AppSubnet${i}` });
-      routeTableIds.push({ Ref: `AppRouteTable${i}` });
+      subnetIds.push({ Ref: `${APP_SUBNET}Subnet${i}` });
+      routeTableIds.push({ Ref: `${APP_SUBNET}RouteTable${i}` });
     }
 
     const resources = {};
     services.forEach((service) => {
-      merge(resources, ServerlessVpcPlugin.buildVPCEndpoint({
-        service, routeTableIds, subnetIds,
-      }));
+      merge(resources, ServerlessVpcPlugin.buildVPCEndpoint(
+        service, { routeTableIds, subnetIds },
+      ));
     });
 
     return resources;
@@ -728,10 +778,11 @@ class ServerlessVpcPlugin {
   /**
    * Build a VPCEndpoint
    *
+   * @param {String} service
    * @param {Object} params
    * @return {Object}
    */
-  static buildVPCEndpoint({ service, routeTableIds = [], subnetIds = [] } = {}) {
+  static buildVPCEndpoint(service, { routeTableIds = [], subnetIds = [] } = {}) {
     const endpoint = {
       Type: 'AWS::EC2::VPCEndpoint',
       Properties: {
@@ -757,6 +808,26 @@ class ServerlessVpcPlugin {
     if (service === 's3' || service === 'dynamodb') {
       endpoint.Properties.VpcEndpointType = 'Gateway';
       endpoint.Properties.RouteTableIds = routeTableIds;
+      endpoint.Properties.PolicyDocument = {
+        Version: '2012-10-17',
+        Statement: [{
+          Effect: 'Allow',
+          Principal: {
+            AWS: {
+              'Fn::GetAtt': [
+                'IamRoleLambdaExecution',
+                'Arn',
+              ],
+            },
+          },
+          Resource: '*',
+        }],
+      };
+      if (service === 's3') {
+        endpoint.Properties.PolicyDocument.Statement[0].Action = 's3:*';
+      } else if (service === 'dynamodb') {
+        endpoint.Properties.PolicyDocument.Statement[0].Action = 'dynamodb:*';
+      }
     } else {
       endpoint.Properties.VpcEndpointType = 'Interface';
       endpoint.Properties.SubnetIds = subnetIds;
