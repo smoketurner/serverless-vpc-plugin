@@ -85,7 +85,12 @@ provider:
 custom:
   vpcConfig:
     cidrBlock: '10.0.0.0/16'
-    useNatGateway: true # optionally add NatGateway instances in the App subnets
+
+    # if useNatGateway is a boolean "true", a NAT Gateway and EIP will be provisioned
+    # in each zone auto-discovered or specified below.
+    # if useNatGateway is a number, that number of NAT Gateways will be provisioned
+    useNatGateway: 2
+
     skipDbCreation: false # whether to skip creating the DBSubnet's
     zones: # optionally specify AZs (defaults to auto-discover all availabile AZs)
       - us-east-1a
