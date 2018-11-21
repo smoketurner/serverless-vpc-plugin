@@ -6,6 +6,12 @@ const merge = require('lodash.merge');
  */
 const DEFAULT_VPC_EIP_LIMIT = 5;
 
+// Subnet name constants
+const APP_SUBNET = 'App';
+const PUBLIC_SUBNET = 'Public';
+const DB_SUBNET = 'DB';
+
+
 class ServerlessVpcPlugin {
   constructor(serverless, options) {
     this.serverless = serverless;
@@ -243,7 +249,7 @@ class ServerlessVpcPlugin {
   /**
    * Split a /16 CIDR block into /20 CIDR blocks.
    *
-   * @param {String} cidrBlock
+   * @param {String} cidrBlock VPC CIDR block
    * @return {Array}
    */
   static splitVpc(cidrBlock) {
@@ -288,9 +294,9 @@ class ServerlessVpcPlugin {
       subnets = subnets.concat(publicSubnets); // Public and DB subnets are both /22
 
       const parts = [
-        ['App', subnets[0]],
-        ['Public', subnets[1]],
-        ['DB', subnets[2]],
+        [APP_SUBNET, subnets[0]],
+        [PUBLIC_SUBNET, subnets[1]],
+        [DB_SUBNET, subnets[2]],
       ];
 
       mapping.set(zone, new Map(parts));
@@ -343,7 +349,7 @@ class ServerlessVpcPlugin {
     zones.forEach((zone, index) => {
       const position = index + 1;
       const params = {
-        name: 'App',
+        name: APP_SUBNET,
         position,
       };
 
@@ -357,17 +363,17 @@ class ServerlessVpcPlugin {
         resources,
 
         // App Subnet
-        this.buildSubnet('App', position, zone, subnets.get(zone).get('App')),
-        this.buildRouteTable('App', position, zone),
-        ServerlessVpcPlugin.buildRouteTableAssociation('App', position),
+        this.buildSubnet(APP_SUBNET, position, zone, subnets.get(zone).get(APP_SUBNET)),
+        this.buildRouteTable(APP_SUBNET, position, zone),
+        ServerlessVpcPlugin.buildRouteTableAssociation(APP_SUBNET, position),
         ServerlessVpcPlugin.buildRoute(params),
 
         // Public Subnet
-        this.buildSubnet('Public', position, zone, subnets.get(zone).get('Public')),
-        this.buildRouteTable('Public', position, zone),
-        ServerlessVpcPlugin.buildRouteTableAssociation('Public', position),
+        this.buildSubnet(PUBLIC_SUBNET, position, zone, subnets.get(zone).get(PUBLIC_SUBNET)),
+        this.buildRouteTable(PUBLIC_SUBNET, position, zone),
+        ServerlessVpcPlugin.buildRouteTableAssociation(PUBLIC_SUBNET, position),
         ServerlessVpcPlugin.buildRoute({
-          name: 'Public',
+          name: PUBLIC_SUBNET,
           position,
           GatewayId: 'InternetGateway',
         }),
@@ -377,9 +383,9 @@ class ServerlessVpcPlugin {
         // DB Subnet
         merge(
           resources,
-          this.buildSubnet('DB', position, zone, subnets.get(zone).get('DB')),
-          this.buildRouteTable('DB', position, zone),
-          ServerlessVpcPlugin.buildRouteTableAssociation('DB', position),
+          this.buildSubnet(DB_SUBNET, position, zone, subnets.get(zone).get(DB_SUBNET)),
+          this.buildRouteTable(DB_SUBNET, position, zone),
+          ServerlessVpcPlugin.buildRouteTableAssociation(DB_SUBNET, position),
         );
       }
     });
@@ -471,7 +477,7 @@ class ServerlessVpcPlugin {
             ],
           },
           SubnetId: {
-            Ref: `PublicSubnet${position}`,
+            Ref: `${PUBLIC_SUBNET}Subnet${position}`,
           },
           Tags: [
             {
@@ -615,7 +621,7 @@ class ServerlessVpcPlugin {
 
     const subnetIds = [];
     for (let i = 1; i <= numZones; i += 1) {
-      subnetIds.push({ Ref: `DBSubnet${i}` });
+      subnetIds.push({ Ref: `${DB_SUBNET}Subnet${i}` });
     }
 
     return {
@@ -653,7 +659,7 @@ class ServerlessVpcPlugin {
 
     const subnetIds = [];
     for (let i = 1; i <= numZones; i += 1) {
-      subnetIds.push({ Ref: `DBSubnet${i}` });
+      subnetIds.push({ Ref: `${DB_SUBNET}Subnet${i}` });
     }
 
     return {
@@ -685,7 +691,7 @@ class ServerlessVpcPlugin {
 
     const subnetIds = [];
     for (let i = 1; i <= numZones; i += 1) {
-      subnetIds.push({ Ref: `DBSubnet${i}` });
+      subnetIds.push({ Ref: `${DB_SUBNET}Subnet${i}` });
     }
 
     return {
@@ -720,7 +726,7 @@ class ServerlessVpcPlugin {
 
     const subnetIds = [];
     for (let i = 1; i <= numZones; i += 1) {
-      subnetIds.push({ Ref: `DBSubnet${i}` });
+      subnetIds.push({ Ref: `${DB_SUBNET}Subnet${i}` });
     }
 
     return {
@@ -756,8 +762,8 @@ class ServerlessVpcPlugin {
     const subnetIds = [];
     const routeTableIds = [];
     for (let i = 1; i <= numZones; i += 1) {
-      subnetIds.push({ Ref: `AppSubnet${i}` });
-      routeTableIds.push({ Ref: `AppRouteTable${i}` });
+      subnetIds.push({ Ref: `${APP_SUBNET}Subnet${i}` });
+      routeTableIds.push({ Ref: `${APP_SUBNET}RouteTable${i}` });
     }
 
     const resources = {};
