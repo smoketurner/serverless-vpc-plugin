@@ -271,7 +271,7 @@ class ServerlessVpcPlugin {
   static splitSubnets(cidrBlock, zones) {
     const mapping = new Map();
 
-    if (!Array.isArray(zones) || zones.length < 1) {
+    if (!cidrBlock || !Array.isArray(zones) || zones.length < 1) {
       return mapping;
     }
 
