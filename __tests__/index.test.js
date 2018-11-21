@@ -989,6 +989,22 @@ describe('ServerlessVpcPlugin', () => {
                 ],
               ],
             },
+            PolicyDocument: {
+              Version: '2012-10-17',
+              Statement: [{
+                Effect: 'Allow',
+                Principal: {
+                  AWS: {
+                    'Fn::GetAtt': [
+                      'IamRoleLambdaExecution',
+                      'Arn',
+                    ],
+                  },
+                },
+                Action: 's3:*',
+                Resource: '*',
+              }],
+            },
             VpcEndpointType: 'Gateway',
             VpcId: {
               Ref: 'VPC',
@@ -1023,6 +1039,22 @@ describe('ServerlessVpcPlugin', () => {
                   'dynamodb',
                 ],
               ],
+            },
+            PolicyDocument: {
+              Version: '2012-10-17',
+              Statement: [{
+                Effect: 'Allow',
+                Principal: {
+                  AWS: {
+                    'Fn::GetAtt': [
+                      'IamRoleLambdaExecution',
+                      'Arn',
+                    ],
+                  },
+                },
+                Action: 'dynamodb:*',
+                Resource: '*',
+              }],
             },
             VpcEndpointType: 'Gateway',
             VpcId: {
@@ -1143,6 +1175,22 @@ describe('ServerlessVpcPlugin', () => {
                 ],
               ],
             },
+            PolicyDocument: {
+              Version: '2012-10-17',
+              Statement: [{
+                Effect: 'Allow',
+                Principal: {
+                  AWS: {
+                    'Fn::GetAtt': [
+                      'IamRoleLambdaExecution',
+                      'Arn',
+                    ],
+                  },
+                },
+                Action: 's3:*',
+                Resource: '*',
+              }],
+            },
             VpcEndpointType: 'Gateway',
             VpcId: {
               Ref: 'VPC',
@@ -1150,9 +1198,9 @@ describe('ServerlessVpcPlugin', () => {
           },
         },
       };
-      const actual = ServerlessVpcPlugin.buildVPCEndpoint({
-        service: 's3', routeTableIds: [{ Ref: 'AppRouteTable1' }],
-      });
+      const actual = ServerlessVpcPlugin.buildVPCEndpoint(
+        's3', { routeTableIds: [{ Ref: 'AppRouteTable1' }] },
+      );
       expect(actual).toEqual(expected);
     });
 
@@ -1191,9 +1239,9 @@ describe('ServerlessVpcPlugin', () => {
           },
         },
       };
-      const actual = ServerlessVpcPlugin.buildVPCEndpoint({
-        service: 'sagemaker.runtime-fips', subnetIds: [{ Ref: 'AppSubnet1' }],
-      });
+      const actual = ServerlessVpcPlugin.buildVPCEndpoint(
+        'sagemaker.runtime-fips', { subnetIds: [{ Ref: 'AppSubnet1' }] },
+      );
       expect(actual).toEqual(expected);
     });
   });

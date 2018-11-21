@@ -768,9 +768,9 @@ class ServerlessVpcPlugin {
 
     const resources = {};
     services.forEach((service) => {
-      merge(resources, ServerlessVpcPlugin.buildVPCEndpoint({
-        service, routeTableIds, subnetIds,
-      }));
+      merge(resources, ServerlessVpcPlugin.buildVPCEndpoint(
+        service, { routeTableIds, subnetIds },
+      ));
     });
 
     return resources;
@@ -779,10 +779,11 @@ class ServerlessVpcPlugin {
   /**
    * Build a VPCEndpoint
    *
+   * @param {String} service
    * @param {Object} params
    * @return {Object}
    */
-  static buildVPCEndpoint({ service, routeTableIds = [], subnetIds = [] } = {}) {
+  static buildVPCEndpoint(service, { routeTableIds = [], subnetIds = [] } = {}) {
     const endpoint = {
       Type: 'AWS::EC2::VPCEndpoint',
       Properties: {
@@ -808,6 +809,26 @@ class ServerlessVpcPlugin {
     if (service === 's3' || service === 'dynamodb') {
       endpoint.Properties.VpcEndpointType = 'Gateway';
       endpoint.Properties.RouteTableIds = routeTableIds;
+      endpoint.Properties.PolicyDocument = {
+        Version: '2012-10-17',
+        Statement: [{
+          Effect: 'Allow',
+          Principal: {
+            AWS: {
+              'Fn::GetAtt': [
+                'IamRoleLambdaExecution',
+                'Arn',
+              ],
+            },
+          },
+          Resource: '*',
+        }],
+      };
+      if (service === 's3') {
+        endpoint.Properties.PolicyDocument.Statement[0].Action = 's3:*';
+      } else if (service === 'dynamodb') {
+        endpoint.Properties.PolicyDocument.Statement[0].Action = 'dynamodb:*';
+      }
     } else {
       endpoint.Properties.VpcEndpointType = 'Interface';
       endpoint.Properties.SubnetIds = subnetIds;
