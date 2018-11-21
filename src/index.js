@@ -258,6 +258,48 @@ class ServerlessVpcPlugin {
   }
 
   /**
+   * Splits the /16 VPC CIDR block into /20 subnets per AZ:
+   *
+   * Application subnet = /21
+   * Public subnet = /22
+   * Database subnet = /22
+   *
+   * @param {String} cidrBlock VPC CIDR block
+   * @param {Array} zones Array of availability zones
+   * @return {Map}
+   */
+  static splitSubnets(cidrBlock, zones) {
+    const mapping = new Map();
+
+    if (!Array.isArray(zones) || zones.length < 1) {
+      return mapping;
+    }
+
+    const azCidrBlocks = ServerlessVpcPlugin.splitVpc(cidrBlock); // VPC subnet is a /16
+
+    zones.forEach((zone, index) => {
+      const azCidrBlock = azCidrBlocks[index]; // AZ subnet is a /20
+      let subnets = [];
+
+      const azSubnets = CIDR.fromString(azCidrBlock).split().map(cidr => cidr.toString());
+      subnets.push(azSubnets[0]); // Application subnet is a /21
+
+      const publicSubnets = CIDR.fromString(azSubnets[1]).split().map(cidr => cidr.toString());
+      subnets = subnets.concat(publicSubnets); // Public and DB subnets are both /22
+
+      const parts = [
+        ['App', subnets[0]],
+        ['Public', subnets[1]],
+        ['DB', subnets[2]],
+      ];
+
+      mapping.set(zone, new Map(parts));
+    });
+
+    return mapping;
+  }
+
+  /**
    * Builds the Availability Zones for the region.
    *
    * 1.) Splits the VPC CIDR Block into /20 subnets, one per AZ.
@@ -278,11 +320,14 @@ class ServerlessVpcPlugin {
     numNatGateway = 0,
     skipDbCreation = false,
   } = {}) {
+    if (!cidrBlock) {
+      return {};
+    }
     if (!Array.isArray(zones) || zones.length < 1) {
       return {};
     }
 
-    const azCidrBlocks = ServerlessVpcPlugin.splitVpc(cidrBlock); // VPC subnet is a /16
+    const subnets = ServerlessVpcPlugin.splitSubnets(cidrBlock, zones);
     const resources = {};
 
     if (numNatGateway > 0) {
@@ -296,17 +341,7 @@ class ServerlessVpcPlugin {
     }
 
     zones.forEach((zone, index) => {
-      const azCidrBlock = azCidrBlocks[index]; // AZ subnet is a /20
       const position = index + 1;
-
-      let subnets = [];
-
-      const azSubnets = CIDR.fromString(azCidrBlock).split().map(cidr => cidr.toString());
-      subnets.push(azSubnets[0]); // Application subnet is a /21
-
-      const publicSubnets = CIDR.fromString(azSubnets[1]).split().map(cidr => cidr.toString());
-      subnets = subnets.concat(publicSubnets); // Public and DB subnets are both /22
-
       const params = {
         name: 'App',
         position,
@@ -322,13 +357,13 @@ class ServerlessVpcPlugin {
         resources,
 
         // App Subnet
-        this.buildSubnet('App', position, zone, subnets[0]),
+        this.buildSubnet('App', position, zone, subnets.get(zone).get('App')),
         this.buildRouteTable('App', position, zone),
         ServerlessVpcPlugin.buildRouteTableAssociation('App', position),
         ServerlessVpcPlugin.buildRoute(params),
 
         // Public Subnet
-        this.buildSubnet('Public', position, zone, subnets[1]),
+        this.buildSubnet('Public', position, zone, subnets.get(zone).get('Public')),
         this.buildRouteTable('Public', position, zone),
         ServerlessVpcPlugin.buildRouteTableAssociation('Public', position),
         ServerlessVpcPlugin.buildRoute({
@@ -342,7 +377,7 @@ class ServerlessVpcPlugin {
         // DB Subnet
         merge(
           resources,
-          this.buildSubnet('DB', position, zone, subnets[2]),
+          this.buildSubnet('DB', position, zone, subnets.get(zone).get('DB')),
           this.buildRouteTable('DB', position, zone),
           ServerlessVpcPlugin.buildRouteTableAssociation('DB', position),
         );

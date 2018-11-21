@@ -339,6 +339,35 @@ describe('ServerlessVpcPlugin', () => {
     });
   });
 
+  describe('#splitSubnets', () => {
+    it('splits 10.0.0.0/16 separate subnets in each AZ', () => {
+      const zones = ['us-east-1a', 'us-east-1b', 'us-east-1c'];
+      const actual = ServerlessVpcPlugin.splitSubnets('10.0.0.0/16', zones);
+
+      const parts = [
+        ['us-east-1a', new Map([
+          ['App', '10.0.0.0/21'],
+          ['Public', '10.0.8.0/22'],
+          ['DB', '10.0.12.0/22']]),
+        ],
+        ['us-east-1b', new Map([
+          ['App', '10.0.16.0/21'],
+          ['Public', '10.0.24.0/22'],
+          ['DB', '10.0.28.0/22']]),
+        ],
+        ['us-east-1c', new Map([
+          ['App', '10.0.32.0/21'],
+          ['Public', '10.0.40.0/22'],
+          ['DB', '10.0.44.0/22']]),
+        ],
+      ];
+
+      const expected = new Map(parts);
+
+      expect(actual).toEqual(expected);
+    });
+  });
+
   describe('#buildAvailabilityZones', () => {
     it('builds no AZs without options', () => {
       const actual = plugin.buildAvailabilityZones({ cidrBlock: '10.0.0.0/16' });
