@@ -1393,4 +1393,187 @@ describe('ServerlessVpcPlugin', () => {
       expect(actual).toEqual(expected);
     });
   });
+
+  describe('#buildNetworkAcl', () => {
+    it('builds a Network ACL', () => {
+      const expected = {
+        AppNetworkAcl: {
+          Type: 'AWS::EC2::NetworkAcl',
+          Properties: {
+            Tags: [
+              {
+                Key: 'STAGE',
+                Value: 'dev',
+              },
+              {
+                Key: 'Name',
+                Value: {
+                  'Fn::Join': [
+                    '-',
+                    [
+                      {
+                        Ref: 'AWS::StackName',
+                      },
+                      'app',
+                    ],
+                  ],
+                },
+              },
+            ],
+            VpcId: {
+              Ref: 'VPC',
+            },
+          },
+        },
+      };
+      const actual = plugin.buildNetworkAcl('App');
+      expect(actual).toEqual(expected);
+    });
+  });
+
+  describe('#buildNetworkAclEntry', () => {
+    it('builds an ingress Network ACL entry', () => {
+      const expected = {
+        PublicNetworkAclIngress100: {
+          Type: 'AWS::EC2::NetworkAclEntry',
+          Properties: {
+            CidrBlock: '0.0.0.0/0',
+            NetworkAclId: {
+              Ref: 'PublicNetworkAcl',
+            },
+            Egress: false,
+            Protocol: -1,
+            RuleAction: 'allow',
+            RuleNumber: 100,
+          },
+        },
+      };
+      const actual = ServerlessVpcPlugin.buildNetworkAclEntry(
+        'PublicNetworkAcl', '0.0.0.0/0',
+      );
+      expect(actual).toEqual(expected);
+    });
+
+    it('builds an egress Network ACL entry', () => {
+      const expected = {
+        PublicNetworkAclEgress100: {
+          Type: 'AWS::EC2::NetworkAclEntry',
+          Properties: {
+            CidrBlock: '0.0.0.0/0',
+            NetworkAclId: {
+              Ref: 'PublicNetworkAcl',
+            },
+            Egress: true,
+            Protocol: -1,
+            RuleAction: 'allow',
+            RuleNumber: 100,
+          },
+        },
+      };
+      const actual = ServerlessVpcPlugin.buildNetworkAclEntry(
+        'PublicNetworkAcl', '0.0.0.0/0', { egress: true },
+      );
+      expect(actual).toEqual(expected);
+    });
+  });
+
+  describe('#buildNetworkAclAssociation', () => {
+    it('builds a network ACL association', () => {
+      const expected = {
+        AppSubnetNetworkAclAssociation1: {
+          Type: 'AWS::EC2::SubnetNetworkAclAssociation',
+          Properties: {
+            SubnetId: 'AppSubnet1',
+            NetworkAclId: 'AppNetworkAcl',
+          },
+        },
+      };
+      const actual = ServerlessVpcPlugin.buildNetworkAclAssociation('App', 1);
+      expect(actual).toEqual(expected);
+    });
+  });
+
+  describe('#buildPublicNetworkAcl', () => {
+    it('builds the public network ACL', () => {
+      const expected = {
+        PublicNetworkAcl: {
+          Type: 'AWS::EC2::NetworkAcl',
+          Properties: {
+            Tags: [
+              {
+                Key: 'STAGE',
+                Value: 'dev',
+              },
+              {
+                Key: 'Name',
+                Value: {
+                  'Fn::Join': [
+                    '-',
+                    [
+                      {
+                        Ref: 'AWS::StackName',
+                      },
+                      'public',
+                    ],
+                  ],
+                },
+              },
+            ],
+            VpcId: {
+              Ref: 'VPC',
+            },
+          },
+        },
+        PublicNetworkAclEgress100: {
+          Type: 'AWS::EC2::NetworkAclEntry',
+          Properties: {
+            CidrBlock: '0.0.0.0/0',
+            NetworkAclId: {
+              Ref: 'PublicNetworkAcl',
+            },
+            Egress: true,
+            Protocol: -1,
+            RuleAction: 'allow',
+            RuleNumber: 100,
+          },
+        },
+        PublicNetworkAclIngress100: {
+          Type: 'AWS::EC2::NetworkAclEntry',
+          Properties: {
+            CidrBlock: '0.0.0.0/0',
+            NetworkAclId: {
+              Ref: 'PublicNetworkAcl',
+            },
+            Egress: false,
+            Protocol: -1,
+            RuleAction: 'allow',
+            RuleNumber: 100,
+          },
+        },
+        PublicSubnetNetworkAclAssociation1: {
+          Type: 'AWS::EC2::SubnetNetworkAclAssociation',
+          Properties: {
+            SubnetId: 'PublicSubnet1',
+            NetworkAclId: 'PublicNetworkAcl',
+          },
+        },
+        PublicSubnetNetworkAclAssociation2: {
+          Type: 'AWS::EC2::SubnetNetworkAclAssociation',
+          Properties: {
+            SubnetId: 'PublicSubnet2',
+            NetworkAclId: 'PublicNetworkAcl',
+          },
+        },
+        PublicSubnetNetworkAclAssociation3: {
+          Type: 'AWS::EC2::SubnetNetworkAclAssociation',
+          Properties: {
+            SubnetId: 'PublicSubnet3',
+            NetworkAclId: 'PublicNetworkAcl',
+          },
+        },
+      };
+      const actual = plugin.buildPublicNetworkAcl(3);
+      expect(actual).toEqual(expected);
+    });
+  });
 });

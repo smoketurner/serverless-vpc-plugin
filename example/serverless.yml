@@ -30,6 +30,13 @@ provider:
 plugins:
   - serverless-vpc-plugin
 
+package:
+  exclude:
+    - package*.json
+    - .git/**
+    - resources/**
+    - node_modules/**
+
 custom:
   bucketName: sls-vpc-example
   vpcConfig:

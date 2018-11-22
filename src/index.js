@@ -939,6 +939,194 @@ class ServerlessVpcPlugin {
       },
     };
   }
+
+  /**
+   * Build a Network Access Control List (ACL)
+   *
+   * @param {String} name
+   * @return {Object}
+   */
+  buildNetworkAcl(name) {
+    const cfName = `${name}NetworkAcl`;
+
+    return {
+      [cfName]: {
+        Type: 'AWS::EC2::NetworkAcl',
+        Properties: {
+          Tags: [
+            {
+              Key: 'STAGE',
+              Value: this.provider.getStage(),
+            },
+            {
+              Key: 'Name',
+              Value: {
+                'Fn::Join': [
+                  '-',
+                  [
+                    {
+                      Ref: 'AWS::StackName',
+                    },
+                    name.toLowerCase(),
+                  ],
+                ],
+              },
+            },
+          ],
+          VpcId: {
+            Ref: 'VPC',
+          },
+        },
+      },
+    };
+  }
+
+  /**
+   * Build a Network ACL entry
+   *
+   * @param {String} name
+   * @param {String} cidrBlock
+   * @param {Object} params
+   * @return {Object}
+   */
+  static buildNetworkAclEntry(name, cidrBlock, {
+    egress = false, protocol = -1, ruleAction = 'allow', ruleNumber = 100,
+  } = {}) {
+    const direction = (egress) ? 'Egress' : 'Ingress';
+    const cfName = `${name}${direction}${ruleNumber}`;
+    return {
+      [cfName]: {
+        Type: 'AWS::EC2::NetworkAclEntry',
+        Properties: {
+          CidrBlock: cidrBlock,
+          NetworkAclId: {
+            Ref: name,
+          },
+          Egress: egress,
+          Protocol: protocol,
+          RuleAction: ruleAction,
+          RuleNumber: ruleNumber,
+        },
+      },
+    };
+  }
+
+  /**
+   * Build a Subnet Network ACL Association
+   *
+   * @param {String} name
+   * @param {Number} position
+   */
+  static buildNetworkAclAssociation(name, position) {
+    const cfName = `${name}SubnetNetworkAclAssociation${position}`;
+    return {
+      [cfName]: {
+        Type: 'AWS::EC2::SubnetNetworkAclAssociation',
+        Properties: {
+          SubnetId: `${name}Subnet${position}`,
+          NetworkAclId: `${name}NetworkAcl`,
+        },
+      },
+    };
+  }
+
+  /**
+   * Build the Public Network ACL
+   *
+   * @param {Number} numZones
+   */
+  buildPublicNetworkAcl(numZones) {
+    if (numZones < 1) {
+      return {};
+    }
+
+    const resources = {};
+
+    merge(
+      resources,
+      this.buildNetworkAcl(PUBLIC_SUBNET),
+      ServerlessVpcPlugin.buildNetworkAclEntry(
+        `${PUBLIC_SUBNET}NetworkAcl`,
+        '0.0.0.0/0',
+      ),
+      ServerlessVpcPlugin.buildNetworkAclEntry(
+        `${PUBLIC_SUBNET}NetworkAcl`,
+        '0.0.0.0/0',
+        { egress: true },
+      ),
+    );
+
+    for (let i = 1; i <= numZones; i += 1) {
+      merge(
+        resources,
+        ServerlessVpcPlugin.buildNetworkAclAssociation(PUBLIC_SUBNET, i),
+      );
+    }
+
+    return resources;
+  }
+
+  /**
+   * Build the Application Network ACL
+   *
+   * @param {Array} publicSubnets
+   */
+  buildAppNetworkAcl(publicSubnets) {
+    if (publicSubnets.length < 1) {
+      return {};
+    }
+
+    const resources = this.buildNetworkAcl(APP_SUBNET);
+
+    publicSubnets.forEach((subnet, index) => {
+      merge(
+        resources,
+        ServerlessVpcPlugin.buildNetworkAclEntry(
+          `${APP_SUBNET}NetworkAcl`,
+          subnet,
+        ),
+        ServerlessVpcPlugin.buildNetworkAclEntry(
+          `${APP_SUBNET}NetworkAcl`,
+          subnet,
+          { egress: true },
+        ),
+        ServerlessVpcPlugin.buildNetworkAclAssociation(APP_SUBNET, index + 1),
+      );
+    });
+
+    return resources;
+  }
+
+  /**
+   * Build the Database Network ACL
+   *
+   * @param {Array} appSubnets
+   */
+  buildDBNetworkAcl(appSubnets) {
+    if (appSubnets.length < 1) {
+      return {};
+    }
+
+    const resources = this.buildNetworkAcl(DB_SUBNET);
+
+    appSubnets.forEach((subnet, index) => {
+      merge(
+        resources,
+        ServerlessVpcPlugin.buildNetworkAclEntry(
+          `${DB_SUBNET}NetworkAcl`,
+          subnet,
+        ),
+        ServerlessVpcPlugin.buildNetworkAclEntry(
+          `${DB_SUBNET}NetworkAcl`,
+          subnet,
+          { egress: true },
+        ),
+        ServerlessVpcPlugin.buildNetworkAclAssociation(DB_SUBNET, index + 1),
+      );
+    });
+
+    return resources;
+  }
 }
 
 module.exports = ServerlessVpcPlugin;

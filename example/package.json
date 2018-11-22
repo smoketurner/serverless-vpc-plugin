@@ -14,8 +14,10 @@
     "remove": "./node_modules/.bin/sls remove -v",
     "test": "./node_modules/.bin/sls invoke -f s3"
   },
+  "dependencies": {
+    "aws-sdk": "2.290.0"
+  },
   "devDependencies": {
-    "aws-sdk": "2.290.0",
     "serverless": "1.33.2",
     "serverless-vpc-plugin": "git://github.com/smoketurner/serverless-vpc-plugin.git#master"
   }
