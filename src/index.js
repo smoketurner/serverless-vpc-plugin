@@ -809,9 +809,12 @@ class ServerlessVpcPlugin {
       endpoint.Properties.VpcEndpointType = 'Gateway';
       endpoint.Properties.RouteTableIds = routeTableIds;
       endpoint.Properties.PolicyDocument = {
-        Version: '2012-10-17',
         Statement: [{
           Effect: 'Allow',
+          /*
+          TODO 11/21: We should restrict the VPC Endpoint to only the Lambda
+          IAM role, but this doesn't work.
+
           Principal: {
             AWS: {
               'Fn::GetAtt': [
@@ -819,7 +822,8 @@ class ServerlessVpcPlugin {
                 'Arn',
               ],
             },
-          },
+          }, */
+          Principal: '*',
           Resource: '*',
         }],
       };

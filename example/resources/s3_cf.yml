@@ -1,0 +1,51 @@
+---
+Resources:
+  TestBucket:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      AccessControl: Private
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      BucketName: ${self:custom.bucketName}
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      Tags:
+        - Key: STAGE
+          Value: ${self:provider.stage}
+
+  TestBucketPolicy:
+    Type: 'AWS::S3::BucketPolicy'
+    Properties:
+      Bucket:
+        Ref: TestBucket
+      PolicyDocument:
+        Statement:
+          - Sid: LambdaAccessS3
+            Effect: Allow
+            Action:
+              - 's3:GetObject'
+              - 's3:PutObject'
+              - 's3:DeleteObject'
+            Principal:
+              AWS:
+                'Fn::GetAtt':
+                  - IamRoleLambdaExecution
+                  - Arn
+            Resource:
+              - 'Fn::GetAtt':
+                - TestBucket
+                - Arn
+              - 'Fn::Join':
+                - ''
+                - - 'arn:aws:s3:::'
+                  - Ref: TestBucket
+                  - '/*'
+            Condition:
+              StringEquals:
+                'aws:sourceVpce':
+                  Ref: S3VPCEndpoint

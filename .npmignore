@@ -2,7 +2,9 @@
 .eslintignore
 .editorconfig
 .gitignore
+.serverless/
 .travis.yml
 .vscode/
 jest-config.json
 __tests__/
+example/

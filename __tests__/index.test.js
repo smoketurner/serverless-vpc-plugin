@@ -990,17 +990,9 @@ describe('ServerlessVpcPlugin', () => {
               ],
             },
             PolicyDocument: {
-              Version: '2012-10-17',
               Statement: [{
                 Effect: 'Allow',
-                Principal: {
-                  AWS: {
-                    'Fn::GetAtt': [
-                      'IamRoleLambdaExecution',
-                      'Arn',
-                    ],
-                  },
-                },
+                Principal: '*',
                 Action: 's3:*',
                 Resource: '*',
               }],
@@ -1041,17 +1033,9 @@ describe('ServerlessVpcPlugin', () => {
               ],
             },
             PolicyDocument: {
-              Version: '2012-10-17',
               Statement: [{
                 Effect: 'Allow',
-                Principal: {
-                  AWS: {
-                    'Fn::GetAtt': [
-                      'IamRoleLambdaExecution',
-                      'Arn',
-                    ],
-                  },
-                },
+                Principal: '*',
                 Action: 'dynamodb:*',
                 Resource: '*',
               }],
@@ -1176,17 +1160,9 @@ describe('ServerlessVpcPlugin', () => {
               ],
             },
             PolicyDocument: {
-              Version: '2012-10-17',
               Statement: [{
                 Effect: 'Allow',
-                Principal: {
-                  AWS: {
-                    'Fn::GetAtt': [
-                      'IamRoleLambdaExecution',
-                      'Arn',
-                    ],
-                  },
-                },
+                Principal: '*',
                 Action: 's3:*',
                 Resource: '*',
               }],

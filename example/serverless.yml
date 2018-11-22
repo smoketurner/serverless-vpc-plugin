@@ -1,0 +1,54 @@
+service: sls-vpc-example
+
+provider:
+  name: aws
+  runtime: nodejs8.10
+  stage: ${opt:stage, 'dev'}
+  region: ${opt:region, 'us-east-1'}
+  profile: whatif-dev
+  versionFunctions: false
+  logRetentionInDays: 1
+  deploymentBucket:
+    serverSideEncryption: AES256
+  endpointType: regional
+  vpc:
+    securityGroupIds:
+      - Ref: LambdaExecutionSecurityGroup
+    subnetIds:
+      - Ref: AppSubnet1
+      - Ref: AppSubnet2
+      - Ref: AppSubnet3
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - 'ec2:CreateNetworkInterface'
+        - 'ec2:DescribeNetworkInterfaces'
+        - 'ec2:DetachNetworkInterface'
+        - 'ec2:DeleteNetworkInterface'
+      Resource: '*'
+
+plugins:
+  - serverless-vpc-plugin
+
+custom:
+  bucketName: sls-vpc-example
+  vpcConfig:
+    cidrBlock: '10.0.0.0/16'
+    useNatGateway: false
+    skipDbCreation: false
+    zones:
+      - us-east-1a
+      - us-east-1b
+      - us-east-1c
+    services:
+      - s3
+
+functions:
+  s3:
+    handler: handler.s3
+    description: S3 Test Handler
+    environment:
+      BUCKET_NAME: ${self:custom.bucketName}
+
+resources:
+  - ${file(resources/s3_cf.yml)}
