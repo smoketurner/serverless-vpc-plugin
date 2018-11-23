@@ -1044,10 +1044,13 @@ class ServerlessVpcPlugin {
     return {
       [cfName]: {
         Type: 'AWS::EC2::SubnetNetworkAclAssociation',
-        DependsOn: `${name}NetworkAcl`,
         Properties: {
-          SubnetId: `${name}Subnet${position}`,
-          NetworkAclId: `${name}NetworkAcl`,
+          SubnetId: {
+            Ref: `${name}Subnet${position}`,
+          },
+          NetworkAclId: {
+            Ref: `${name}NetworkAcl`,
+          },
         },
       },
     };

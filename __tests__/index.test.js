@@ -1483,8 +1483,12 @@ describe('ServerlessVpcPlugin', () => {
         AppSubnetNetworkAclAssociation1: {
           Type: 'AWS::EC2::SubnetNetworkAclAssociation',
           Properties: {
-            SubnetId: 'AppSubnet1',
-            NetworkAclId: 'AppNetworkAcl',
+            SubnetId: {
+              Ref: 'AppSubnet1',
+            },
+            NetworkAclId: {
+              Ref: 'AppNetworkAcl',
+            },
           },
         },
       };
@@ -1567,8 +1571,12 @@ describe('ServerlessVpcPlugin', () => {
         PublicSubnetNetworkAclAssociation3: {
           Type: 'AWS::EC2::SubnetNetworkAclAssociation',
           Properties: {
-            SubnetId: 'PublicSubnet3',
-            NetworkAclId: 'PublicNetworkAcl',
+            SubnetId: {
+              Ref: 'PublicSubnet3',
+            },
+            NetworkAclId: {
+              Ref: 'PublicNetworkAcl',
+            },
           },
         },
       };
@@ -1689,22 +1697,34 @@ describe('ServerlessVpcPlugin', () => {
         AppSubnetNetworkAclAssociation1: {
           Type: 'AWS::EC2::SubnetNetworkAclAssociation',
           Properties: {
-            SubnetId: 'AppSubnet1',
-            NetworkAclId: 'AppNetworkAcl',
+            SubnetId: {
+              Ref: 'AppSubnet1',
+            },
+            NetworkAclId: {
+              Ref: 'AppNetworkAcl',
+            },
           },
         },
         AppSubnetNetworkAclAssociation2: {
           Type: 'AWS::EC2::SubnetNetworkAclAssociation',
           Properties: {
-            SubnetId: 'AppSubnet2',
-            NetworkAclId: 'AppNetworkAcl',
+            SubnetId: {
+              Ref: 'AppSubnet2',
+            },
+            NetworkAclId: {
+              Ref: 'AppNetworkAcl',
+            },
           },
         },
         AppSubnetNetworkAclAssociation3: {
           Type: 'AWS::EC2::SubnetNetworkAclAssociation',
           Properties: {
-            SubnetId: 'AppSubnet3',
-            NetworkAclId: 'AppNetworkAcl',
+            SubnetId: {
+              Ref: 'AppSubnet3',
+            },
+            NetworkAclId: {
+              Ref: 'AppNetworkAcl',
+            },
           },
         },
       };
@@ -1830,22 +1850,34 @@ describe('ServerlessVpcPlugin', () => {
         DBSubnetNetworkAclAssociation1: {
           Type: 'AWS::EC2::SubnetNetworkAclAssociation',
           Properties: {
-            SubnetId: 'DBSubnet1',
-            NetworkAclId: 'DBNetworkAcl',
+            SubnetId: {
+              Ref: 'DBSubnet1',
+            },
+            NetworkAclId: {
+              Ref: 'DBNetworkAcl',
+            },
           },
         },
         DBSubnetNetworkAclAssociation2: {
           Type: 'AWS::EC2::SubnetNetworkAclAssociation',
           Properties: {
-            SubnetId: 'DBSubnet2',
-            NetworkAclId: 'DBNetworkAcl',
+            SubnetId: {
+              Ref: 'DBSubnet2',
+            },
+            NetworkAclId: {
+              Ref: 'DBNetworkAcl',
+            },
           },
         },
         DBSubnetNetworkAclAssociation3: {
           Type: 'AWS::EC2::SubnetNetworkAclAssociation',
           Properties: {
-            SubnetId: 'DBSubnet3',
-            NetworkAclId: 'DBNetworkAcl',
+            SubnetId: {
+              Ref: 'DBSubnet3',
+            },
+            NetworkAclId: {
+              Ref: 'DBNetworkAcl',
+            },
           },
         },
       };
