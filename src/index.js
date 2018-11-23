@@ -5,7 +5,17 @@ const {
   DEFAULT_VPC_EIP_LIMIT, APP_SUBNET, PUBLIC_SUBNET, DB_SUBNET,
 } = require('./constants');
 
-const { buildAppNetworkAcl, buildPublicNetworkAcl, buildDBNetworkAcl } = require('./nacl');
+const {
+  buildAppNetworkAcl,
+  buildPublicNetworkAcl,
+  buildDBNetworkAcl
+} = require('./nacl');
+const {
+  buildRDSSubnetGroup,
+  buildElastiCacheSubnetGroup,
+  buildRedshiftSubnetGroup,
+  buildDAXSubnetGroup,
+} = require('./subnet_groups');
 
 
 class ServerlessVpcPlugin {
@@ -102,10 +112,10 @@ class ServerlessVpcPlugin {
       } else {
         merge(
           this.serverless.service.provider.compiledCloudFormationTemplate.Resources,
-          this.buildRDSSubnetGroup({ numZones }),
-          this.buildRedshiftSubnetGroup({ numZones }),
-          ServerlessVpcPlugin.buildElastiCacheSubnetGroup({ numZones }),
-          ServerlessVpcPlugin.buildDAXSubnetGroup({ numZones }),
+          buildRDSSubnetGroup(this.provider.getStage(), { numZones }),
+          buildRedshiftSubnetGroup(this.provider.getStage(), { numZones }),
+          buildElastiCacheSubnetGroup({ numZones }),
+          buildDAXSubnetGroup({ numZones }),
         );
       }
     }
@@ -623,144 +633,6 @@ class ServerlessVpcPlugin {
     };
   }
 
-  /**
-   * Build an RDSubnetGroup for a given number of zones
-   *
-   * @param {Objects} params
-   * @return {Object}
-   */
-  buildRDSSubnetGroup({ name = 'RDSSubnetGroup', numZones = 0 } = {}) {
-    if (numZones < 1) {
-      return {};
-    }
-
-    const subnetIds = [];
-    for (let i = 1; i <= numZones; i += 1) {
-      subnetIds.push({ Ref: `${DB_SUBNET}Subnet${i}` });
-    }
-
-    return {
-      [name]: {
-        Type: 'AWS::RDS::DBSubnetGroup',
-        Properties: {
-          DBSubnetGroupName: {
-            Ref: 'AWS::StackName',
-          },
-          DBSubnetGroupDescription: {
-            Ref: 'AWS::StackName',
-          },
-          SubnetIds: subnetIds,
-          Tags: [
-            {
-              Key: 'STAGE',
-              Value: this.provider.getStage(),
-            },
-          ],
-        },
-      },
-    };
-  }
-
-  /**
-   * Build an ElastiCacheSubnetGroup for a given number of zones
-   *
-   * @param {Object} params
-   * @return {Object}
-   */
-  static buildElastiCacheSubnetGroup({
-    name = 'ElastiCacheSubnetGroup', numZones = 0,
-  } = {}) {
-    if (numZones < 1) {
-      return {};
-    }
-
-    const subnetIds = [];
-    for (let i = 1; i <= numZones; i += 1) {
-      subnetIds.push({ Ref: `${DB_SUBNET}Subnet${i}` });
-    }
-
-    return {
-      [name]: {
-        Type: 'AWS::ElastiCache::SubnetGroup',
-        Properties: {
-          CacheSubnetGroupName: {
-            Ref: 'AWS::StackName',
-          },
-          Description: {
-            Ref: 'AWS::StackName',
-          },
-          SubnetIds: subnetIds,
-        },
-      },
-    };
-  }
-
-  /**
-   * Build an RedshiftSubnetGroup for a given number of zones
-   *
-   * @param {Object} params
-   * @return {Object}
-   */
-  buildRedshiftSubnetGroup({ name = 'RedshiftSubnetGroup', numZones = 0 } = {}) {
-    if (numZones < 1) {
-      return {};
-    }
-
-    const subnetIds = [];
-    for (let i = 1; i <= numZones; i += 1) {
-      subnetIds.push({ Ref: `${DB_SUBNET}Subnet${i}` });
-    }
-
-    return {
-      [name]: {
-        Type: 'AWS::Redshift::ClusterSubnetGroup',
-        Properties: {
-          Description: {
-            Ref: 'AWS::StackName',
-          },
-          SubnetIds: subnetIds,
-          Tags: [
-            {
-              Key: 'STAGE',
-              Value: this.provider.getStage(),
-            },
-          ],
-        },
-      },
-    };
-  }
-
-  /**
-   * Build an DAXSubnetGroup for a given number of zones
-   *
-   * @param {Object} params
-   * @return {Object}
-   */
-  static buildDAXSubnetGroup({ name = 'DAXSubnetGroup', numZones = 0 } = {}) {
-    if (numZones < 1) {
-      return {};
-    }
-
-    const subnetIds = [];
-    for (let i = 1; i <= numZones; i += 1) {
-      subnetIds.push({ Ref: `${DB_SUBNET}Subnet${i}` });
-    }
-
-    return {
-      [name]: {
-        Type: 'AWS::DAX::SubnetGroup',
-        Properties: {
-          SubnetGroupName: {
-            Ref: 'AWS::StackName',
-          },
-          Description: {
-            Ref: 'AWS::StackName',
-          },
-          SubnetIds: subnetIds,
-        },
-      },
-    };
-  }
 
   /**
    * Build VPC endpoints for a given number of services and zones
@@ -957,8 +829,6 @@ class ServerlessVpcPlugin {
       },
     };
   }
-
-
 }
 
 module.exports = ServerlessVpcPlugin;
