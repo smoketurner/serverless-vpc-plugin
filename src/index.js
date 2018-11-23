@@ -1,15 +1,11 @@
 const CIDR = require('cidr-split');
 const merge = require('lodash.merge');
 
-/**
- * @see https://docs.aws.amazon.com/vpc/latest/userguide/amazon-vpc-limits.html
- */
-const DEFAULT_VPC_EIP_LIMIT = 5;
+const {
+  DEFAULT_VPC_EIP_LIMIT, APP_SUBNET, PUBLIC_SUBNET, DB_SUBNET,
+} = require('./constants');
 
-// Subnet name constants
-const APP_SUBNET = 'App';
-const PUBLIC_SUBNET = 'Public';
-const DB_SUBNET = 'DB';
+const { buildAppNetworkAcl, buildPublicNetworkAcl, buildDBNetworkAcl } = require('./nacl');
 
 
 class ServerlessVpcPlugin {
@@ -289,13 +285,13 @@ class ServerlessVpcPlugin {
 
     zones.forEach((zone, index) => {
       const azCidrBlock = azCidrBlocks[index]; // AZ subnet is a /20
-      let subnets = [];
+      const subnets = [];
 
       const azSubnets = CIDR.fromString(azCidrBlock).split().map(cidr => cidr.toString());
       subnets.push(azSubnets[0]); // Application subnet is a /21
 
       const smallerSubnets = CIDR.fromString(azSubnets[1]).split().map(cidr => cidr.toString());
-      subnets = subnets.concat(smallerSubnets); // Public and DB subnets are both /22
+      subnets.push(...smallerSubnets); // Public and DB subnets are both /22
 
       const parts = [
         [APP_SUBNET, subnets[0]],
@@ -398,14 +394,14 @@ class ServerlessVpcPlugin {
     });
 
     // Add Network ACLs
-    merge(
+    /*merge(
       resources,
-      this.buildPublicNetworkAcl(zones.length),
-      this.buildAppNetworkAcl(subnets.get(PUBLIC_SUBNET)),
+      buildPublicNetworkAcl(zones.length, this.provider.getStage()),
+      buildAppNetworkAcl(subnets.get(PUBLIC_SUBNET), this.provider.getStage()),
     );
     if (!skipDbCreation) {
-      merge(resources, this.buildDBNetworkAcl(subnets.get(APP_SUBNET)));
-    }
+      merge(resources, buildDBNetworkAcl(subnets.get(APP_SUBNET), this.provider.getStage()));
+    }*/
 
     return resources;
   }
@@ -962,199 +958,7 @@ class ServerlessVpcPlugin {
     };
   }
 
-  /**
-   * Build a Network Access Control List (ACL)
-   *
-   * @param {String} name
-   * @return {Object}
-   */
-  buildNetworkAcl(name) {
-    const cfName = `${name}NetworkAcl`;
 
-    return {
-      [cfName]: {
-        Type: 'AWS::EC2::NetworkAcl',
-        Properties: {
-          Tags: [
-            {
-              Key: 'STAGE',
-              Value: this.provider.getStage(),
-            },
-            {
-              Key: 'Name',
-              Value: {
-                'Fn::Join': [
-                  '-',
-                  [
-                    {
-                      Ref: 'AWS::StackName',
-                    },
-                    name.toLowerCase(),
-                  ],
-                ],
-              },
-            },
-          ],
-          VpcId: {
-            Ref: 'VPC',
-          },
-        },
-      },
-    };
-  }
-
-  /**
-   * Build a Network ACL entry
-   *
-   * @param {String} name
-   * @param {String} cidrBlock
-   * @param {Object} params
-   * @return {Object}
-   */
-  static buildNetworkAclEntry(name, cidrBlock, {
-    Egress = false, Protocol = -1, RuleAction = 'allow', RuleNumber = 100,
-  } = {}) {
-    const direction = (Egress) ? 'Egress' : 'Ingress';
-    const cfName = `${name}${direction}${RuleNumber}`;
-    return {
-      [cfName]: {
-        Type: 'AWS::EC2::NetworkAclEntry',
-        Properties: {
-          CidrBlock: cidrBlock,
-          NetworkAclId: {
-            Ref: name,
-          },
-          Egress,
-          Protocol,
-          RuleAction,
-          RuleNumber,
-        },
-      },
-    };
-  }
-
-  /**
-   * Build a Subnet Network ACL Association
-   *
-   * @param {String} name
-   * @param {Number} position
-   */
-  static buildNetworkAclAssociation(name, position) {
-    const cfName = `${name}SubnetNetworkAclAssociation${position}`;
-    return {
-      [cfName]: {
-        Type: 'AWS::EC2::SubnetNetworkAclAssociation',
-        Properties: {
-          SubnetId: {
-            Ref: `${name}Subnet${position}`,
-          },
-          NetworkAclId: {
-            Ref: `${name}NetworkAcl`,
-          },
-        },
-      },
-    };
-  }
-
-  /**
-   * Build the Public Network ACL
-   *
-   * @param {Number} numZones
-   */
-  buildPublicNetworkAcl(numZones) {
-    if (numZones < 1) {
-      return {};
-    }
-
-    const resources = {};
-
-    merge(
-      resources,
-      this.buildNetworkAcl(PUBLIC_SUBNET),
-      ServerlessVpcPlugin.buildNetworkAclEntry(
-        `${PUBLIC_SUBNET}NetworkAcl`,
-        '0.0.0.0/0',
-      ),
-      ServerlessVpcPlugin.buildNetworkAclEntry(
-        `${PUBLIC_SUBNET}NetworkAcl`,
-        '0.0.0.0/0',
-        { Egress: true },
-      ),
-    );
-
-    for (let i = 1; i <= numZones; i += 1) {
-      merge(
-        resources,
-        ServerlessVpcPlugin.buildNetworkAclAssociation(PUBLIC_SUBNET, i),
-      );
-    }
-
-    return resources;
-  }
-
-  /**
-   * Build the Application Network ACL
-   *
-   * @param {Array} publicSubnets
-   */
-  buildAppNetworkAcl(publicSubnets) {
-    if (publicSubnets.length < 1) {
-      return {};
-    }
-
-    const resources = this.buildNetworkAcl(APP_SUBNET);
-
-    publicSubnets.forEach((subnet, index) => {
-      merge(
-        resources,
-        ServerlessVpcPlugin.buildNetworkAclEntry(
-          `${APP_SUBNET}NetworkAcl`,
-          subnet,
-          { RuleNumber: 100 + index },
-        ),
-        ServerlessVpcPlugin.buildNetworkAclEntry(
-          `${APP_SUBNET}NetworkAcl`,
-          subnet,
-          { RuleNumber: 100 + index, Egress: true },
-        ),
-        ServerlessVpcPlugin.buildNetworkAclAssociation(APP_SUBNET, index + 1),
-      );
-    });
-
-    return resources;
-  }
-
-  /**
-   * Build the Database Network ACL
-   *
-   * @param {Array} appSubnets
-   */
-  buildDBNetworkAcl(appSubnets) {
-    if (appSubnets.length < 1) {
-      return {};
-    }
-
-    const resources = this.buildNetworkAcl(DB_SUBNET);
-
-    appSubnets.forEach((subnet, index) => {
-      merge(
-        resources,
-        ServerlessVpcPlugin.buildNetworkAclEntry(
-          `${DB_SUBNET}NetworkAcl`,
-          subnet,
-          { RuleNumber: 100 + index },
-        ),
-        ServerlessVpcPlugin.buildNetworkAclEntry(
-          `${DB_SUBNET}NetworkAcl`,
-          subnet,
-          { RuleNumber: 100 + index, Egress: true },
-        ),
-        ServerlessVpcPlugin.buildNetworkAclAssociation(DB_SUBNET, index + 1),
-      );
-    });
-
-    return resources;
-  }
 }
 
 module.exports = ServerlessVpcPlugin;
