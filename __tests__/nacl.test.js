@@ -40,7 +40,7 @@ describe('nacl', () => {
           },
         },
       };
-      const actual = buildNetworkAcl('App', 'dev');
+      const actual = buildNetworkAcl('dev', 'App');
       expect(actual).toEqual(expected);
     });
   });
@@ -202,7 +202,7 @@ describe('nacl', () => {
           },
         },
       };
-      const actual = buildPublicNetworkAcl(3, 'dev');
+      const actual = buildPublicNetworkAcl('dev', 3);
       expect(actual).toEqual(expected);
     });
   });
@@ -355,7 +355,7 @@ describe('nacl', () => {
         '10.0.24.0/22',
         '10.0.40.0/22',
       ];
-      const actual = buildAppNetworkAcl(publicSubnets, 'dev');
+      const actual = buildAppNetworkAcl('dev', publicSubnets);
       expect(actual).toEqual(expected);
     });
   });
@@ -508,7 +508,7 @@ describe('nacl', () => {
         '10.0.16.0/21',
         '10.0.32.0/21',
       ];
-      const actual = buildDBNetworkAcl(appSubnets, 'dev');
+      const actual = buildDBNetworkAcl('dev', appSubnets);
       expect(actual).toEqual(expected);
     });
   });

@@ -131,164 +131,6 @@ describe('ServerlessVpcPlugin', () => {
     });
   });
 
-  describe('#buildVpc', () => {
-    it('builds a VPC with default name', () => {
-      const expected = {
-        VPC: {
-          Type: 'AWS::EC2::VPC',
-          Properties: {
-            CidrBlock: '10.0.0.0/16',
-            EnableDnsSupport: true,
-            EnableDnsHostnames: true,
-            InstanceTenancy: 'default',
-            Tags: [
-              {
-                Key: 'STAGE',
-                Value: 'dev',
-              },
-              {
-                Key: 'Name',
-                Value: {
-                  Ref: 'AWS::StackName',
-                },
-              },
-            ],
-          },
-        },
-      };
-
-      const actual = plugin.buildVpc();
-      expect(actual).toEqual(expected);
-    });
-
-    it('builds a VPC with a custom parameters', () => {
-      const expected = {
-        MyVpc: {
-          Type: 'AWS::EC2::VPC',
-          Properties: {
-            CidrBlock: '192.168.0.0/16',
-            EnableDnsSupport: true,
-            EnableDnsHostnames: true,
-            InstanceTenancy: 'default',
-            Tags: [
-              {
-                Key: 'STAGE',
-                Value: 'dev',
-              },
-              {
-                Key: 'Name',
-                Value: {
-                  Ref: 'AWS::StackName',
-                },
-              },
-            ],
-          },
-        },
-      };
-
-      const actual = plugin.buildVpc({ name: 'MyVpc', cidrBlock: '192.168.0.0/16' });
-      expect(actual).toEqual(expected);
-    });
-  });
-
-  describe('#buildInternetGateway', () => {
-    it('builds an Internet Gateway with default name', () => {
-      const expected = {
-        InternetGateway: {
-          Type: 'AWS::EC2::InternetGateway',
-          Properties: {
-            Tags: [
-              {
-                Key: 'STAGE',
-                Value: 'dev',
-              },
-              {
-                Key: 'Name',
-                Value: {
-                  Ref: 'AWS::StackName',
-                },
-              },
-            ],
-          },
-        },
-      };
-
-      const actual = plugin.buildInternetGateway();
-
-      expect(actual).toEqual(expected);
-    });
-
-    it('builds an Internet Gateway with a custom name', () => {
-      const expected = {
-        MyInternetGateway: {
-          Type: 'AWS::EC2::InternetGateway',
-          Properties: {
-            Tags: [
-              {
-                Key: 'STAGE',
-                Value: 'dev',
-              },
-              {
-                Key: 'Name',
-                Value: {
-                  Ref: 'AWS::StackName',
-                },
-              },
-            ],
-          },
-        },
-      };
-
-      const actual = plugin.buildInternetGateway({ name: 'MyInternetGateway' });
-
-      expect(actual).toEqual(expected);
-    });
-  });
-
-  describe('#buildInternetGatewayAttachment', () => {
-    it('builds an Internet Gateway Attachment with default name', () => {
-      const expected = {
-        InternetGatewayAttachment: {
-          Type: 'AWS::EC2::VPCGatewayAttachment',
-          Properties: {
-            InternetGatewayId: {
-              Ref: 'InternetGateway',
-            },
-            VpcId: {
-              Ref: 'VPC',
-            },
-          },
-        },
-      };
-
-      const actual = ServerlessVpcPlugin.buildInternetGatewayAttachment();
-
-      expect(actual).toEqual(expected);
-    });
-
-    it('builds an Internet Gateway Attachment with a custom name', () => {
-      const expected = {
-        MyInternetGatewayAttachment: {
-          Type: 'AWS::EC2::VPCGatewayAttachment',
-          Properties: {
-            InternetGatewayId: {
-              Ref: 'InternetGateway',
-            },
-            VpcId: {
-              Ref: 'VPC',
-            },
-          },
-        },
-      };
-
-      const actual = ServerlessVpcPlugin.buildInternetGatewayAttachment({
-        name: 'MyInternetGatewayAttachment',
-      });
-
-      expect(actual).toEqual(expected);
-    });
-  });
-
   describe('#splitVpc', () => {
     it('splits 10.0.0.0/16 into 16 /20s', () => {
       const actual = ServerlessVpcPlugin.splitVpc('10.0.0.0/16').map(cidr => cidr.toString());
@@ -373,14 +215,16 @@ describe('ServerlessVpcPlugin', () => {
 
   describe('#buildAvailabilityZones', () => {
     it('builds no AZs without options', () => {
-      const actual = plugin.buildAvailabilityZones({ cidrBlock: '10.0.0.0/16' });
+      const actual = ServerlessVpcPlugin.buildAvailabilityZones(
+        'dev', { cidrBlock: '10.0.0.0/16' },
+      );
       expect(actual).toEqual({});
     });
 
     it('builds a single AZ with a NAT Gateway and DBSubnet', () => {
       const expected = Object.assign({}, vpcSingleAZNatGWDB);
 
-      const actual = plugin.buildAvailabilityZones({
+      const actual = ServerlessVpcPlugin.buildAvailabilityZones('dev', {
         cidrBlock: '10.0.0.0/16',
         zones: ['us-east-1a'],
         numNatGateway: 1,
@@ -392,7 +236,7 @@ describe('ServerlessVpcPlugin', () => {
     it('builds a single AZ without a NAT Gateway and DBSubnet', () => {
       const expected = Object.assign({}, vpcSingleAZNoGatGWDB);
 
-      const actual = plugin.buildAvailabilityZones({
+      const actual = ServerlessVpcPlugin.buildAvailabilityZones('dev', {
         cidrBlock: '10.0.0.0/16',
         zones: ['us-east-1a'],
         numNatGateway: 0,
@@ -404,7 +248,7 @@ describe('ServerlessVpcPlugin', () => {
     it('builds a single AZ with a NAT Gateway and no DBSubnet', () => {
       const expected = Object.assign({}, vpcSingleAZNatGWNoDB);
 
-      const actual = plugin.buildAvailabilityZones({
+      const actual = ServerlessVpcPlugin.buildAvailabilityZones('dev', {
         cidrBlock: '10.0.0.0/16',
         zones: ['us-east-1a'],
         numNatGateway: 1,
@@ -416,7 +260,7 @@ describe('ServerlessVpcPlugin', () => {
     it('builds a single AZ without a NAT Gateway and no DBSubnet', () => {
       const expected = Object.assign({}, vpcSingleAZNoGatGWNoDB);
 
-      const actual = plugin.buildAvailabilityZones({
+      const actual = ServerlessVpcPlugin.buildAvailabilityZones('dev', {
         cidrBlock: '10.0.0.0/16',
         zones: ['us-east-1a'],
         numNatGateway: 0,
@@ -428,7 +272,7 @@ describe('ServerlessVpcPlugin', () => {
     it('builds multiple AZs with a NAT Gateway and DBSubnet', () => {
       const expected = Object.assign({}, vpcMultipleAZNatGWDB);
 
-      const actual = plugin.buildAvailabilityZones({
+      const actual = ServerlessVpcPlugin.buildAvailabilityZones('dev', {
         cidrBlock: '10.0.0.0/16',
         zones: ['us-east-1a', 'us-east-1b'],
         numNatGateway: 2,
@@ -440,7 +284,7 @@ describe('ServerlessVpcPlugin', () => {
     it('builds multiple AZs without a NAT Gateway and DBSubnet', () => {
       const expected = Object.assign({}, vpcMultipleAZNoNatGWDB);
 
-      const actual = plugin.buildAvailabilityZones({
+      const actual = ServerlessVpcPlugin.buildAvailabilityZones('dev', {
         cidrBlock: '10.0.0.0/16',
         zones: ['us-east-1a', 'us-east-1b'],
         numNatGateway: 0,
@@ -452,7 +296,7 @@ describe('ServerlessVpcPlugin', () => {
     it('builds multiple AZs with a NAT Gateway and no DBSubnet', () => {
       const expected = Object.assign({}, vpcMultipleAZNatGWNoDB);
 
-      const actual = plugin.buildAvailabilityZones({
+      const actual = ServerlessVpcPlugin.buildAvailabilityZones('dev', {
         cidrBlock: '10.0.0.0/16',
         zones: ['us-east-1a', 'us-east-1b'],
         numNatGateway: 2,
@@ -464,7 +308,7 @@ describe('ServerlessVpcPlugin', () => {
     it('builds multiple AZs without a NAT Gateway and no DBSubnet', () => {
       const expected = Object.assign({}, vpcMultipleAZNoNatGWNoDB);
 
-      const actual = plugin.buildAvailabilityZones({
+      const actual = ServerlessVpcPlugin.buildAvailabilityZones('dev', {
         cidrBlock: '10.0.0.0/16',
         zones: ['us-east-1a', 'us-east-1b'],
         numNatGateway: 0,
@@ -476,7 +320,7 @@ describe('ServerlessVpcPlugin', () => {
     it('builds multiple AZs with a single NAT Gateway and no DBSubnet', () => {
       const expected = Object.assign({}, vpcMultipleAZSingleNatGWNoDB);
 
-      const actual = plugin.buildAvailabilityZones({
+      const actual = ServerlessVpcPlugin.buildAvailabilityZones('dev', {
         cidrBlock: '10.0.0.0/16',
         zones: ['us-east-1a', 'us-east-1b'],
         numNatGateway: 1,
@@ -488,650 +332,11 @@ describe('ServerlessVpcPlugin', () => {
     it('builds multiple AZs with a multple NAT Gateways and no DBSubnet', () => {
       const expected = Object.assign({}, vpcMultipleAZMultipleNatGWNoDB);
 
-      const actual = plugin.buildAvailabilityZones({
+      const actual = ServerlessVpcPlugin.buildAvailabilityZones('dev', {
         cidrBlock: '10.0.0.0/16',
         zones: ['us-east-1a', 'us-east-1b', 'us-east-1c'],
         numNatGateway: 2,
         skipDbCreation: true,
-      });
-      expect(actual).toEqual(expected);
-    });
-  });
-
-  describe('#buildSubnet', () => {
-    it('builds a subnet', () => {
-      const expected = {
-        AppSubnet1: {
-          Type: 'AWS::EC2::Subnet',
-          Properties: {
-            AvailabilityZone: 'us-east-1a',
-            CidrBlock: '10.0.0.0/22',
-            Tags: [
-              {
-                Key: 'STAGE',
-                Value: 'dev',
-              },
-              {
-                Key: 'Name',
-                Value: {
-                  'Fn::Join': [
-                    '-',
-                    [
-                      {
-                        Ref: 'AWS::StackName',
-                      },
-                      'app',
-                      'us-east-1a',
-                    ],
-                  ],
-                },
-              },
-            ],
-            VpcId: {
-              Ref: 'VPC',
-            },
-          },
-        },
-      };
-      const actual = plugin.buildSubnet('App', 1, 'us-east-1a', '10.0.0.0/22');
-      expect(actual).toEqual(expected);
-    });
-  });
-
-  describe('#buildEIP', () => {
-    it('builds an EIP', () => {
-      const expected = {
-        EIP1: {
-          Type: 'AWS::EC2::EIP',
-          Properties: {
-            Domain: 'vpc',
-          },
-        },
-      };
-      const actual = ServerlessVpcPlugin.buildEIP(1);
-      expect(actual).toEqual(expected);
-    });
-  });
-
-  describe('#buildNatGateway', () => {
-    it('builds a NAT Gateway', () => {
-      const expected = {
-        NatGateway1: {
-          Type: 'AWS::EC2::NatGateway',
-          Properties: {
-            AllocationId: {
-              'Fn::GetAtt': [
-                'EIP1',
-                'AllocationId',
-              ],
-            },
-            SubnetId: {
-              Ref: 'PublicSubnet1',
-            },
-            Tags: [
-              {
-                Key: 'STAGE',
-                Value: 'dev',
-              },
-              {
-                Key: 'Name',
-                Value: {
-                  'Fn::Join': [
-                    '-',
-                    [
-                      {
-                        Ref: 'AWS::StackName',
-                      },
-                      'us-east-1a',
-                    ],
-                  ],
-                },
-              },
-            ],
-          },
-        },
-      };
-      const actual = plugin.buildNatGateway(1, 'us-east-1a');
-      expect(actual).toEqual(expected);
-    });
-  });
-
-  describe('#buildRouteTable', () => {
-    it('builds a route table', () => {
-      const expected = {
-        AppRouteTable1: {
-          Type: 'AWS::EC2::RouteTable',
-          Properties: {
-            VpcId: {
-              Ref: 'VPC',
-            },
-            Tags: [
-              {
-                Key: 'STAGE',
-                Value: 'dev',
-              },
-              {
-                Key: 'Name',
-                Value: {
-                  'Fn::Join': [
-                    '-',
-                    [
-                      {
-                        Ref: 'AWS::StackName',
-                      },
-                      'app',
-                      'us-east-1a',
-                    ],
-                  ],
-                },
-              },
-            ],
-          },
-        },
-      };
-      const actual = plugin.buildRouteTable('App', 1, 'us-east-1a');
-      expect(actual).toEqual(expected);
-    });
-  });
-
-  describe('#buildRouteTableAssociation', () => {
-    it('builds a route table association', () => {
-      const expected = {
-        AppRouteTableAssociation1: {
-          Type: 'AWS::EC2::SubnetRouteTableAssociation',
-          Properties: {
-            RouteTableId: {
-              Ref: 'AppRouteTable1',
-            },
-            SubnetId: {
-              Ref: 'AppSubnet1',
-            },
-          },
-        },
-      };
-      const actual = ServerlessVpcPlugin.buildRouteTableAssociation('App', 1);
-      expect(actual).toEqual(expected);
-    });
-  });
-
-  describe('#buildRoute', () => {
-    it('builds a route with a NAT Gateway', () => {
-      const expected = {
-        AppRoute1: {
-          Type: 'AWS::EC2::Route',
-          Properties: {
-            DestinationCidrBlock: '0.0.0.0/0',
-            NatGatewayId: {
-              Ref: 'NatGateway1',
-            },
-            RouteTableId: {
-              Ref: 'AppRouteTable1',
-            },
-          },
-        },
-      };
-      const actual = ServerlessVpcPlugin.buildRoute('App', 1, {
-        NatGatewayId: 'NatGateway1',
-      });
-      expect(actual).toEqual(expected);
-    });
-
-    it('builds a route with an Internet Gateway', () => {
-      const expected = {
-        AppRoute1: {
-          Type: 'AWS::EC2::Route',
-          Properties: {
-            DestinationCidrBlock: '0.0.0.0/0',
-            GatewayId: {
-              Ref: 'InternetGateway',
-            },
-            RouteTableId: {
-              Ref: 'AppRouteTable1',
-            },
-          },
-        },
-      };
-      const actual = ServerlessVpcPlugin.buildRoute('App', 1, {
-        GatewayId: 'InternetGateway',
-      });
-      expect(actual).toEqual(expected);
-    });
-
-    it('throws an error if no gateway provided', () => {
-      expect(() => {
-        ServerlessVpcPlugin.buildRoute('App', 1);
-      }).toThrow('Unable to create route: either NatGatewayId or GatewayId must be provided');
-    });
-  });
-
-  describe('#buildEndpointServices', () => {
-    it('skips building endpoints if none provided', () => {
-      const actual = ServerlessVpcPlugin.buildEndpointServices();
-      expect(actual).toEqual({});
-    });
-
-    it('builds an S3 VPC Gateway endpoint', () => {
-      const expected = {
-        S3VPCEndpoint: {
-          Type: 'AWS::EC2::VPCEndpoint',
-          Properties: {
-            RouteTableIds: [
-              {
-                Ref: 'AppRouteTable1',
-              },
-            ],
-            ServiceName: {
-              'Fn::Join': [
-                '.',
-                [
-                  'com.amazonaws',
-                  {
-                    Ref: 'AWS::Region',
-                  },
-                  's3',
-                ],
-              ],
-            },
-            PolicyDocument: {
-              Statement: [{
-                Effect: 'Allow',
-                Principal: '*',
-                Action: 's3:*',
-                Resource: '*',
-              }],
-            },
-            VpcEndpointType: 'Gateway',
-            VpcId: {
-              Ref: 'VPC',
-            },
-          },
-        },
-      };
-      const actual = ServerlessVpcPlugin.buildEndpointServices({
-        services: ['s3'], numZones: 1,
-      });
-      expect(actual).toEqual(expected);
-    });
-
-    it('builds an DynamoDB VPC Gateway endpoint', () => {
-      const expected = {
-        DynamodbVPCEndpoint: {
-          Type: 'AWS::EC2::VPCEndpoint',
-          Properties: {
-            RouteTableIds: [
-              {
-                Ref: 'AppRouteTable1',
-              },
-            ],
-            ServiceName: {
-              'Fn::Join': [
-                '.',
-                [
-                  'com.amazonaws',
-                  {
-                    Ref: 'AWS::Region',
-                  },
-                  'dynamodb',
-                ],
-              ],
-            },
-            PolicyDocument: {
-              Statement: [{
-                Effect: 'Allow',
-                Principal: '*',
-                Action: 'dynamodb:*',
-                Resource: '*',
-              }],
-            },
-            VpcEndpointType: 'Gateway',
-            VpcId: {
-              Ref: 'VPC',
-            },
-          },
-        },
-      };
-      const actual = ServerlessVpcPlugin.buildEndpointServices({
-        services: ['dynamodb'], numZones: 1,
-      });
-      expect(actual).toEqual(expected);
-    });
-
-    it('builds an KMS VPC Interface endpoint', () => {
-      const expected = {
-        KmsVPCEndpoint: {
-          Type: 'AWS::EC2::VPCEndpoint',
-          Properties: {
-            PrivateDnsEnabled: true,
-            SecurityGroupIds: [
-              {
-                Ref: 'LambdaEndpointSecurityGroup',
-              },
-            ],
-            SubnetIds: [
-              {
-                Ref: 'AppSubnet1',
-              },
-            ],
-            ServiceName: {
-              'Fn::Join': [
-                '.',
-                [
-                  'com.amazonaws',
-                  {
-                    Ref: 'AWS::Region',
-                  },
-                  'kms',
-                ],
-              ],
-            },
-            VpcEndpointType: 'Interface',
-            VpcId: {
-              Ref: 'VPC',
-            },
-          },
-        },
-      };
-      const actual = ServerlessVpcPlugin.buildEndpointServices({
-        services: ['kms'], numZones: 1,
-      });
-      expect(actual).toEqual(expected);
-    });
-
-    it('builds an SageMaker Runtime FIPS VPC Interface endpoint', () => {
-      const expected = {
-        SagemakerRuntimeFipsVPCEndpoint: {
-          Type: 'AWS::EC2::VPCEndpoint',
-          Properties: {
-            PrivateDnsEnabled: true,
-            SecurityGroupIds: [
-              {
-                Ref: 'LambdaEndpointSecurityGroup',
-              },
-            ],
-            SubnetIds: [
-              {
-                Ref: 'AppSubnet1',
-              },
-            ],
-            ServiceName: {
-              'Fn::Join': [
-                '.',
-                [
-                  'com.amazonaws',
-                  {
-                    Ref: 'AWS::Region',
-                  },
-                  'sagemaker.runtime-fips',
-                ],
-              ],
-            },
-            VpcEndpointType: 'Interface',
-            VpcId: {
-              Ref: 'VPC',
-            },
-          },
-        },
-      };
-      const actual = ServerlessVpcPlugin.buildEndpointServices({
-        services: ['sagemaker.runtime-fips'], numZones: 1,
-      });
-      expect(actual).toEqual(expected);
-    });
-  });
-
-  describe('#buildVPCEndpoint', () => {
-    it('builds an S3 VPC Gateway endpoint', () => {
-      const expected = {
-        S3VPCEndpoint: {
-          Type: 'AWS::EC2::VPCEndpoint',
-          Properties: {
-            RouteTableIds: [
-              {
-                Ref: 'AppRouteTable1',
-              },
-            ],
-            ServiceName: {
-              'Fn::Join': [
-                '.',
-                [
-                  'com.amazonaws',
-                  {
-                    Ref: 'AWS::Region',
-                  },
-                  's3',
-                ],
-              ],
-            },
-            PolicyDocument: {
-              Statement: [{
-                Effect: 'Allow',
-                Principal: '*',
-                Action: 's3:*',
-                Resource: '*',
-              }],
-            },
-            VpcEndpointType: 'Gateway',
-            VpcId: {
-              Ref: 'VPC',
-            },
-          },
-        },
-      };
-      const actual = ServerlessVpcPlugin.buildVPCEndpoint(
-        's3', { routeTableIds: [{ Ref: 'AppRouteTable1' }] },
-      );
-      expect(actual).toEqual(expected);
-    });
-
-    it('builds an SageMaker Runtime FIPS VPC Interface endpoint', () => {
-      const expected = {
-        SagemakerRuntimeFipsVPCEndpoint: {
-          Type: 'AWS::EC2::VPCEndpoint',
-          Properties: {
-            PrivateDnsEnabled: true,
-            SecurityGroupIds: [
-              {
-                Ref: 'LambdaEndpointSecurityGroup',
-              },
-            ],
-            SubnetIds: [
-              {
-                Ref: 'AppSubnet1',
-              },
-            ],
-            ServiceName: {
-              'Fn::Join': [
-                '.',
-                [
-                  'com.amazonaws',
-                  {
-                    Ref: 'AWS::Region',
-                  },
-                  'sagemaker.runtime-fips',
-                ],
-              ],
-            },
-            VpcEndpointType: 'Interface',
-            VpcId: {
-              Ref: 'VPC',
-            },
-          },
-        },
-      };
-      const actual = ServerlessVpcPlugin.buildVPCEndpoint(
-        'sagemaker.runtime-fips', { subnetIds: [{ Ref: 'AppSubnet1' }] },
-      );
-      expect(actual).toEqual(expected);
-    });
-  });
-
-  describe('#buildLambdaSecurityGroup', () => {
-    it('builds a Lambda security group with no options', () => {
-      const expected = {
-        LambdaExecutionSecurityGroup: {
-          Type: 'AWS::EC2::SecurityGroup',
-          Properties: {
-            GroupDescription: 'Lambda Execution Group',
-            VpcId: {
-              Ref: 'VPC',
-            },
-            Tags: [
-              {
-                Key: 'STAGE',
-                Value: 'dev',
-              },
-              {
-                Key: 'Name',
-                Value: {
-                  'Fn::Join': [
-                    '-',
-                    [
-                      {
-                        Ref: 'AWS::StackName',
-                      },
-                      'lambda-exec',
-                    ],
-                  ],
-                },
-              },
-            ],
-          },
-        },
-      };
-      const actual = plugin.buildLambdaSecurityGroup();
-      expect(actual).toEqual(expected);
-    });
-
-    it('builds a Lambda security group with a custom name', () => {
-      const expected = {
-        MyLambdaExecutionSecurityGroup: {
-          Type: 'AWS::EC2::SecurityGroup',
-          Properties: {
-            GroupDescription: 'Lambda Execution Group',
-            VpcId: {
-              Ref: 'VPC',
-            },
-            Tags: [
-              {
-                Key: 'STAGE',
-                Value: 'dev',
-              },
-              {
-                Key: 'Name',
-                Value: {
-                  'Fn::Join': [
-                    '-',
-                    [
-                      {
-                        Ref: 'AWS::StackName',
-                      },
-                      'lambda-exec',
-                    ],
-                  ],
-                },
-              },
-            ],
-          },
-        },
-      };
-      const actual = plugin.buildLambdaSecurityGroup({
-        name: 'MyLambdaExecutionSecurityGroup',
-      });
-      expect(actual).toEqual(expected);
-    });
-  });
-
-  describe('#buildLambdaVPCEndpointSecurityGroup', () => {
-    it('builds a Lambda endpoint security group with no options', () => {
-      const expected = {
-        LambdaEndpointSecurityGroup: {
-          Type: 'AWS::EC2::SecurityGroup',
-          Properties: {
-            GroupDescription: 'Lambda access to VPC endpoints',
-            VpcId: {
-              Ref: 'VPC',
-            },
-            SecurityGroupIngress: [
-              {
-                SourceSecurityGroupId: {
-                  Ref: 'LambdaExecutionSecurityGroup',
-                },
-                IpProtocol: 'tcp',
-                FromPort: 443,
-                ToPort: 443,
-              },
-            ],
-            Tags: [
-              {
-                Key: 'STAGE',
-                Value: 'dev',
-              },
-              {
-                Key: 'Name',
-                Value: {
-                  'Fn::Join': [
-                    '-',
-                    [
-                      {
-                        Ref: 'AWS::StackName',
-                      },
-                      'lambda-endpoint',
-                    ],
-                  ],
-                },
-              },
-            ],
-          },
-        },
-      };
-      const actual = plugin.buildLambdaVPCEndpointSecurityGroup();
-      expect(actual).toEqual(expected);
-    });
-
-    it('builds a Lambda security group with a custom name', () => {
-      const expected = {
-        MyLambdaEndpointSecurityGroup: {
-          Type: 'AWS::EC2::SecurityGroup',
-          Properties: {
-            GroupDescription: 'Lambda access to VPC endpoints',
-            VpcId: {
-              Ref: 'VPC',
-            },
-            SecurityGroupIngress: [
-              {
-                SourceSecurityGroupId: {
-                  Ref: 'LambdaExecutionSecurityGroup',
-                },
-                IpProtocol: 'tcp',
-                FromPort: 443,
-                ToPort: 443,
-              },
-            ],
-            Tags: [
-              {
-                Key: 'STAGE',
-                Value: 'dev',
-              },
-              {
-                Key: 'Name',
-                Value: {
-                  'Fn::Join': [
-                    '-',
-                    [
-                      {
-                        Ref: 'AWS::StackName',
-                      },
-                      'lambda-endpoint',
-                    ],
-                  ],
-                },
-              },
-            ],
-          },
-        },
-      };
-      const actual = plugin.buildLambdaVPCEndpointSecurityGroup({
-        name: 'MyLambdaEndpointSecurityGroup',
       });
       expect(actual).toEqual(expected);
     });

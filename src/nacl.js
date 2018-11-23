@@ -7,11 +7,11 @@ const {
 /**
  * Build a Network Access Control List (ACL)
  *
- * @param {String} name
  * @param {String} stage
+ * @param {String} name
  * @return {Object}
  */
-function buildNetworkAcl(name, stage) {
+function buildNetworkAcl(stage, name) {
   const cfName = `${name}NetworkAcl`;
 
   return {
@@ -54,7 +54,7 @@ function buildNetworkAcl(name, stage) {
  * @param {Object} params
  * @return {Object}
  */
-function buildNetworkAclEntry(name, cidrBlock, {
+function buildNetworkAclEntry(name, CidrBlock, {
   Egress = false, Protocol = -1, RuleAction = 'allow', RuleNumber = 100,
 } = {}) {
   const direction = (Egress) ? 'Egress' : 'Ingress';
@@ -63,7 +63,7 @@ function buildNetworkAclEntry(name, cidrBlock, {
     [cfName]: {
       Type: 'AWS::EC2::NetworkAclEntry',
       Properties: {
-        CidrBlock: cidrBlock,
+        CidrBlock,
         NetworkAclId: {
           Ref: name,
         },
@@ -102,10 +102,10 @@ function buildNetworkAclAssociation(name, position) {
 /**
  * Build the Public Network ACL
  *
- * @param {Number} numZones
  * @param {String} stage
+ * @param {Number} numZones
  */
-function buildPublicNetworkAcl(numZones, stage) {
+function buildPublicNetworkAcl(stage, numZones) {
   if (numZones < 1) {
     return {};
   }
@@ -114,7 +114,7 @@ function buildPublicNetworkAcl(numZones, stage) {
 
   merge(
     resources,
-    buildNetworkAcl(PUBLIC_SUBNET, stage),
+    buildNetworkAcl(stage, PUBLIC_SUBNET),
     buildNetworkAclEntry(
       `${PUBLIC_SUBNET}NetworkAcl`,
       '0.0.0.0/0',
@@ -139,15 +139,15 @@ function buildPublicNetworkAcl(numZones, stage) {
 /**
  * Build the Application Network ACL
  *
- * @param {Array} publicSubnets
  * @param {String} stage
+ * @param {Array} publicSubnets
  */
-function buildAppNetworkAcl(publicSubnets, stage) {
+function buildAppNetworkAcl(stage, publicSubnets) {
   if (publicSubnets.length < 1) {
     return {};
   }
 
-  const resources = buildNetworkAcl(APP_SUBNET, stage);
+  const resources = buildNetworkAcl(stage, APP_SUBNET);
 
   publicSubnets.forEach((subnet, index) => {
     merge(
@@ -172,15 +172,15 @@ function buildAppNetworkAcl(publicSubnets, stage) {
 /**
  * Build the Database Network ACL
  *
- * @param {Array} appSubnets
  * @param {String} stage
+ * @param {Array} appSubnets
  */
-function buildDBNetworkAcl(appSubnets, stage) {
+function buildDBNetworkAcl(stage, appSubnets) {
   if (appSubnets.length < 1) {
     return {};
   }
 
-  const resources = buildNetworkAcl(DB_SUBNET, stage);
+  const resources = buildNetworkAcl(stage, DB_SUBNET);
 
   appSubnets.forEach((subnet, index) => {
     merge(

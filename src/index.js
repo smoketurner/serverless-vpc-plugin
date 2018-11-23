@@ -6,16 +6,38 @@ const {
 } = require('./constants');
 
 const {
+  buildVpc,
+  buildInternetGateway,
+  buildInternetGatewayAttachment,
+  buildLambdaSecurityGroup,
+  buildSubnet,
+  buildRoute,
+  buildRouteTable,
+  buildRouteTableAssociation,
+} = require('./vpc');
+
+const {
   buildAppNetworkAcl,
   buildPublicNetworkAcl,
   buildDBNetworkAcl
 } = require('./nacl');
+
 const {
   buildRDSSubnetGroup,
   buildElastiCacheSubnetGroup,
   buildRedshiftSubnetGroup,
   buildDAXSubnetGroup,
 } = require('./subnet_groups');
+
+const {
+  buildEndpointServices,
+  buildLambdaVPCEndpointSecurityGroup,
+} = require('./vpce');
+
+const {
+  buildEIP,
+  buildNatGateway,
+} = require('./natgw');
 
 
 class ServerlessVpcPlugin {
@@ -60,6 +82,7 @@ class ServerlessVpcPlugin {
     }
 
     const region = this.provider.getRegion();
+    const stage = this.provider.getStage();
 
     if (zones.length < 1) {
       this.serverless.cli.log(`Discovering available zones in ${region}...`);
@@ -83,13 +106,13 @@ class ServerlessVpcPlugin {
 
     merge(
       this.serverless.service.provider.compiledCloudFormationTemplate.Resources,
-      this.buildVpc({ cidrBlock }),
-      this.buildInternetGateway(),
-      ServerlessVpcPlugin.buildInternetGatewayAttachment(),
-      this.buildAvailabilityZones({
+      buildVpc(stage, { cidrBlock }),
+      buildInternetGateway(stage),
+      buildInternetGatewayAttachment(),
+      ServerlessVpcPlugin.buildAvailabilityZones(stage, {
         cidrBlock, zones, numNatGateway: useNatGateway, skipDbCreation,
       }),
-      this.buildLambdaSecurityGroup(),
+      buildLambdaSecurityGroup(stage),
     );
 
     if (services.length > 0) {
@@ -101,8 +124,8 @@ class ServerlessVpcPlugin {
 
       merge(
         this.serverless.service.provider.compiledCloudFormationTemplate.Resources,
-        ServerlessVpcPlugin.buildEndpointServices({ services, numZones }),
-        this.buildLambdaVPCEndpointSecurityGroup(),
+        buildEndpointServices({ services, numZones }),
+        buildLambdaVPCEndpointSecurityGroup(stage),
       );
     }
 
@@ -112,8 +135,8 @@ class ServerlessVpcPlugin {
       } else {
         merge(
           this.serverless.service.provider.compiledCloudFormationTemplate.Resources,
-          buildRDSSubnetGroup(this.provider.getStage(), { numZones }),
-          buildRedshiftSubnetGroup(this.provider.getStage(), { numZones }),
+          buildRDSSubnetGroup(stage, { numZones }),
+          buildRedshiftSubnetGroup(stage, { numZones }),
           buildElastiCacheSubnetGroup({ numZones }),
           buildDAXSubnetGroup({ numZones }),
         );
@@ -168,88 +191,6 @@ class ServerlessVpcPlugin {
   async validateServices(region, services) {
     const available = await this.getVpcEndpointServicesPerRegion();
     return services.map(service => `com.amazonaws.${region}.${service}`).filter(service => !available.includes(service));
-  }
-
-  /**
-   * Build a VPC
-   *
-   * @param {Object} params
-   * @return {Object}
-   */
-  buildVpc({ name = 'VPC', cidrBlock = '10.0.0.0/16' } = {}) {
-    return {
-      [name]: {
-        Type: 'AWS::EC2::VPC',
-        Properties: {
-          CidrBlock: cidrBlock,
-          EnableDnsSupport: true,
-          EnableDnsHostnames: true,
-          InstanceTenancy: 'default',
-          Tags: [
-            {
-              Key: 'STAGE',
-              Value: this.provider.getStage(),
-            },
-            {
-              Key: 'Name',
-              Value: {
-                Ref: 'AWS::StackName',
-              },
-            },
-          ],
-        },
-      },
-    };
-  }
-
-  /**
-   * Build an InternetGateway
-   *
-   * @param {Object} params
-   * @return {Object}
-   */
-  buildInternetGateway({ name = 'InternetGateway' } = {}) {
-    return {
-      [name]: {
-        Type: 'AWS::EC2::InternetGateway',
-        Properties: {
-          Tags: [
-            {
-              Key: 'STAGE',
-              Value: this.provider.getStage(),
-            },
-            {
-              Key: 'Name',
-              Value: {
-                Ref: 'AWS::StackName',
-              },
-            },
-          ],
-        },
-      },
-    };
-  }
-
-  /**
-   * Build an InternetGatewayAttachment
-   *
-   * @param {Object} params
-   * @return {Object}
-   */
-  static buildInternetGatewayAttachment({ name = 'InternetGatewayAttachment' } = {}) {
-    return {
-      [name]: {
-        Type: 'AWS::EC2::VPCGatewayAttachment',
-        Properties: {
-          InternetGatewayId: {
-            Ref: 'InternetGateway',
-          },
-          VpcId: {
-            Ref: 'VPC',
-          },
-        },
-      },
-    };
   }
 
   /**
@@ -332,13 +273,14 @@ class ServerlessVpcPlugin {
    * 3.) Split the second /21 subnet into two /22 subnets: one Public subnet (for load balancers),
    *     and one for databases (RDS, ElastiCache, and Redshift)
    *
+   * @param {String} stage Serverless Stage
    * @param {String} cidrBlock VPC CIDR Block
    * @param {Array} zones Array of availability zones
    * @param {Number} numNatGateway Number of NAT gateways (and EIPs) to provision
    * @param {Boolean} skipDbCreation Whether to skip creating the DBSubnet or not
    * @return {Object}
    */
-  buildAvailabilityZones({
+  static buildAvailabilityZones(stage, {
     cidrBlock,
     zones = [],
     numNatGateway = 0,
@@ -358,8 +300,8 @@ class ServerlessVpcPlugin {
       for (let index = 0; index < numNatGateway; index += 1) {
         merge(
           resources,
-          ServerlessVpcPlugin.buildEIP(index + 1),
-          this.buildNatGateway(index + 1, zones[index]),
+          buildEIP(index + 1),
+          buildNatGateway(index + 1, zones[index], stage),
         );
       }
     }
@@ -378,16 +320,16 @@ class ServerlessVpcPlugin {
         resources,
 
         // App Subnet
-        this.buildSubnet(APP_SUBNET, position, zone, subnets.get(zone).get(APP_SUBNET)),
-        this.buildRouteTable(APP_SUBNET, position, zone),
-        ServerlessVpcPlugin.buildRouteTableAssociation(APP_SUBNET, position),
-        ServerlessVpcPlugin.buildRoute(APP_SUBNET, position, params),
+        buildSubnet(stage, APP_SUBNET, position, zone, subnets.get(zone).get(APP_SUBNET)),
+        buildRouteTable(stage, APP_SUBNET, position, zone),
+        buildRouteTableAssociation(APP_SUBNET, position),
+        buildRoute(APP_SUBNET, position, params),
 
         // Public Subnet
-        this.buildSubnet(PUBLIC_SUBNET, position, zone, subnets.get(zone).get(PUBLIC_SUBNET)),
-        this.buildRouteTable(PUBLIC_SUBNET, position, zone),
-        ServerlessVpcPlugin.buildRouteTableAssociation(PUBLIC_SUBNET, position),
-        ServerlessVpcPlugin.buildRoute(PUBLIC_SUBNET, position, {
+        buildSubnet(stage, PUBLIC_SUBNET, position, zone, subnets.get(zone).get(PUBLIC_SUBNET)),
+        buildRouteTable(stage, PUBLIC_SUBNET, position, zone),
+        buildRouteTableAssociation(PUBLIC_SUBNET, position),
+        buildRoute(PUBLIC_SUBNET, position, {
           GatewayId: 'InternetGateway',
         }),
       );
@@ -396,9 +338,9 @@ class ServerlessVpcPlugin {
         // DB Subnet
         merge(
           resources,
-          this.buildSubnet(DB_SUBNET, position, zone, subnets.get(zone).get(DB_SUBNET)),
-          this.buildRouteTable(DB_SUBNET, position, zone),
-          ServerlessVpcPlugin.buildRouteTableAssociation(DB_SUBNET, position),
+          buildSubnet(stage, DB_SUBNET, position, zone, subnets.get(zone).get(DB_SUBNET)),
+          buildRouteTable(stage, DB_SUBNET, position, zone),
+          buildRouteTableAssociation(DB_SUBNET, position),
         );
       }
     });
@@ -406,428 +348,14 @@ class ServerlessVpcPlugin {
     // Add Network ACLs
     /*merge(
       resources,
-      buildPublicNetworkAcl(zones.length, this.provider.getStage()),
-      buildAppNetworkAcl(subnets.get(PUBLIC_SUBNET), this.provider.getStage()),
+      buildPublicNetworkAcl(stage, zones.length),
+      buildAppNetworkAcl(stage, subnets.get(PUBLIC_SUBNET)),
     );
     if (!skipDbCreation) {
-      merge(resources, buildDBNetworkAcl(subnets.get(APP_SUBNET), this.provider.getStage()));
+      merge(resources, buildDBNetworkAcl(stage, subnets.get(APP_SUBNET)));
     }*/
 
     return resources;
-  }
-
-  /**
-   * Create a subnet
-   *
-   * @param {String} name Name of subnet
-   * @param {Number} position Subnet position
-   * @param {String} zone Availability zone
-   * @param {String} cidrBlock Subnet CIDR block
-   * @return {Object}
-   */
-  buildSubnet(name, position, zone, cidrBlock) {
-    const cfName = `${name}Subnet${position}`;
-    return {
-      [cfName]: {
-        Type: 'AWS::EC2::Subnet',
-        Properties: {
-          AvailabilityZone: zone,
-          CidrBlock: cidrBlock,
-          Tags: [
-            {
-              Key: 'STAGE',
-              Value: this.provider.getStage(),
-            },
-            {
-              Key: 'Name',
-              Value: {
-                'Fn::Join': [
-                  '-',
-                  [
-                    {
-                      Ref: 'AWS::StackName',
-                    },
-                    name.toLowerCase(),
-                    zone,
-                  ],
-                ],
-              },
-            },
-          ],
-          VpcId: {
-            Ref: 'VPC',
-          },
-        },
-      },
-    };
-  }
-
-  /**
-   * Build an EIP
-   *
-   * @param {Number} position
-   * @return {Object}
-   */
-  static buildEIP(position) {
-    const cfName = `EIP${position}`;
-    return {
-      [cfName]: {
-        Type: 'AWS::EC2::EIP',
-        Properties: {
-          Domain: 'vpc',
-        },
-      },
-    };
-  }
-
-  /**
-   * Build a NatGateway in a given AZ
-   *
-   * @param {Number} position
-   * @param {String} zone
-   * @return {Object}
-   */
-  buildNatGateway(position, zone) {
-    const cfName = `NatGateway${position}`;
-    return {
-      [cfName]: {
-        Type: 'AWS::EC2::NatGateway',
-        Properties: {
-          AllocationId: {
-            'Fn::GetAtt': [
-              `EIP${position}`,
-              'AllocationId',
-            ],
-          },
-          SubnetId: {
-            Ref: `${PUBLIC_SUBNET}Subnet${position}`,
-          },
-          Tags: [
-            {
-              Key: 'STAGE',
-              Value: this.provider.getStage(),
-            },
-            {
-              Key: 'Name',
-              Value: {
-                'Fn::Join': [
-                  '-',
-                  [
-                    {
-                      Ref: 'AWS::StackName',
-                    },
-                    zone,
-                  ],
-                ],
-              },
-            },
-          ],
-        },
-      },
-    };
-  }
-
-  /**
-   * Build a RouteTable in a given AZ
-   *
-   * @param {String} name
-   * @param {Number} position
-   * @param {String} zone
-   * @return {Object}
-   */
-  buildRouteTable(name, position, zone) {
-    const cfName = `${name}RouteTable${position}`;
-    return {
-      [cfName]: {
-        Type: 'AWS::EC2::RouteTable',
-        Properties: {
-          VpcId: {
-            Ref: 'VPC',
-          },
-          Tags: [
-            {
-              Key: 'STAGE',
-              Value: this.provider.getStage(),
-            },
-            {
-              Key: 'Name',
-              Value: {
-                'Fn::Join': [
-                  '-',
-                  [
-                    {
-                      Ref: 'AWS::StackName',
-                    },
-                    name.toLowerCase(),
-                    zone,
-                  ],
-                ],
-              },
-            },
-          ],
-        },
-      },
-    };
-  }
-
-  /**
-   * Build a RouteTableAssociation
-   *
-   * @param {String} name
-   * @param {Number} position
-   * @return {Object}
-   */
-  static buildRouteTableAssociation(name, position) {
-    const cfName = `${name}RouteTableAssociation${position}`;
-    return {
-      [cfName]: {
-        Type: 'AWS::EC2::SubnetRouteTableAssociation',
-        Properties: {
-          RouteTableId: {
-            Ref: `${name}RouteTable${position}`,
-          },
-          SubnetId: {
-            Ref: `${name}Subnet${position}`,
-          },
-        },
-      },
-    };
-  }
-
-  /**
-   * Build a Route for a NatGateway or InternetGateway
-   *
-   * @param {String} name
-   * @param {Number} position
-   * @param {Object} params
-   * @return {Object}
-   */
-  static buildRoute(name, position, {
-    NatGatewayId = null, GatewayId = null,
-  } = {}) {
-    const route = {
-      Type: 'AWS::EC2::Route',
-      Properties: {
-        DestinationCidrBlock: '0.0.0.0/0',
-        RouteTableId: {
-          Ref: `${name}RouteTable${position}`,
-        },
-      },
-    };
-
-    if (NatGatewayId) {
-      route.Properties.NatGatewayId = {
-        Ref: NatGatewayId,
-      };
-    } else if (GatewayId) {
-      route.Properties.GatewayId = {
-        Ref: GatewayId,
-      };
-    } else {
-      throw new Error('Unable to create route: either NatGatewayId or GatewayId must be provided');
-    }
-
-    const cfName = `${name}Route${position}`;
-    return {
-      [cfName]: route,
-    };
-  }
-
-
-  /**
-   * Build VPC endpoints for a given number of services and zones
-   *
-   * @param {Object} params
-   * @return {Object}
-   */
-  static buildEndpointServices({ services = [], numZones = 0 } = {}) {
-    if (!Array.isArray(services) || services.length < 1) {
-      return {};
-    }
-    if (numZones < 1) {
-      return {};
-    }
-
-    const subnetIds = [];
-    const routeTableIds = [];
-    for (let i = 1; i <= numZones; i += 1) {
-      subnetIds.push({ Ref: `${APP_SUBNET}Subnet${i}` });
-      routeTableIds.push({ Ref: `${APP_SUBNET}RouteTable${i}` });
-    }
-
-    const resources = {};
-    services.forEach((service) => {
-      merge(resources, ServerlessVpcPlugin.buildVPCEndpoint(
-        service, { routeTableIds, subnetIds },
-      ));
-    });
-
-    return resources;
-  }
-
-  /**
-   * Build a VPCEndpoint
-   *
-   * @param {String} service
-   * @param {Object} params
-   * @return {Object}
-   */
-  static buildVPCEndpoint(service, { routeTableIds = [], subnetIds = [] } = {}) {
-    const endpoint = {
-      Type: 'AWS::EC2::VPCEndpoint',
-      Properties: {
-        ServiceName: {
-          'Fn::Join': [
-            '.',
-            [
-              'com.amazonaws',
-              {
-                Ref: 'AWS::Region',
-              },
-              service,
-            ],
-          ],
-        },
-        VpcId: {
-          Ref: 'VPC',
-        },
-      },
-    };
-
-    // @see https://docs.aws.amazon.com/vpc/latest/userguide/vpc-endpoints.html
-    if (service === 's3' || service === 'dynamodb') {
-      endpoint.Properties.VpcEndpointType = 'Gateway';
-      endpoint.Properties.RouteTableIds = routeTableIds;
-      endpoint.Properties.PolicyDocument = {
-        Statement: [{
-          Effect: 'Allow',
-          /*
-          TODO 11/21: We should restrict the VPC Endpoint to only the Lambda
-          IAM role, but this doesn't work.
-
-          Principal: {
-            AWS: {
-              'Fn::GetAtt': [
-                'IamRoleLambdaExecution',
-                'Arn',
-              ],
-            },
-          }, */
-          Principal: '*',
-          Resource: '*',
-        }],
-      };
-      if (service === 's3') {
-        endpoint.Properties.PolicyDocument.Statement[0].Action = 's3:*';
-      } else if (service === 'dynamodb') {
-        endpoint.Properties.PolicyDocument.Statement[0].Action = 'dynamodb:*';
-      }
-    } else {
-      endpoint.Properties.VpcEndpointType = 'Interface';
-      endpoint.Properties.SubnetIds = subnetIds;
-      endpoint.Properties.PrivateDnsEnabled = true;
-      endpoint.Properties.SecurityGroupIds = [{
-        Ref: 'LambdaEndpointSecurityGroup',
-      }];
-    }
-
-    const parts = service.split(/[-_.]/g);
-    parts.push('VPCEndpoint');
-    const cfName = parts.map(part => part.charAt(0).toUpperCase() + part.slice(1)).join('');
-
-    return {
-      [cfName]: endpoint,
-    };
-  }
-
-  /**
-   * Build a SecurityGroup to be used by Lambda's when they execute.
-   *
-   * @param {Object} params
-   * @return {Object}
-   */
-  buildLambdaSecurityGroup({ name = 'LambdaExecutionSecurityGroup' } = {}) {
-    return {
-      [name]: {
-        Type: 'AWS::EC2::SecurityGroup',
-        Properties: {
-          GroupDescription: 'Lambda Execution Group',
-          VpcId: {
-            Ref: 'VPC',
-          },
-          Tags: [
-            {
-              Key: 'STAGE',
-              Value: this.provider.getStage(),
-            },
-            {
-              Key: 'Name',
-              Value: {
-                'Fn::Join': [
-                  '-',
-                  [
-                    {
-                      Ref: 'AWS::StackName',
-                    },
-                    'lambda-exec',
-                  ],
-                ],
-              },
-            },
-          ],
-        },
-      },
-    };
-  }
-
-  /**
-   * Build a SecurityGroup to allow the Lambda's access to VPC endpoints over HTTPS.
-   *
-   * @param {Object} params
-   * @return {Object}
-   */
-  buildLambdaVPCEndpointSecurityGroup({ name = 'LambdaEndpointSecurityGroup' } = {}) {
-    return {
-      [name]: {
-        Type: 'AWS::EC2::SecurityGroup',
-        Properties: {
-          GroupDescription: 'Lambda access to VPC endpoints',
-          VpcId: {
-            Ref: 'VPC',
-          },
-          SecurityGroupIngress: [
-            {
-              SourceSecurityGroupId: {
-                Ref: 'LambdaExecutionSecurityGroup',
-              },
-              IpProtocol: 'tcp',
-              FromPort: 443,
-              ToPort: 443,
-            },
-          ],
-          Tags: [
-            {
-              Key: 'STAGE',
-              Value: this.provider.getStage(),
-            },
-            {
-              Key: 'Name',
-              Value: {
-                'Fn::Join': [
-                  '-',
-                  [
-                    {
-                      Ref: 'AWS::StackName',
-                    },
-                    'lambda-endpoint',
-                  ],
-                ],
-              },
-            },
-          ],
-        },
-      },
-    };
   }
 }
 
