@@ -283,6 +283,10 @@ class ServerlessVpcPlugin {
 
     const azCidrBlocks = ServerlessVpcPlugin.splitVpc(cidrBlock); // VPC subnet is a /16
 
+    const publicSubnets = [];
+    const appSubnets = [];
+    const dbSubnets = [];
+
     zones.forEach((zone, index) => {
       const azCidrBlock = azCidrBlocks[index]; // AZ subnet is a /20
       let subnets = [];
@@ -290,8 +294,8 @@ class ServerlessVpcPlugin {
       const azSubnets = CIDR.fromString(azCidrBlock).split().map(cidr => cidr.toString());
       subnets.push(azSubnets[0]); // Application subnet is a /21
 
-      const publicSubnets = CIDR.fromString(azSubnets[1]).split().map(cidr => cidr.toString());
-      subnets = subnets.concat(publicSubnets); // Public and DB subnets are both /22
+      const smallerSubnets = CIDR.fromString(azSubnets[1]).split().map(cidr => cidr.toString());
+      subnets = subnets.concat(smallerSubnets); // Public and DB subnets are both /22
 
       const parts = [
         [APP_SUBNET, subnets[0]],
@@ -299,8 +303,16 @@ class ServerlessVpcPlugin {
         [DB_SUBNET, subnets[2]],
       ];
 
+      appSubnets.push(subnets[0]);
+      publicSubnets.push(subnets[1]);
+      dbSubnets.push(subnets[2]);
+
       mapping.set(zone, new Map(parts));
     });
+
+    mapping.set(PUBLIC_SUBNET, publicSubnets);
+    mapping.set(APP_SUBNET, appSubnets);
+    mapping.set(DB_SUBNET, dbSubnets);
 
     return mapping;
   }
@@ -384,6 +396,16 @@ class ServerlessVpcPlugin {
         );
       }
     });
+
+    // Add Network ACLs
+    merge(
+      resources,
+      this.buildPublicNetworkAcl(zones.length),
+      this.buildAppNetworkAcl(subnets.get(PUBLIC_SUBNET)),
+    );
+    if (!skipDbCreation) {
+      merge(resources, this.buildDBNetworkAcl(subnets.get(APP_SUBNET)));
+    }
 
     return resources;
   }
@@ -1084,11 +1106,12 @@ class ServerlessVpcPlugin {
         ServerlessVpcPlugin.buildNetworkAclEntry(
           `${APP_SUBNET}NetworkAcl`,
           subnet,
+          { RuleNumber: 100 + index },
         ),
         ServerlessVpcPlugin.buildNetworkAclEntry(
           `${APP_SUBNET}NetworkAcl`,
           subnet,
-          { Egress: true },
+          { RuleNumber: 100 + index, Egress: true },
         ),
         ServerlessVpcPlugin.buildNetworkAclAssociation(APP_SUBNET, index + 1),
       );
@@ -1115,11 +1138,12 @@ class ServerlessVpcPlugin {
         ServerlessVpcPlugin.buildNetworkAclEntry(
           `${DB_SUBNET}NetworkAcl`,
           subnet,
+          { RuleNumber: 100 + index },
         ),
         ServerlessVpcPlugin.buildNetworkAclEntry(
           `${DB_SUBNET}NetworkAcl`,
           subnet,
-          { Egress: true },
+          { RuleNumber: 100 + index, Egress: true },
         ),
         ServerlessVpcPlugin.buildNetworkAclAssociation(DB_SUBNET, index + 1),
       );

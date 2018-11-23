@@ -1580,12 +1580,281 @@ describe('ServerlessVpcPlugin', () => {
   describe('#buildAppNetworkAcl', () => {
     it('builds the application network ACL', () => {
       const expected = {
-
+        AppNetworkAcl: {
+          Type: 'AWS::EC2::NetworkAcl',
+          Properties: {
+            Tags: [
+              {
+                Key: 'STAGE',
+                Value: 'dev',
+              },
+              {
+                Key: 'Name',
+                Value: {
+                  'Fn::Join': [
+                    '-',
+                    [
+                      {
+                        Ref: 'AWS::StackName',
+                      },
+                      'app',
+                    ],
+                  ],
+                },
+              },
+            ],
+            VpcId: {
+              Ref: 'VPC',
+            },
+          },
+        },
+        AppNetworkAclEgress100: {
+          Type: 'AWS::EC2::NetworkAclEntry',
+          Properties: {
+            CidrBlock: '10.0.8.0/22',
+            NetworkAclId: {
+              Ref: 'AppNetworkAcl',
+            },
+            Egress: true,
+            Protocol: -1,
+            RuleAction: 'allow',
+            RuleNumber: 100,
+          },
+        },
+        AppNetworkAclIngress100: {
+          Type: 'AWS::EC2::NetworkAclEntry',
+          Properties: {
+            CidrBlock: '10.0.8.0/22',
+            NetworkAclId: {
+              Ref: 'AppNetworkAcl',
+            },
+            Egress: false,
+            Protocol: -1,
+            RuleAction: 'allow',
+            RuleNumber: 100,
+          },
+        },
+        AppNetworkAclEgress101: {
+          Type: 'AWS::EC2::NetworkAclEntry',
+          Properties: {
+            CidrBlock: '10.0.24.0/22',
+            NetworkAclId: {
+              Ref: 'AppNetworkAcl',
+            },
+            Egress: true,
+            Protocol: -1,
+            RuleAction: 'allow',
+            RuleNumber: 101,
+          },
+        },
+        AppNetworkAclIngress101: {
+          Type: 'AWS::EC2::NetworkAclEntry',
+          Properties: {
+            CidrBlock: '10.0.24.0/22',
+            NetworkAclId: {
+              Ref: 'AppNetworkAcl',
+            },
+            Egress: false,
+            Protocol: -1,
+            RuleAction: 'allow',
+            RuleNumber: 101,
+          },
+        },
+        AppNetworkAclEgress102: {
+          Type: 'AWS::EC2::NetworkAclEntry',
+          Properties: {
+            CidrBlock: '10.0.40.0/22',
+            NetworkAclId: {
+              Ref: 'AppNetworkAcl',
+            },
+            Egress: true,
+            Protocol: -1,
+            RuleAction: 'allow',
+            RuleNumber: 102,
+          },
+        },
+        AppNetworkAclIngress102: {
+          Type: 'AWS::EC2::NetworkAclEntry',
+          Properties: {
+            CidrBlock: '10.0.40.0/22',
+            NetworkAclId: {
+              Ref: 'AppNetworkAcl',
+            },
+            Egress: false,
+            Protocol: -1,
+            RuleAction: 'allow',
+            RuleNumber: 102,
+          },
+        },
+        AppSubnetNetworkAclAssociation1: {
+          Type: 'AWS::EC2::SubnetNetworkAclAssociation',
+          Properties: {
+            SubnetId: 'AppSubnet1',
+            NetworkAclId: 'AppNetworkAcl',
+          },
+        },
+        AppSubnetNetworkAclAssociation2: {
+          Type: 'AWS::EC2::SubnetNetworkAclAssociation',
+          Properties: {
+            SubnetId: 'AppSubnet2',
+            NetworkAclId: 'AppNetworkAcl',
+          },
+        },
+        AppSubnetNetworkAclAssociation3: {
+          Type: 'AWS::EC2::SubnetNetworkAclAssociation',
+          Properties: {
+            SubnetId: 'AppSubnet3',
+            NetworkAclId: 'AppNetworkAcl',
+          },
+        },
       };
       const publicSubnets = [
-
+        '10.0.8.0/22',
+        '10.0.24.0/22',
+        '10.0.40.0/22',
       ];
       const actual = plugin.buildAppNetworkAcl(publicSubnets);
+      expect(actual).toEqual(expected);
+    });
+  });
+
+  describe('#buildDBNetworkAcl', () => {
+    it('builds the database network ACL', () => {
+      const expected = {
+        DBNetworkAcl: {
+          Type: 'AWS::EC2::NetworkAcl',
+          Properties: {
+            Tags: [
+              {
+                Key: 'STAGE',
+                Value: 'dev',
+              },
+              {
+                Key: 'Name',
+                Value: {
+                  'Fn::Join': [
+                    '-',
+                    [
+                      {
+                        Ref: 'AWS::StackName',
+                      },
+                      'db',
+                    ],
+                  ],
+                },
+              },
+            ],
+            VpcId: {
+              Ref: 'VPC',
+            },
+          },
+        },
+        DBNetworkAclEgress100: {
+          Type: 'AWS::EC2::NetworkAclEntry',
+          Properties: {
+            CidrBlock: '10.0.0.0/21',
+            NetworkAclId: {
+              Ref: 'DBNetworkAcl',
+            },
+            Egress: true,
+            Protocol: -1,
+            RuleAction: 'allow',
+            RuleNumber: 100,
+          },
+        },
+        DBNetworkAclIngress100: {
+          Type: 'AWS::EC2::NetworkAclEntry',
+          Properties: {
+            CidrBlock: '10.0.0.0/21',
+            NetworkAclId: {
+              Ref: 'DBNetworkAcl',
+            },
+            Egress: false,
+            Protocol: -1,
+            RuleAction: 'allow',
+            RuleNumber: 100,
+          },
+        },
+        DBNetworkAclEgress101: {
+          Type: 'AWS::EC2::NetworkAclEntry',
+          Properties: {
+            CidrBlock: '10.0.16.0/21',
+            NetworkAclId: {
+              Ref: 'DBNetworkAcl',
+            },
+            Egress: true,
+            Protocol: -1,
+            RuleAction: 'allow',
+            RuleNumber: 101,
+          },
+        },
+        DBNetworkAclIngress101: {
+          Type: 'AWS::EC2::NetworkAclEntry',
+          Properties: {
+            CidrBlock: '10.0.16.0/21',
+            NetworkAclId: {
+              Ref: 'DBNetworkAcl',
+            },
+            Egress: false,
+            Protocol: -1,
+            RuleAction: 'allow',
+            RuleNumber: 101,
+          },
+        },
+        DBNetworkAclEgress102: {
+          Type: 'AWS::EC2::NetworkAclEntry',
+          Properties: {
+            CidrBlock: '10.0.32.0/21',
+            NetworkAclId: {
+              Ref: 'DBNetworkAcl',
+            },
+            Egress: true,
+            Protocol: -1,
+            RuleAction: 'allow',
+            RuleNumber: 102,
+          },
+        },
+        DBNetworkAclIngress102: {
+          Type: 'AWS::EC2::NetworkAclEntry',
+          Properties: {
+            CidrBlock: '10.0.32.0/21',
+            NetworkAclId: {
+              Ref: 'DBNetworkAcl',
+            },
+            Egress: false,
+            Protocol: -1,
+            RuleAction: 'allow',
+            RuleNumber: 102,
+          },
+        },
+        DBSubnetNetworkAclAssociation1: {
+          Type: 'AWS::EC2::SubnetNetworkAclAssociation',
+          Properties: {
+            SubnetId: 'DBSubnet1',
+            NetworkAclId: 'DBNetworkAcl',
+          },
+        },
+        DBSubnetNetworkAclAssociation2: {
+          Type: 'AWS::EC2::SubnetNetworkAclAssociation',
+          Properties: {
+            SubnetId: 'DBSubnet2',
+            NetworkAclId: 'DBNetworkAcl',
+          },
+        },
+        DBSubnetNetworkAclAssociation3: {
+          Type: 'AWS::EC2::SubnetNetworkAclAssociation',
+          Properties: {
+            SubnetId: 'DBSubnet3',
+            NetworkAclId: 'DBNetworkAcl',
+          },
+        },
+      };
+      const appSubnets = [
+        '10.0.0.0/21',
+        '10.0.16.0/21',
+        '10.0.32.0/21',
+      ];
+      const actual = plugin.buildDBNetworkAcl(appSubnets);
       expect(actual).toEqual(expected);
     });
   });
