@@ -10,7 +10,7 @@
   },
   "main": "handler.js",
   "scripts": {
-    "deploy": "SLS_DEBUG=1 ./node_modules/.bin/sls deploy -v",
+    "deploy": "SLS_DEBUG=1 ./node_modules/.bin/sls deploy -v --force",
     "remove": "./node_modules/.bin/sls remove -v",
     "test": "./node_modules/.bin/sls invoke -f s3"
   },
