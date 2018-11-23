@@ -990,10 +990,10 @@ class ServerlessVpcPlugin {
    * @return {Object}
    */
   static buildNetworkAclEntry(name, cidrBlock, {
-    egress = false, protocol = -1, ruleAction = 'allow', ruleNumber = 100,
+    Egress = false, Protocol = -1, RuleAction = 'allow', RuleNumber = 100,
   } = {}) {
-    const direction = (egress) ? 'Egress' : 'Ingress';
-    const cfName = `${name}${direction}${ruleNumber}`;
+    const direction = (Egress) ? 'Egress' : 'Ingress';
+    const cfName = `${name}${direction}${RuleNumber}`;
     return {
       [cfName]: {
         Type: 'AWS::EC2::NetworkAclEntry',
@@ -1002,10 +1002,10 @@ class ServerlessVpcPlugin {
           NetworkAclId: {
             Ref: name,
           },
-          Egress: egress,
-          Protocol: protocol,
-          RuleAction: ruleAction,
-          RuleNumber: ruleNumber,
+          Egress,
+          Protocol,
+          RuleAction,
+          RuleNumber,
         },
       },
     };
@@ -1052,7 +1052,7 @@ class ServerlessVpcPlugin {
       ServerlessVpcPlugin.buildNetworkAclEntry(
         `${PUBLIC_SUBNET}NetworkAcl`,
         '0.0.0.0/0',
-        { egress: true },
+        { Egress: true },
       ),
     );
 
@@ -1088,7 +1088,7 @@ class ServerlessVpcPlugin {
         ServerlessVpcPlugin.buildNetworkAclEntry(
           `${APP_SUBNET}NetworkAcl`,
           subnet,
-          { egress: true },
+          { Egress: true },
         ),
         ServerlessVpcPlugin.buildNetworkAclAssociation(APP_SUBNET, index + 1),
       );
@@ -1119,7 +1119,7 @@ class ServerlessVpcPlugin {
         ServerlessVpcPlugin.buildNetworkAclEntry(
           `${DB_SUBNET}NetworkAcl`,
           subnet,
-          { egress: true },
+          { Egress: true },
         ),
         ServerlessVpcPlugin.buildNetworkAclAssociation(DB_SUBNET, index + 1),
       );

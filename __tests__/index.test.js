@@ -1471,7 +1471,7 @@ describe('ServerlessVpcPlugin', () => {
         },
       };
       const actual = ServerlessVpcPlugin.buildNetworkAclEntry(
-        'PublicNetworkAcl', '0.0.0.0/0', { egress: true },
+        'PublicNetworkAcl', '0.0.0.0/0', { Egress: true },
       );
       expect(actual).toEqual(expected);
     });
@@ -1573,6 +1573,19 @@ describe('ServerlessVpcPlugin', () => {
         },
       };
       const actual = plugin.buildPublicNetworkAcl(3);
+      expect(actual).toEqual(expected);
+    });
+  });
+
+  describe('#buildAppNetworkAcl', () => {
+    it('builds the application network ACL', () => {
+      const expected = {
+
+      };
+      const publicSubnets = [
+
+      ];
+      const actual = plugin.buildAppNetworkAcl(publicSubnets);
       expect(actual).toEqual(expected);
     });
   });
