@@ -10,6 +10,7 @@ describe('subnet_groups', () => {
     it('skips building an RDS subnet group with no zones', () => {
       const actual = buildRDSSubnetGroup();
       expect(actual).toEqual({});
+      expect.assertions(1);
     });
 
     it('builds an RDS subnet group', () => {
@@ -42,6 +43,7 @@ describe('subnet_groups', () => {
       };
       const actual = buildRDSSubnetGroup('dev', { numZones: 2 });
       expect(actual).toEqual(expected);
+      expect.assertions(1);
     });
 
     it('builds an RDS subnet group with a custom name', () => {
@@ -74,6 +76,7 @@ describe('subnet_groups', () => {
       };
       const actual = buildRDSSubnetGroup('dev', { name: 'MyRDSSubnetGroup', numZones: 2 });
       expect(actual).toEqual(expected);
+      expect.assertions(1);
     });
   });
 
@@ -81,6 +84,7 @@ describe('subnet_groups', () => {
     it('skips building an ElastiCache subnet group with no zones', () => {
       const actual = buildElastiCacheSubnetGroup();
       expect(actual).toEqual({});
+      expect.assertions(1);
     });
 
     it('builds an ElastiCache subnet group', () => {
@@ -107,6 +111,7 @@ describe('subnet_groups', () => {
       };
       const actual = buildElastiCacheSubnetGroup({ numZones: 2 });
       expect(actual).toEqual(expected);
+      expect.assertions(1);
     });
 
     it('builds an ElastiCache subnet group with a custom name', () => {
@@ -135,6 +140,7 @@ describe('subnet_groups', () => {
         name: 'MyElastiCacheSubnetGroup', numZones: 2,
       });
       expect(actual).toEqual(expected);
+      expect.assertions(1);
     });
   });
 
@@ -142,6 +148,7 @@ describe('subnet_groups', () => {
     it('skips building a Redshift subnet group with no zones', () => {
       const actual = buildRedshiftSubnetGroup();
       expect(actual).toEqual({});
+      expect.assertions(1);
     });
 
     it('builds an Redshift subnet group', () => {
@@ -171,6 +178,7 @@ describe('subnet_groups', () => {
       };
       const actual = buildRedshiftSubnetGroup('dev', { numZones: 2 });
       expect(actual).toEqual(expected);
+      expect.assertions(1);
     });
 
     it('builds an Redshift subnet group with a custom name', () => {
@@ -202,6 +210,7 @@ describe('subnet_groups', () => {
         name: 'MyRedshiftSubnetGroup', numZones: 2,
       });
       expect(actual).toEqual(expected);
+      expect.assertions(1);
     });
   });
 
@@ -209,6 +218,7 @@ describe('subnet_groups', () => {
     it('skips building an DAX subnet group with no zones', () => {
       const actual = buildDAXSubnetGroup();
       expect(actual).toEqual({});
+      expect.assertions(1);
     });
 
     it('builds an DAX subnet group', () => {
@@ -235,6 +245,7 @@ describe('subnet_groups', () => {
       };
       const actual = buildDAXSubnetGroup({ numZones: 2 });
       expect(actual).toEqual(expected);
+      expect.assertions(1);
     });
 
     it('builds an DAX subnet group with a custom name', () => {
@@ -263,6 +274,7 @@ describe('subnet_groups', () => {
         name: 'MyDAXSubnetGroup', numZones: 2,
       });
       expect(actual).toEqual(expected);
+      expect.assertions(1);
     });
   });
 });

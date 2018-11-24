@@ -9,6 +9,7 @@ describe('vpce', () => {
     it('skips building endpoints if none provided', () => {
       const actual = buildEndpointServices();
       expect(actual).toEqual({});
+      expect.assertions(1);
     });
 
     it('builds an S3 VPC Gateway endpoint', () => {
@@ -52,6 +53,7 @@ describe('vpce', () => {
         services: ['s3'], numZones: 1,
       });
       expect(actual).toEqual(expected);
+      expect.assertions(1);
     });
 
     it('builds an DynamoDB VPC Gateway endpoint', () => {
@@ -95,6 +97,7 @@ describe('vpce', () => {
         services: ['dynamodb'], numZones: 1,
       });
       expect(actual).toEqual(expected);
+      expect.assertions(1);
     });
 
     it('builds an KMS VPC Interface endpoint', () => {
@@ -136,6 +139,7 @@ describe('vpce', () => {
         services: ['kms'], numZones: 1,
       });
       expect(actual).toEqual(expected);
+      expect.assertions(1);
     });
 
     it('builds an SageMaker Runtime FIPS VPC Interface endpoint', () => {
@@ -177,6 +181,7 @@ describe('vpce', () => {
         services: ['sagemaker.runtime-fips'], numZones: 1,
       });
       expect(actual).toEqual(expected);
+      expect.assertions(1);
     });
   });
 
@@ -222,6 +227,7 @@ describe('vpce', () => {
         's3', { routeTableIds: [{ Ref: 'AppRouteTable1' }] },
       );
       expect(actual).toEqual(expected);
+      expect.assertions(1);
     });
 
     it('builds an SageMaker Runtime FIPS VPC Interface endpoint', () => {
@@ -263,6 +269,7 @@ describe('vpce', () => {
         'sagemaker.runtime-fips', { subnetIds: [{ Ref: 'AppSubnet1' }] },
       );
       expect(actual).toEqual(expected);
+      expect.assertions(1);
     });
   });
 
@@ -311,6 +318,7 @@ describe('vpce', () => {
       };
       const actual = buildLambdaVPCEndpointSecurityGroup('dev');
       expect(actual).toEqual(expected);
+      expect.assertions(1);
     });
 
     it('builds a Lambda security group with a custom name', () => {
@@ -359,6 +367,7 @@ describe('vpce', () => {
         name: 'MyLambdaEndpointSecurityGroup',
       });
       expect(actual).toEqual(expected);
+      expect.assertions(1);
     });
   });
 });

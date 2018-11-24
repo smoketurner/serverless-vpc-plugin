@@ -13,6 +13,7 @@ describe('natgw', () => {
       };
       const actual = buildEIP(1);
       expect(actual).toEqual(expected);
+      expect.assertions(1);
     });
   });
 
@@ -54,8 +55,9 @@ describe('natgw', () => {
           },
         },
       };
-      const actual = buildNatGateway(1, 'us-east-1a', 'dev');
+      const actual = buildNatGateway('dev', 1, 'us-east-1a');
       expect(actual).toEqual(expected);
+      expect.assertions(1);
     });
   });
 });

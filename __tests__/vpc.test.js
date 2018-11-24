@@ -38,6 +38,7 @@ describe('vpc', () => {
 
       const actual = buildVpc('dev');
       expect(actual).toEqual(expected);
+      expect.assertions(1);
     });
 
     it('builds a VPC with a custom parameters', () => {
@@ -67,6 +68,7 @@ describe('vpc', () => {
 
       const actual = buildVpc('dev', { name: 'MyVpc', cidrBlock: '192.168.0.0/16' });
       expect(actual).toEqual(expected);
+      expect.assertions(1);
     });
   });
 
@@ -94,6 +96,7 @@ describe('vpc', () => {
 
       const actual = buildInternetGateway('dev');
       expect(actual).toEqual(expected);
+      expect.assertions(1);
     });
 
     it('builds an Internet Gateway with a custom name', () => {
@@ -119,6 +122,7 @@ describe('vpc', () => {
 
       const actual = buildInternetGateway('dev', { name: 'MyInternetGateway' });
       expect(actual).toEqual(expected);
+      expect.assertions(1);
     });
   });
 
@@ -140,6 +144,7 @@ describe('vpc', () => {
 
       const actual = buildInternetGatewayAttachment();
       expect(actual).toEqual(expected);
+      expect.assertions(1);
     });
 
     it('builds an Internet Gateway Attachment with a custom name', () => {
@@ -162,6 +167,7 @@ describe('vpc', () => {
       });
 
       expect(actual).toEqual(expected);
+      expect.assertions(1);
     });
   });
 
@@ -202,6 +208,7 @@ describe('vpc', () => {
       };
       const actual = buildSubnet('dev', 'App', 1, 'us-east-1a', '10.0.0.0/22');
       expect(actual).toEqual(expected);
+      expect.assertions(1);
     });
   });
 
@@ -240,6 +247,7 @@ describe('vpc', () => {
       };
       const actual = buildRouteTable('dev', 'App', 1, 'us-east-1a');
       expect(actual).toEqual(expected);
+      expect.assertions(1);
     });
   });
 
@@ -260,6 +268,7 @@ describe('vpc', () => {
       };
       const actual = buildRouteTableAssociation('App', 1);
       expect(actual).toEqual(expected);
+      expect.assertions(1);
     });
   });
 
@@ -283,6 +292,7 @@ describe('vpc', () => {
         NatGatewayId: 'NatGateway1',
       });
       expect(actual).toEqual(expected);
+      expect.assertions(1);
     });
 
     it('builds a route with an Internet Gateway', () => {
@@ -304,12 +314,14 @@ describe('vpc', () => {
         GatewayId: 'InternetGateway',
       });
       expect(actual).toEqual(expected);
+      expect.assertions(1);
     });
 
     it('throws an error if no gateway provided', () => {
       expect(() => {
         buildRoute('App', 1);
       }).toThrow('Unable to create route: either NatGatewayId or GatewayId must be provided');
+      expect.assertions(1);
     });
   });
 
@@ -348,6 +360,7 @@ describe('vpc', () => {
       };
       const actual = buildLambdaSecurityGroup('dev');
       expect(actual).toEqual(expected);
+      expect.assertions(1);
     });
 
     it('builds a Lambda security group with a custom name', () => {
@@ -386,6 +399,7 @@ describe('vpc', () => {
         name: 'MyLambdaExecutionSecurityGroup',
       });
       expect(actual).toEqual(expected);
+      expect.assertions(1);
     });
   });
 });

@@ -154,6 +154,7 @@ describe('ServerlessVpcPlugin', () => {
       ];
 
       expect(actual).toEqual(expected);
+      expect.assertions(1);
     });
 
     it('splits 192.168.0.0/16 into 16 /20s', () => {
@@ -178,6 +179,7 @@ describe('ServerlessVpcPlugin', () => {
       ];
 
       expect(actual).toEqual(expected);
+      expect.assertions(1);
     });
   });
 
@@ -210,6 +212,7 @@ describe('ServerlessVpcPlugin', () => {
       const expected = new Map(parts);
 
       expect(actual).toEqual(expected);
+      expect.assertions(1);
     });
   });
 
@@ -219,6 +222,7 @@ describe('ServerlessVpcPlugin', () => {
         'dev', { cidrBlock: '10.0.0.0/16' },
       );
       expect(actual).toEqual({});
+      expect.assertions(1);
     });
 
     it('builds a single AZ with a NAT Gateway and DBSubnet', () => {
@@ -231,6 +235,7 @@ describe('ServerlessVpcPlugin', () => {
         skipDbCreation: false,
       });
       expect(actual).toEqual(expected);
+      expect.assertions(1);
     });
 
     it('builds a single AZ without a NAT Gateway and DBSubnet', () => {
@@ -243,6 +248,7 @@ describe('ServerlessVpcPlugin', () => {
         skipDbCreation: false,
       });
       expect(actual).toEqual(expected);
+      expect.assertions(1);
     });
 
     it('builds a single AZ with a NAT Gateway and no DBSubnet', () => {
@@ -255,6 +261,7 @@ describe('ServerlessVpcPlugin', () => {
         skipDbCreation: true,
       });
       expect(actual).toEqual(expected);
+      expect.assertions(1);
     });
 
     it('builds a single AZ without a NAT Gateway and no DBSubnet', () => {
@@ -267,6 +274,7 @@ describe('ServerlessVpcPlugin', () => {
         skipDbCreation: true,
       });
       expect(actual).toEqual(expected);
+      expect.assertions(1);
     });
 
     it('builds multiple AZs with a NAT Gateway and DBSubnet', () => {
@@ -279,6 +287,7 @@ describe('ServerlessVpcPlugin', () => {
         skipDbCreation: false,
       });
       expect(actual).toEqual(expected);
+      expect.assertions(1);
     });
 
     it('builds multiple AZs without a NAT Gateway and DBSubnet', () => {
@@ -291,6 +300,7 @@ describe('ServerlessVpcPlugin', () => {
         skipDbCreation: false,
       });
       expect(actual).toEqual(expected);
+      expect.assertions(1);
     });
 
     it('builds multiple AZs with a NAT Gateway and no DBSubnet', () => {
@@ -303,6 +313,7 @@ describe('ServerlessVpcPlugin', () => {
         skipDbCreation: true,
       });
       expect(actual).toEqual(expected);
+      expect.assertions(1);
     });
 
     it('builds multiple AZs without a NAT Gateway and no DBSubnet', () => {
@@ -315,6 +326,7 @@ describe('ServerlessVpcPlugin', () => {
         skipDbCreation: true,
       });
       expect(actual).toEqual(expected);
+      expect.assertions(1);
     });
 
     it('builds multiple AZs with a single NAT Gateway and no DBSubnet', () => {
@@ -327,6 +339,7 @@ describe('ServerlessVpcPlugin', () => {
         skipDbCreation: true,
       });
       expect(actual).toEqual(expected);
+      expect.assertions(1);
     });
 
     it('builds multiple AZs with a multple NAT Gateways and no DBSubnet', () => {
@@ -339,6 +352,7 @@ describe('ServerlessVpcPlugin', () => {
         skipDbCreation: true,
       });
       expect(actual).toEqual(expected);
+      expect.assertions(1);
     });
   });
 });

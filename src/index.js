@@ -19,7 +19,7 @@ const {
 const {
   buildAppNetworkAcl,
   buildPublicNetworkAcl,
-  buildDBNetworkAcl
+  buildDBNetworkAcl,
 } = require('./nacl');
 
 const {
@@ -301,7 +301,7 @@ class ServerlessVpcPlugin {
         merge(
           resources,
           buildEIP(index + 1),
-          buildNatGateway(index + 1, zones[index], stage),
+          buildNatGateway(stage, index + 1, zones[index]),
         );
       }
     }
@@ -346,14 +346,14 @@ class ServerlessVpcPlugin {
     });
 
     // Add Network ACLs
-    /*merge(
+    merge(
       resources,
       buildPublicNetworkAcl(stage, zones.length),
       buildAppNetworkAcl(stage, subnets.get(PUBLIC_SUBNET)),
     );
     if (!skipDbCreation) {
       merge(resources, buildDBNetworkAcl(stage, subnets.get(APP_SUBNET)));
-    }*/
+    }
 
     return resources;
   }

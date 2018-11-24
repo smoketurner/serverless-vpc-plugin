@@ -1,13 +1,32 @@
 {
-  "AppRoute1": {
-    "Type": "AWS::EC2::Route",
+  "AppSubnet1": {
+    "Type": "AWS::EC2::Subnet",
     "Properties": {
-      "DestinationCidrBlock": "0.0.0.0/0",
-      "GatewayId": {
-        "Ref": "InternetGateway"
-      },
-      "RouteTableId": {
-        "Ref": "AppRouteTable1"
+      "AvailabilityZone": "us-east-1a",
+      "CidrBlock": "10.0.0.0/21",
+      "Tags": [
+        {
+          "Key": "STAGE",
+          "Value": "dev"
+        },
+        {
+          "Key": "Name",
+          "Value": {
+            "Fn::Join": [
+              "-",
+              [
+                {
+                  "Ref": "AWS::StackName"
+                },
+                "app",
+                "us-east-1a"
+              ]
+            ]
+          }
+        }
+      ],
+      "VpcId": {
+        "Ref": "VPC"
       }
     }
   },
@@ -51,11 +70,23 @@
       }
     }
   },
-  "AppSubnet1": {
+  "AppRoute1": {
+    "Type": "AWS::EC2::Route",
+    "Properties": {
+      "DestinationCidrBlock": "0.0.0.0/0",
+      "RouteTableId": {
+        "Ref": "AppRouteTable1"
+      },
+      "GatewayId": {
+        "Ref": "InternetGateway"
+      }
+    }
+  },
+  "PublicSubnet1": {
     "Type": "AWS::EC2::Subnet",
     "Properties": {
       "AvailabilityZone": "us-east-1a",
-      "CidrBlock": "10.0.0.0/21",
+      "CidrBlock": "10.0.8.0/22",
       "Tags": [
         {
           "Key": "STAGE",
@@ -70,7 +101,7 @@
                 {
                   "Ref": "AWS::StackName"
                 },
-                "app",
+                "public",
                 "us-east-1a"
               ]
             ]
@@ -79,18 +110,6 @@
       ],
       "VpcId": {
         "Ref": "VPC"
-      }
-    }
-  },
-  "PublicRoute1": {
-    "Type": "AWS::EC2::Route",
-    "Properties": {
-      "DestinationCidrBlock": "0.0.0.0/0",
-      "GatewayId": {
-        "Ref": "InternetGateway"
-      },
-      "RouteTableId": {
-        "Ref": "PublicRouteTable1"
       }
     }
   },
@@ -134,11 +153,23 @@
       }
     }
   },
-  "PublicSubnet1": {
+  "PublicRoute1": {
+    "Type": "AWS::EC2::Route",
+    "Properties": {
+      "DestinationCidrBlock": "0.0.0.0/0",
+      "RouteTableId": {
+        "Ref": "PublicRouteTable1"
+      },
+      "GatewayId": {
+        "Ref": "InternetGateway"
+      }
+    }
+  },
+  "AppSubnet2": {
     "Type": "AWS::EC2::Subnet",
     "Properties": {
-      "AvailabilityZone": "us-east-1a",
-      "CidrBlock": "10.0.8.0/22",
+      "AvailabilityZone": "us-east-1b",
+      "CidrBlock": "10.0.16.0/21",
       "Tags": [
         {
           "Key": "STAGE",
@@ -153,8 +184,8 @@
                 {
                   "Ref": "AWS::StackName"
                 },
-                "public",
-                "us-east-1a"
+                "app",
+                "us-east-1b"
               ]
             ]
           }
@@ -162,18 +193,6 @@
       ],
       "VpcId": {
         "Ref": "VPC"
-      }
-    }
-  },
-  "AppRoute2": {
-    "Type": "AWS::EC2::Route",
-    "Properties": {
-      "DestinationCidrBlock": "0.0.0.0/0",
-      "GatewayId": {
-        "Ref": "InternetGateway"
-      },
-      "RouteTableId": {
-        "Ref": "AppRouteTable2"
       }
     }
   },
@@ -217,11 +236,23 @@
       }
     }
   },
-  "AppSubnet2": {
+  "AppRoute2": {
+    "Type": "AWS::EC2::Route",
+    "Properties": {
+      "DestinationCidrBlock": "0.0.0.0/0",
+      "RouteTableId": {
+        "Ref": "AppRouteTable2"
+      },
+      "GatewayId": {
+        "Ref": "InternetGateway"
+      }
+    }
+  },
+  "PublicSubnet2": {
     "Type": "AWS::EC2::Subnet",
     "Properties": {
       "AvailabilityZone": "us-east-1b",
-      "CidrBlock": "10.0.16.0/21",
+      "CidrBlock": "10.0.24.0/22",
       "Tags": [
         {
           "Key": "STAGE",
@@ -236,7 +267,7 @@
                 {
                   "Ref": "AWS::StackName"
                 },
-                "app",
+                "public",
                 "us-east-1b"
               ]
             ]
@@ -245,18 +276,6 @@
       ],
       "VpcId": {
         "Ref": "VPC"
-      }
-    }
-  },
-  "PublicRoute2": {
-    "Type": "AWS::EC2::Route",
-    "Properties": {
-      "DestinationCidrBlock": "0.0.0.0/0",
-      "GatewayId": {
-        "Ref": "InternetGateway"
-      },
-      "RouteTableId": {
-        "Ref": "PublicRouteTable2"
       }
     }
   },
@@ -300,11 +319,21 @@
       }
     }
   },
-  "PublicSubnet2": {
-    "Type": "AWS::EC2::Subnet",
+  "PublicRoute2": {
+    "Type": "AWS::EC2::Route",
     "Properties": {
-      "AvailabilityZone": "us-east-1b",
-      "CidrBlock": "10.0.24.0/22",
+      "DestinationCidrBlock": "0.0.0.0/0",
+      "RouteTableId": {
+        "Ref": "PublicRouteTable2"
+      },
+      "GatewayId": {
+        "Ref": "InternetGateway"
+      }
+    }
+  },
+  "PublicNetworkAcl": {
+    "Type": "AWS::EC2::NetworkAcl",
+    "Properties": {
       "Tags": [
         {
           "Key": "STAGE",
@@ -319,8 +348,7 @@
                 {
                   "Ref": "AWS::StackName"
                 },
-                "public",
-                "us-east-1b"
+                "public"
               ]
             ]
           }
@@ -328,6 +356,54 @@
       ],
       "VpcId": {
         "Ref": "VPC"
+      }
+    }
+  },
+  "PublicNetworkAclIngress100": {
+    "Type": "AWS::EC2::NetworkAclEntry",
+    "Properties": {
+      "CidrBlock": "0.0.0.0/0",
+      "NetworkAclId": {
+        "Ref": "PublicNetworkAcl"
+      },
+      "Egress": false,
+      "Protocol": -1,
+      "RuleAction": "allow",
+      "RuleNumber": 100
+    }
+  },
+  "PublicNetworkAclEgress100": {
+    "Type": "AWS::EC2::NetworkAclEntry",
+    "Properties": {
+      "CidrBlock": "0.0.0.0/0",
+      "NetworkAclId": {
+        "Ref": "PublicNetworkAcl"
+      },
+      "Egress": true,
+      "Protocol": -1,
+      "RuleAction": "allow",
+      "RuleNumber": 100
+    }
+  },
+  "PublicSubnetNetworkAclAssociation1": {
+    "Type": "AWS::EC2::SubnetNetworkAclAssociation",
+    "Properties": {
+      "SubnetId": {
+        "Ref": "PublicSubnet1"
+      },
+      "NetworkAclId": {
+        "Ref": "PublicNetworkAcl"
+      }
+    }
+  },
+  "PublicSubnetNetworkAclAssociation2": {
+    "Type": "AWS::EC2::SubnetNetworkAclAssociation",
+    "Properties": {
+      "SubnetId": {
+        "Ref": "PublicSubnet2"
+      },
+      "NetworkAclId": {
+        "Ref": "PublicNetworkAcl"
       }
     }
   }

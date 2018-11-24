@@ -204,6 +204,7 @@ describe('nacl', () => {
       };
       const actual = buildPublicNetworkAcl('dev', 3);
       expect(actual).toEqual(expected);
+      expect.assertions(1);
     });
   });
 
@@ -357,6 +358,7 @@ describe('nacl', () => {
       ];
       const actual = buildAppNetworkAcl('dev', publicSubnets);
       expect(actual).toEqual(expected);
+      expect.assertions(1);
     });
   });
 
@@ -510,6 +512,7 @@ describe('nacl', () => {
       ];
       const actual = buildDBNetworkAcl('dev', appSubnets);
       expect(actual).toEqual(expected);
+      expect.assertions(1);
     });
   });
 });

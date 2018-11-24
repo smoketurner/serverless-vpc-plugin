@@ -21,12 +21,12 @@ function buildEIP(position) {
 /**
  * Build a NatGateway in a given AZ
  *
+ * @param {String} stage
  * @param {Number} position
  * @param {String} zone
- * @param {String} stage
  * @return {Object}
  */
-function buildNatGateway(position, zone, stage) {
+function buildNatGateway(stage, position, zone) {
   const cfName = `NatGateway${position}`;
   return {
     [cfName]: {
