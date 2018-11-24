@@ -115,8 +115,8 @@ class ServerlessVpcPlugin {
       buildVpc(stage, { cidrBlock }),
       buildInternetGateway(stage),
       buildInternetGatewayAttachment(),
-      ServerlessVpcPlugin.buildAvailabilityZones(stage, {
-        cidrBlock, zones, numNatGateway: useNatGateway, skipDbCreation, useNetworkAcl,
+      ServerlessVpcPlugin.buildAvailabilityZones(stage, cidrBlock, {
+        zones, numNatGateway: useNatGateway, skipDbCreation, useNetworkAcl,
       }),
       buildLambdaSecurityGroup(stage),
     );
@@ -287,8 +287,7 @@ class ServerlessVpcPlugin {
    * @param {Boolean} useNetworkAcl Whether to create Network ACLs or not
    * @return {Object}
    */
-  static buildAvailabilityZones(stage, {
-    cidrBlock,
+  static buildAvailabilityZones(stage, cidrBlock, {
     zones = [],
     numNatGateway = 0,
     skipDbCreation = false,
