@@ -242,7 +242,7 @@ describe('nacl', () => {
         AppNetworkAclEgress100: {
           Type: 'AWS::EC2::NetworkAclEntry',
           Properties: {
-            CidrBlock: '10.0.8.0/22',
+            CidrBlock: '0.0.0.0/0',
             NetworkAclId: {
               Ref: 'AppNetworkAcl',
             },
@@ -255,7 +255,7 @@ describe('nacl', () => {
         AppNetworkAclIngress100: {
           Type: 'AWS::EC2::NetworkAclEntry',
           Properties: {
-            CidrBlock: '10.0.8.0/22',
+            CidrBlock: '0.0.0.0/0',
             NetworkAclId: {
               Ref: 'AppNetworkAcl',
             },
@@ -263,58 +263,6 @@ describe('nacl', () => {
             Protocol: -1,
             RuleAction: 'allow',
             RuleNumber: 100,
-          },
-        },
-        AppNetworkAclEgress101: {
-          Type: 'AWS::EC2::NetworkAclEntry',
-          Properties: {
-            CidrBlock: '10.0.24.0/22',
-            NetworkAclId: {
-              Ref: 'AppNetworkAcl',
-            },
-            Egress: true,
-            Protocol: -1,
-            RuleAction: 'allow',
-            RuleNumber: 101,
-          },
-        },
-        AppNetworkAclIngress101: {
-          Type: 'AWS::EC2::NetworkAclEntry',
-          Properties: {
-            CidrBlock: '10.0.24.0/22',
-            NetworkAclId: {
-              Ref: 'AppNetworkAcl',
-            },
-            Egress: false,
-            Protocol: -1,
-            RuleAction: 'allow',
-            RuleNumber: 101,
-          },
-        },
-        AppNetworkAclEgress102: {
-          Type: 'AWS::EC2::NetworkAclEntry',
-          Properties: {
-            CidrBlock: '10.0.40.0/22',
-            NetworkAclId: {
-              Ref: 'AppNetworkAcl',
-            },
-            Egress: true,
-            Protocol: -1,
-            RuleAction: 'allow',
-            RuleNumber: 102,
-          },
-        },
-        AppNetworkAclIngress102: {
-          Type: 'AWS::EC2::NetworkAclEntry',
-          Properties: {
-            CidrBlock: '10.0.40.0/22',
-            NetworkAclId: {
-              Ref: 'AppNetworkAcl',
-            },
-            Egress: false,
-            Protocol: -1,
-            RuleAction: 'allow',
-            RuleNumber: 102,
           },
         },
         AppSubnetNetworkAclAssociation1: {
@@ -351,12 +299,7 @@ describe('nacl', () => {
           },
         },
       };
-      const publicSubnets = [
-        '10.0.8.0/22',
-        '10.0.24.0/22',
-        '10.0.40.0/22',
-      ];
-      const actual = buildAppNetworkAcl('dev', publicSubnets);
+      const actual = buildAppNetworkAcl('dev', 3);
       expect(actual).toEqual(expected);
       expect.assertions(1);
     });

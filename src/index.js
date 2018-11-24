@@ -356,7 +356,7 @@ class ServerlessVpcPlugin {
       merge(
         resources,
         buildPublicNetworkAcl(stage, zones.length),
-        buildAppNetworkAcl(stage, subnets.get(PUBLIC_SUBNET)),
+        buildAppNetworkAcl(stage, zones.length),
       );
       if (!skipDbCreation) {
         merge(resources, buildDBNetworkAcl(stage, subnets.get(APP_SUBNET)));

@@ -9,6 +9,7 @@ const vpcSingleAZNatGWDB = require('./fixtures/vpc_single_az_natgw_db.json');
 const vpcSingleAZNoGatGWDB = require('./fixtures/vpc_single_az_no_natgw_db.json');
 const vpcSingleAZNatGWNoDB = require('./fixtures/vpc_single_az_natgw_no_db.json');
 const vpcSingleAZNoGatGWNoDB = require('./fixtures/vpc_single_az_no_natgw_no_db.json');
+const vpcSingleAZNoNatGWNoDBNACL = require('./fixtures/vpc_single_az_no_natgw_no_db_nacl.json');
 
 const vpcMultipleAZNatGWDB = require('./fixtures/vpc_multiple_az_natgw_db.json');
 const vpcMultipleAZNoNatGWDB = require('./fixtures/vpc_multiple_az_no_natgw_db.json');
@@ -350,6 +351,20 @@ describe('ServerlessVpcPlugin', () => {
         zones: ['us-east-1a', 'us-east-1b', 'us-east-1c'],
         numNatGateway: 2,
         skipDbCreation: true,
+      });
+      expect(actual).toEqual(expected);
+      expect.assertions(1);
+    });
+
+    it('builds a single AZ without a NAT Gateway and no DBSubnet and NACL', () => {
+      const expected = Object.assign({}, vpcSingleAZNoNatGWNoDBNACL);
+
+      const actual = ServerlessVpcPlugin.buildAvailabilityZones('dev', {
+        cidrBlock: '10.0.0.0/16',
+        zones: ['us-east-1a'],
+        numNatGateway: 0,
+        skipDbCreation: true,
+        useNetworkAcl: true,
       });
       expect(actual).toEqual(expected);
       expect.assertions(1);

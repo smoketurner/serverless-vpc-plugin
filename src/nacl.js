@@ -140,31 +140,35 @@ function buildPublicNetworkAcl(stage, numZones) {
  * Build the Application Network ACL
  *
  * @param {String} stage
- * @param {Array} publicSubnets
+ * @param {Number} numZones
  */
-function buildAppNetworkAcl(stage, publicSubnets) {
-  if (publicSubnets.length < 1) {
+function buildAppNetworkAcl(stage, numZones) {
+  if (numZones < 1) {
     return {};
   }
 
-  const resources = buildNetworkAcl(stage, APP_SUBNET);
+  const resources = {};
 
-  publicSubnets.forEach((subnet, index) => {
+  merge(
+    resources,
+    buildNetworkAcl(stage, APP_SUBNET),
+    buildNetworkAclEntry(
+      `${APP_SUBNET}NetworkAcl`,
+      '0.0.0.0/0',
+    ),
+    buildNetworkAclEntry(
+      `${APP_SUBNET}NetworkAcl`,
+      '0.0.0.0/0',
+      { Egress: true },
+    ),
+  );
+
+  for (let i = 1; i <= numZones; i += 1) {
     merge(
       resources,
-      buildNetworkAclEntry(
-        `${APP_SUBNET}NetworkAcl`,
-        subnet,
-        { RuleNumber: 100 + index },
-      ),
-      buildNetworkAclEntry(
-        `${APP_SUBNET}NetworkAcl`,
-        subnet,
-        { RuleNumber: 100 + index, Egress: true },
-      ),
-      buildNetworkAclAssociation(APP_SUBNET, index + 1),
+      buildNetworkAclAssociation(APP_SUBNET, i),
     );
-  });
+  }
 
   return resources;
 }
@@ -176,7 +180,7 @@ function buildAppNetworkAcl(stage, publicSubnets) {
  * @param {Array} appSubnets
  */
 function buildDBNetworkAcl(stage, appSubnets) {
-  if (appSubnets.length < 1) {
+  if (!Array.isArray(appSubnets) || appSubnets.length < 1) {
     return {};
   }
 
