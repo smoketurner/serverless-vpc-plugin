@@ -55,6 +55,7 @@ class ServerlessVpcPlugin {
   async afterInitialize() {
     let cidrBlock = '10.0.0.0/16';
     let useNatGateway = false;
+    let useNetworkAcl = false;
     let zones = [];
     let services = ['s3', 'dynamodb'];
     let skipDbCreation = false;
@@ -67,6 +68,9 @@ class ServerlessVpcPlugin {
       }
       if ('useNatGateway' in vpcConfig) {
         ({ useNatGateway } = vpcConfig);
+      }
+      if ('useNetworkAcl' in vpcConfig && typeof vpcConfig.useNetworkAcl === 'boolean') {
+        ({ useNetworkAcl } = vpcConfig);
       }
       if (vpcConfig.zones && Array.isArray(vpcConfig.zones) && vpcConfig.zones.length > 0) {
         ({ zones } = vpcConfig);
@@ -110,7 +114,7 @@ class ServerlessVpcPlugin {
       buildInternetGateway(stage),
       buildInternetGatewayAttachment(),
       ServerlessVpcPlugin.buildAvailabilityZones(stage, {
-        cidrBlock, zones, numNatGateway: useNatGateway, skipDbCreation,
+        cidrBlock, zones, numNatGateway: useNatGateway, skipDbCreation, useNetworkAcl,
       }),
       buildLambdaSecurityGroup(stage),
     );
@@ -278,6 +282,7 @@ class ServerlessVpcPlugin {
    * @param {Array} zones Array of availability zones
    * @param {Number} numNatGateway Number of NAT gateways (and EIPs) to provision
    * @param {Boolean} skipDbCreation Whether to skip creating the DBSubnet or not
+   * @param {Boolean} useNetworkAcl Whether to create Network ACLs or not
    * @return {Object}
    */
   static buildAvailabilityZones(stage, {
@@ -285,6 +290,7 @@ class ServerlessVpcPlugin {
     zones = [],
     numNatGateway = 0,
     skipDbCreation = false,
+    useNetworkAcl = false,
   } = {}) {
     if (!cidrBlock) {
       return {};
@@ -345,14 +351,16 @@ class ServerlessVpcPlugin {
       }
     });
 
-    // Add Network ACLs
-    merge(
-      resources,
-      buildPublicNetworkAcl(stage, zones.length),
-      buildAppNetworkAcl(stage, subnets.get(PUBLIC_SUBNET)),
-    );
-    if (!skipDbCreation) {
-      merge(resources, buildDBNetworkAcl(stage, subnets.get(APP_SUBNET)));
+    if (useNetworkAcl) {
+      // Add Network ACLs
+      merge(
+        resources,
+        buildPublicNetworkAcl(stage, zones.length),
+        buildAppNetworkAcl(stage, subnets.get(PUBLIC_SUBNET)),
+      );
+      if (!skipDbCreation) {
+        merge(resources, buildDBNetworkAcl(stage, subnets.get(APP_SUBNET)));
+      }
     }
 
     return resources;
