@@ -41,7 +41,7 @@ custom:
   bucketName: sls-vpc-example
   vpcConfig:
     cidrBlock: '10.0.0.0/16'
-    useNatGateway: 1
+    useNatGateway: false
     skipDbCreation: false
     useNetworkAcl: true
     zones:
