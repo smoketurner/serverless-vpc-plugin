@@ -91,6 +91,17 @@ custom:
     # if useNatGateway is a number, that number of NAT Gateways will be provisioned
     useNatGateway: 2
 
+    # WORK IN PROGRESS
+    #
+    # TODO: with the current network ACLs in place, you are unable to invoke
+    # the lambda from the AWS console
+    #
+    # Whether to create Network ACLs to restrict traffic between the subnets:
+    # - Public <-> App = ALLOW
+    # - App <-> DB = ALLOW
+    # - Public <-> DB = DENY
+    useNetworkAcl: false
+
     skipDbCreation: false # whether to skip creating the DBSubnet's
     zones: # optionally specify AZs (defaults to auto-discover all availabile AZs)
       - us-east-1a
