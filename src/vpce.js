@@ -2,7 +2,6 @@ const merge = require('lodash.merge');
 
 const { APP_SUBNET } = require('./constants');
 
-
 /**
  * Build a VPCEndpoint
  *
@@ -10,7 +9,10 @@ const { APP_SUBNET } = require('./constants');
  * @param {Object} params
  * @return {Object}
  */
-function buildVPCEndpoint(service, { routeTableIds = [], subnetIds = [] } = {}) {
+function buildVPCEndpoint(
+  service,
+  { routeTableIds = [], subnetIds = [] } = {}
+) {
   const endpoint = {
     Type: 'AWS::EC2::VPCEndpoint',
     Properties: {
@@ -20,16 +22,16 @@ function buildVPCEndpoint(service, { routeTableIds = [], subnetIds = [] } = {}) 
           [
             'com.amazonaws',
             {
-              Ref: 'AWS::Region',
+              Ref: 'AWS::Region'
             },
-            service,
-          ],
-        ],
+            service
+          ]
+        ]
       },
       VpcId: {
-        Ref: 'VPC',
-      },
-    },
+        Ref: 'VPC'
+      }
+    }
   };
 
   // @see https://docs.aws.amazon.com/vpc/latest/userguide/vpc-endpoints.html
@@ -37,23 +39,25 @@ function buildVPCEndpoint(service, { routeTableIds = [], subnetIds = [] } = {}) 
     endpoint.Properties.VpcEndpointType = 'Gateway';
     endpoint.Properties.RouteTableIds = routeTableIds;
     endpoint.Properties.PolicyDocument = {
-      Statement: [{
-        Effect: 'Allow',
-        /*
-        TODO 11/21: We should restrict the VPC Endpoint to only the Lambda
-        IAM role, but this doesn't work.
+      Statement: [
+        {
+          Effect: 'Allow',
+          /*
+          TODO 11/21: We should restrict the VPC Endpoint to only the Lambda
+          IAM role, but this doesn't work.
 
-        Principal: {
-          AWS: {
-            'Fn::GetAtt': [
-              'IamRoleLambdaExecution',
-              'Arn',
-            ],
-          },
-        }, */
-        Principal: '*',
-        Resource: '*',
-      }],
+          Principal: {
+            AWS: {
+              'Fn::GetAtt': [
+                'IamRoleLambdaExecution',
+                'Arn',
+              ],
+            },
+          }, */
+          Principal: '*',
+          Resource: '*'
+        }
+      ]
     };
     if (service === 's3') {
       endpoint.Properties.PolicyDocument.Statement[0].Action = 's3:*';
@@ -64,17 +68,21 @@ function buildVPCEndpoint(service, { routeTableIds = [], subnetIds = [] } = {}) 
     endpoint.Properties.VpcEndpointType = 'Interface';
     endpoint.Properties.SubnetIds = subnetIds;
     endpoint.Properties.PrivateDnsEnabled = true;
-    endpoint.Properties.SecurityGroupIds = [{
-      Ref: 'LambdaEndpointSecurityGroup',
-    }];
+    endpoint.Properties.SecurityGroupIds = [
+      {
+        Ref: 'LambdaEndpointSecurityGroup'
+      }
+    ];
   }
 
   const parts = service.split(/[-_.]/g);
   parts.push('VPCEndpoint');
-  const cfName = parts.map(part => part.charAt(0).toUpperCase() + part.slice(1)).join('');
+  const cfName = parts
+    .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+    .join('');
 
   return {
-    [cfName]: endpoint,
+    [cfName]: endpoint
   };
 }
 
@@ -100,10 +108,8 @@ function buildEndpointServices({ services = [], numZones = 0 } = {}) {
   }
 
   const resources = {};
-  services.forEach((service) => {
-    merge(resources, buildVPCEndpoint(
-      service, { routeTableIds, subnetIds },
-    ));
+  services.forEach(service => {
+    merge(resources, buildVPCEndpoint(service, { routeTableIds, subnetIds }));
   });
 
   return resources;
@@ -116,29 +122,32 @@ function buildEndpointServices({ services = [], numZones = 0 } = {}) {
  * @param {Object} params
  * @return {Object}
  */
-function buildLambdaVPCEndpointSecurityGroup(stage, { name = 'LambdaEndpointSecurityGroup' } = {}) {
+function buildLambdaVPCEndpointSecurityGroup(
+  stage,
+  { name = 'LambdaEndpointSecurityGroup' } = {}
+) {
   return {
     [name]: {
       Type: 'AWS::EC2::SecurityGroup',
       Properties: {
         GroupDescription: 'Lambda access to VPC endpoints',
         VpcId: {
-          Ref: 'VPC',
+          Ref: 'VPC'
         },
         SecurityGroupIngress: [
           {
             SourceSecurityGroupId: {
-              Ref: 'LambdaExecutionSecurityGroup',
+              Ref: 'LambdaExecutionSecurityGroup'
             },
             IpProtocol: 'tcp',
             FromPort: 443,
-            ToPort: 443,
-          },
+            ToPort: 443
+          }
         ],
         Tags: [
           {
             Key: 'STAGE',
-            Value: stage,
+            Value: stage
           },
           {
             Key: 'Name',
@@ -147,21 +156,21 @@ function buildLambdaVPCEndpointSecurityGroup(stage, { name = 'LambdaEndpointSecu
                 '-',
                 [
                   {
-                    Ref: 'AWS::StackName',
+                    Ref: 'AWS::StackName'
                   },
-                  'lambda-endpoint',
-                ],
-              ],
-            },
-          },
-        ],
-      },
-    },
+                  'lambda-endpoint'
+                ]
+              ]
+            }
+          }
+        ]
+      }
+    }
   };
 }
 
 module.exports = {
   buildEndpointServices,
   buildVPCEndpoint,
-  buildLambdaVPCEndpointSecurityGroup,
+  buildLambdaVPCEndpointSecurityGroup
 };

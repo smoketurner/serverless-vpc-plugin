@@ -12,9 +12,9 @@ function buildEIP(position) {
     [cfName]: {
       Type: 'AWS::EC2::EIP',
       Properties: {
-        Domain: 'vpc',
-      },
-    },
+        Domain: 'vpc'
+      }
+    }
   };
 }
 
@@ -33,18 +33,15 @@ function buildNatGateway(stage, position, zone) {
       Type: 'AWS::EC2::NatGateway',
       Properties: {
         AllocationId: {
-          'Fn::GetAtt': [
-            `EIP${position}`,
-            'AllocationId',
-          ],
+          'Fn::GetAtt': [`EIP${position}`, 'AllocationId']
         },
         SubnetId: {
-          Ref: `${PUBLIC_SUBNET}Subnet${position}`,
+          Ref: `${PUBLIC_SUBNET}Subnet${position}`
         },
         Tags: [
           {
             Key: 'STAGE',
-            Value: stage,
+            Value: stage
           },
           {
             Key: 'Name',
@@ -53,20 +50,20 @@ function buildNatGateway(stage, position, zone) {
                 '-',
                 [
                   {
-                    Ref: 'AWS::StackName',
+                    Ref: 'AWS::StackName'
                   },
-                  zone,
-                ],
-              ],
-            },
-          },
-        ],
-      },
-    },
+                  zone
+                ]
+              ]
+            }
+          }
+        ]
+      }
+    }
   };
 }
 
 module.exports = {
   buildEIP,
-  buildNatGateway,
+  buildNatGateway
 };

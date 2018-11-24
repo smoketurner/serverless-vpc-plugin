@@ -2,6 +2,7 @@ const AWS = require('aws-sdk');
 
 const { BUCKET_NAME } = process.env;
 
+// eslint-disable-next-line no-unused-vars
 module.exports.s3 = async (event, context) => {
   const s3 = new AWS.S3();
 
@@ -10,7 +11,7 @@ module.exports.s3 = async (event, context) => {
     Key: 'test.txt',
     Body: 'this is a test',
     ContentType: 'text/plain',
-    ServerSideEncryption: 'AES256',
+    ServerSideEncryption: 'AES256'
   };
 
   const response = await s3.putObject(params).promise();

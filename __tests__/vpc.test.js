@@ -6,7 +6,7 @@ const {
   buildSubnet,
   buildRoute,
   buildRouteTable,
-  buildRouteTableAssociation,
+  buildRouteTableAssociation
 } = require('../src/vpc');
 
 describe('vpc', () => {
@@ -23,17 +23,17 @@ describe('vpc', () => {
             Tags: [
               {
                 Key: 'STAGE',
-                Value: 'dev',
+                Value: 'dev'
               },
               {
                 Key: 'Name',
                 Value: {
-                  Ref: 'AWS::StackName',
-                },
-              },
-            ],
-          },
-        },
+                  Ref: 'AWS::StackName'
+                }
+              }
+            ]
+          }
+        }
       };
 
       const actual = buildVpc('dev');
@@ -53,20 +53,23 @@ describe('vpc', () => {
             Tags: [
               {
                 Key: 'STAGE',
-                Value: 'dev',
+                Value: 'dev'
               },
               {
                 Key: 'Name',
                 Value: {
-                  Ref: 'AWS::StackName',
-                },
-              },
-            ],
-          },
-        },
+                  Ref: 'AWS::StackName'
+                }
+              }
+            ]
+          }
+        }
       };
 
-      const actual = buildVpc('dev', { name: 'MyVpc', cidrBlock: '192.168.0.0/16' });
+      const actual = buildVpc('dev', {
+        name: 'MyVpc',
+        cidrBlock: '192.168.0.0/16'
+      });
       expect(actual).toEqual(expected);
       expect.assertions(1);
     });
@@ -81,17 +84,17 @@ describe('vpc', () => {
             Tags: [
               {
                 Key: 'STAGE',
-                Value: 'dev',
+                Value: 'dev'
               },
               {
                 Key: 'Name',
                 Value: {
-                  Ref: 'AWS::StackName',
-                },
-              },
-            ],
-          },
-        },
+                  Ref: 'AWS::StackName'
+                }
+              }
+            ]
+          }
+        }
       };
 
       const actual = buildInternetGateway('dev');
@@ -107,17 +110,17 @@ describe('vpc', () => {
             Tags: [
               {
                 Key: 'STAGE',
-                Value: 'dev',
+                Value: 'dev'
               },
               {
                 Key: 'Name',
                 Value: {
-                  Ref: 'AWS::StackName',
-                },
-              },
-            ],
-          },
-        },
+                  Ref: 'AWS::StackName'
+                }
+              }
+            ]
+          }
+        }
       };
 
       const actual = buildInternetGateway('dev', { name: 'MyInternetGateway' });
@@ -133,13 +136,13 @@ describe('vpc', () => {
           Type: 'AWS::EC2::VPCGatewayAttachment',
           Properties: {
             InternetGatewayId: {
-              Ref: 'InternetGateway',
+              Ref: 'InternetGateway'
             },
             VpcId: {
-              Ref: 'VPC',
-            },
-          },
-        },
+              Ref: 'VPC'
+            }
+          }
+        }
       };
 
       const actual = buildInternetGatewayAttachment();
@@ -153,17 +156,17 @@ describe('vpc', () => {
           Type: 'AWS::EC2::VPCGatewayAttachment',
           Properties: {
             InternetGatewayId: {
-              Ref: 'InternetGateway',
+              Ref: 'InternetGateway'
             },
             VpcId: {
-              Ref: 'VPC',
-            },
-          },
-        },
+              Ref: 'VPC'
+            }
+          }
+        }
       };
 
       const actual = buildInternetGatewayAttachment({
-        name: 'MyInternetGatewayAttachment',
+        name: 'MyInternetGatewayAttachment'
       });
 
       expect(actual).toEqual(expected);
@@ -182,7 +185,7 @@ describe('vpc', () => {
             Tags: [
               {
                 Key: 'STAGE',
-                Value: 'dev',
+                Value: 'dev'
               },
               {
                 Key: 'Name',
@@ -191,20 +194,20 @@ describe('vpc', () => {
                     '-',
                     [
                       {
-                        Ref: 'AWS::StackName',
+                        Ref: 'AWS::StackName'
                       },
                       'app',
-                      'us-east-1a',
-                    ],
-                  ],
-                },
-              },
+                      'us-east-1a'
+                    ]
+                  ]
+                }
+              }
             ],
             VpcId: {
-              Ref: 'VPC',
-            },
-          },
-        },
+              Ref: 'VPC'
+            }
+          }
+        }
       };
       const actual = buildSubnet('dev', 'App', 1, 'us-east-1a', '10.0.0.0/22');
       expect(actual).toEqual(expected);
@@ -219,12 +222,12 @@ describe('vpc', () => {
           Type: 'AWS::EC2::RouteTable',
           Properties: {
             VpcId: {
-              Ref: 'VPC',
+              Ref: 'VPC'
             },
             Tags: [
               {
                 Key: 'STAGE',
-                Value: 'dev',
+                Value: 'dev'
               },
               {
                 Key: 'Name',
@@ -233,17 +236,17 @@ describe('vpc', () => {
                     '-',
                     [
                       {
-                        Ref: 'AWS::StackName',
+                        Ref: 'AWS::StackName'
                       },
                       'app',
-                      'us-east-1a',
-                    ],
-                  ],
-                },
-              },
-            ],
-          },
-        },
+                      'us-east-1a'
+                    ]
+                  ]
+                }
+              }
+            ]
+          }
+        }
       };
       const actual = buildRouteTable('dev', 'App', 1, 'us-east-1a');
       expect(actual).toEqual(expected);
@@ -258,13 +261,13 @@ describe('vpc', () => {
           Type: 'AWS::EC2::SubnetRouteTableAssociation',
           Properties: {
             RouteTableId: {
-              Ref: 'AppRouteTable1',
+              Ref: 'AppRouteTable1'
             },
             SubnetId: {
-              Ref: 'AppSubnet1',
-            },
-          },
-        },
+              Ref: 'AppSubnet1'
+            }
+          }
+        }
       };
       const actual = buildRouteTableAssociation('App', 1);
       expect(actual).toEqual(expected);
@@ -280,16 +283,16 @@ describe('vpc', () => {
           Properties: {
             DestinationCidrBlock: '0.0.0.0/0',
             NatGatewayId: {
-              Ref: 'NatGateway1',
+              Ref: 'NatGateway1'
             },
             RouteTableId: {
-              Ref: 'AppRouteTable1',
-            },
-          },
-        },
+              Ref: 'AppRouteTable1'
+            }
+          }
+        }
       };
       const actual = buildRoute('App', 1, {
-        NatGatewayId: 'NatGateway1',
+        NatGatewayId: 'NatGateway1'
       });
       expect(actual).toEqual(expected);
       expect.assertions(1);
@@ -302,16 +305,16 @@ describe('vpc', () => {
           Properties: {
             DestinationCidrBlock: '0.0.0.0/0',
             GatewayId: {
-              Ref: 'InternetGateway',
+              Ref: 'InternetGateway'
             },
             RouteTableId: {
-              Ref: 'AppRouteTable1',
-            },
-          },
-        },
+              Ref: 'AppRouteTable1'
+            }
+          }
+        }
       };
       const actual = buildRoute('App', 1, {
-        GatewayId: 'InternetGateway',
+        GatewayId: 'InternetGateway'
       });
       expect(actual).toEqual(expected);
       expect.assertions(1);
@@ -320,7 +323,9 @@ describe('vpc', () => {
     it('throws an error if no gateway provided', () => {
       expect(() => {
         buildRoute('App', 1);
-      }).toThrow('Unable to create route: either NatGatewayId or GatewayId must be provided');
+      }).toThrow(
+        'Unable to create route: either NatGatewayId or GatewayId must be provided'
+      );
       expect.assertions(1);
     });
   });
@@ -333,12 +338,12 @@ describe('vpc', () => {
           Properties: {
             GroupDescription: 'Lambda Execution Group',
             VpcId: {
-              Ref: 'VPC',
+              Ref: 'VPC'
             },
             Tags: [
               {
                 Key: 'STAGE',
-                Value: 'dev',
+                Value: 'dev'
               },
               {
                 Key: 'Name',
@@ -347,16 +352,16 @@ describe('vpc', () => {
                     '-',
                     [
                       {
-                        Ref: 'AWS::StackName',
+                        Ref: 'AWS::StackName'
                       },
-                      'lambda-exec',
-                    ],
-                  ],
-                },
-              },
-            ],
-          },
-        },
+                      'lambda-exec'
+                    ]
+                  ]
+                }
+              }
+            ]
+          }
+        }
       };
       const actual = buildLambdaSecurityGroup('dev');
       expect(actual).toEqual(expected);
@@ -370,12 +375,12 @@ describe('vpc', () => {
           Properties: {
             GroupDescription: 'Lambda Execution Group',
             VpcId: {
-              Ref: 'VPC',
+              Ref: 'VPC'
             },
             Tags: [
               {
                 Key: 'STAGE',
-                Value: 'dev',
+                Value: 'dev'
               },
               {
                 Key: 'Name',
@@ -384,19 +389,19 @@ describe('vpc', () => {
                     '-',
                     [
                       {
-                        Ref: 'AWS::StackName',
+                        Ref: 'AWS::StackName'
                       },
-                      'lambda-exec',
-                    ],
-                  ],
-                },
-              },
-            ],
-          },
-        },
+                      'lambda-exec'
+                    ]
+                  ]
+                }
+              }
+            ]
+          }
+        }
       };
       const actual = buildLambdaSecurityGroup('dev', {
-        name: 'MyLambdaExecutionSecurityGroup',
+        name: 'MyLambdaExecutionSecurityGroup'
       });
       expect(actual).toEqual(expected);
       expect.assertions(1);

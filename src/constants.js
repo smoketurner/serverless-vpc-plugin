@@ -12,5 +12,5 @@ module.exports = {
   DEFAULT_VPC_EIP_LIMIT,
   APP_SUBNET,
   PUBLIC_SUBNET,
-  DB_SUBNET,
+  DB_SUBNET
 };

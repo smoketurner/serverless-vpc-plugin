@@ -7,9 +7,9 @@ describe('natgw', () => {
         EIP1: {
           Type: 'AWS::EC2::EIP',
           Properties: {
-            Domain: 'vpc',
-          },
-        },
+            Domain: 'vpc'
+          }
+        }
       };
       const actual = buildEIP(1);
       expect(actual).toEqual(expected);
@@ -24,18 +24,15 @@ describe('natgw', () => {
           Type: 'AWS::EC2::NatGateway',
           Properties: {
             AllocationId: {
-              'Fn::GetAtt': [
-                'EIP1',
-                'AllocationId',
-              ],
+              'Fn::GetAtt': ['EIP1', 'AllocationId']
             },
             SubnetId: {
-              Ref: 'PublicSubnet1',
+              Ref: 'PublicSubnet1'
             },
             Tags: [
               {
                 Key: 'STAGE',
-                Value: 'dev',
+                Value: 'dev'
               },
               {
                 Key: 'Name',
@@ -44,16 +41,16 @@ describe('natgw', () => {
                     '-',
                     [
                       {
-                        Ref: 'AWS::StackName',
+                        Ref: 'AWS::StackName'
                       },
-                      'us-east-1a',
-                    ],
-                  ],
-                },
-              },
-            ],
-          },
-        },
+                      'us-east-1a'
+                    ]
+                  ]
+                }
+              }
+            ]
+          }
+        }
       };
       const actual = buildNatGateway('dev', 1, 'us-east-1a');
       expect(actual).toEqual(expected);

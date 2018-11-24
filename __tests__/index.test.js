@@ -26,7 +26,7 @@ describe('ServerlessVpcPlugin', () => {
   beforeEach(() => {
     const options = {
       stage: 'dev',
-      region: 'us-east-1',
+      region: 'us-east-1'
     };
     serverless = new Serverless(options);
     const provider = new AwsProvider(serverless, options);
@@ -56,7 +56,7 @@ describe('ServerlessVpcPlugin', () => {
 
     it('should initialize with custom options', () => {
       const options = {
-        zones: ['us-west-2'],
+        zones: ['us-west-2']
       };
       plugin = new ServerlessVpcPlugin(serverless, options);
       expect(plugin.serverless).toBeInstanceOf(Serverless);
@@ -66,7 +66,9 @@ describe('ServerlessVpcPlugin', () => {
 
     it('should be added as a serverless plugin', () => {
       serverless.pluginManager.addPlugin(ServerlessVpcPlugin);
-      expect(serverless.pluginManager.plugins[0]).toBeInstanceOf(ServerlessVpcPlugin);
+      expect(serverless.pluginManager.plugins[0]).toBeInstanceOf(
+        ServerlessVpcPlugin
+      );
       expect.assertions(1);
     });
   });
@@ -79,17 +81,17 @@ describe('ServerlessVpcPlugin', () => {
           AvailabilityZones: [
             {
               State: 'available',
-              ZoneName: 'us-east-1b',
+              ZoneName: 'us-east-1b'
             },
             {
               State: 'unavailable',
-              ZoneName: 'us-east-1c',
+              ZoneName: 'us-east-1c'
             },
             {
               State: 'available',
-              ZoneName: 'us-east-1a',
-            },
-          ],
+              ZoneName: 'us-east-1a'
+            }
+          ]
         };
         return callback(null, data);
       });
@@ -114,8 +116,8 @@ describe('ServerlessVpcPlugin', () => {
             'com.amazonaws.us-east-1.dynamodb',
             'com.amazonaws.us-east-1.s3',
             'com.amazonaws.us-east-1.kms',
-            'com.amazonaws.us-east-1.kinesis-streams',
-          ],
+            'com.amazonaws.us-east-1.kinesis-streams'
+          ]
         };
         return callback(null, data);
       });
@@ -134,7 +136,9 @@ describe('ServerlessVpcPlugin', () => {
 
   describe('#splitVpc', () => {
     it('splits 10.0.0.0/16 into 16 /20s', () => {
-      const actual = ServerlessVpcPlugin.splitVpc('10.0.0.0/16').map(cidr => cidr.toString());
+      const actual = ServerlessVpcPlugin.splitVpc('10.0.0.0/16').map(cidr =>
+        cidr.toString()
+      );
       const expected = [
         '10.0.0.0/20',
         '10.0.16.0/20',
@@ -151,7 +155,7 @@ describe('ServerlessVpcPlugin', () => {
         '10.0.192.0/20',
         '10.0.208.0/20',
         '10.0.224.0/20',
-        '10.0.240.0/20',
+        '10.0.240.0/20'
       ];
 
       expect(actual).toEqual(expected);
@@ -159,7 +163,9 @@ describe('ServerlessVpcPlugin', () => {
     });
 
     it('splits 192.168.0.0/16 into 16 /20s', () => {
-      const actual = ServerlessVpcPlugin.splitVpc('192.168.0.0/16').map(cidr => cidr.toString());
+      const actual = ServerlessVpcPlugin.splitVpc('192.168.0.0/16').map(cidr =>
+        cidr.toString()
+      );
       const expected = [
         '192.168.0.0/20',
         '192.168.16.0/20',
@@ -176,7 +182,7 @@ describe('ServerlessVpcPlugin', () => {
         '192.168.192.0/20',
         '192.168.208.0/20',
         '192.168.224.0/20',
-        '192.168.240.0/20',
+        '192.168.240.0/20'
       ];
 
       expect(actual).toEqual(expected);
@@ -190,24 +196,33 @@ describe('ServerlessVpcPlugin', () => {
       const actual = ServerlessVpcPlugin.splitSubnets('10.0.0.0/16', zones);
 
       const parts = [
-        ['us-east-1a', new Map([
-          ['App', '10.0.0.0/21'],
-          ['Public', '10.0.8.0/22'],
-          ['DB', '10.0.12.0/22']]),
+        [
+          'us-east-1a',
+          new Map([
+            ['App', '10.0.0.0/21'],
+            ['Public', '10.0.8.0/22'],
+            ['DB', '10.0.12.0/22']
+          ])
         ],
-        ['us-east-1b', new Map([
-          ['App', '10.0.16.0/21'],
-          ['Public', '10.0.24.0/22'],
-          ['DB', '10.0.28.0/22']]),
+        [
+          'us-east-1b',
+          new Map([
+            ['App', '10.0.16.0/21'],
+            ['Public', '10.0.24.0/22'],
+            ['DB', '10.0.28.0/22']
+          ])
         ],
-        ['us-east-1c', new Map([
-          ['App', '10.0.32.0/21'],
-          ['Public', '10.0.40.0/22'],
-          ['DB', '10.0.44.0/22']]),
+        [
+          'us-east-1c',
+          new Map([
+            ['App', '10.0.32.0/21'],
+            ['Public', '10.0.40.0/22'],
+            ['DB', '10.0.44.0/22']
+          ])
         ],
         ['App', ['10.0.0.0/21', '10.0.16.0/21', '10.0.32.0/21']],
         ['Public', ['10.0.8.0/22', '10.0.24.0/22', '10.0.40.0/22']],
-        ['DB', ['10.0.12.0/22', '10.0.28.0/22', '10.0.44.0/22']],
+        ['DB', ['10.0.12.0/22', '10.0.28.0/22', '10.0.44.0/22']]
       ];
 
       const expected = new Map(parts);
@@ -219,7 +234,10 @@ describe('ServerlessVpcPlugin', () => {
 
   describe('#buildAvailabilityZones', () => {
     it('builds no AZs without options', () => {
-      const actual = ServerlessVpcPlugin.buildAvailabilityZones('dev', '10.0.0.0/16');
+      const actual = ServerlessVpcPlugin.buildAvailabilityZones(
+        'dev',
+        '10.0.0.0/16'
+      );
       expect(actual).toEqual({});
       expect.assertions(1);
     });
@@ -227,11 +245,15 @@ describe('ServerlessVpcPlugin', () => {
     it('builds a single AZ with a NAT Gateway and DBSubnet', () => {
       const expected = Object.assign({}, vpcSingleAZNatGWDB);
 
-      const actual = ServerlessVpcPlugin.buildAvailabilityZones('dev', '10.0.0.0/16', {
-        zones: ['us-east-1a'],
-        numNatGateway: 1,
-        skipDbCreation: false,
-      });
+      const actual = ServerlessVpcPlugin.buildAvailabilityZones(
+        'dev',
+        '10.0.0.0/16',
+        {
+          zones: ['us-east-1a'],
+          numNatGateway: 1,
+          skipDbCreation: false
+        }
+      );
       expect(actual).toEqual(expected);
       expect.assertions(1);
     });
@@ -239,11 +261,15 @@ describe('ServerlessVpcPlugin', () => {
     it('builds a single AZ without a NAT Gateway and DBSubnet', () => {
       const expected = Object.assign({}, vpcSingleAZNoGatGWDB);
 
-      const actual = ServerlessVpcPlugin.buildAvailabilityZones('dev', '10.0.0.0/16', {
-        zones: ['us-east-1a'],
-        numNatGateway: 0,
-        skipDbCreation: false,
-      });
+      const actual = ServerlessVpcPlugin.buildAvailabilityZones(
+        'dev',
+        '10.0.0.0/16',
+        {
+          zones: ['us-east-1a'],
+          numNatGateway: 0,
+          skipDbCreation: false
+        }
+      );
       expect(actual).toEqual(expected);
       expect.assertions(1);
     });
@@ -251,11 +277,15 @@ describe('ServerlessVpcPlugin', () => {
     it('builds a single AZ with a NAT Gateway and no DBSubnet', () => {
       const expected = Object.assign({}, vpcSingleAZNatGWNoDB);
 
-      const actual = ServerlessVpcPlugin.buildAvailabilityZones('dev', '10.0.0.0/16', {
-        zones: ['us-east-1a'],
-        numNatGateway: 1,
-        skipDbCreation: true,
-      });
+      const actual = ServerlessVpcPlugin.buildAvailabilityZones(
+        'dev',
+        '10.0.0.0/16',
+        {
+          zones: ['us-east-1a'],
+          numNatGateway: 1,
+          skipDbCreation: true
+        }
+      );
       expect(actual).toEqual(expected);
       expect.assertions(1);
     });
@@ -263,11 +293,15 @@ describe('ServerlessVpcPlugin', () => {
     it('builds a single AZ without a NAT Gateway and no DBSubnet', () => {
       const expected = Object.assign({}, vpcSingleAZNoGatGWNoDB);
 
-      const actual = ServerlessVpcPlugin.buildAvailabilityZones('dev', '10.0.0.0/16', {
-        zones: ['us-east-1a'],
-        numNatGateway: 0,
-        skipDbCreation: true,
-      });
+      const actual = ServerlessVpcPlugin.buildAvailabilityZones(
+        'dev',
+        '10.0.0.0/16',
+        {
+          zones: ['us-east-1a'],
+          numNatGateway: 0,
+          skipDbCreation: true
+        }
+      );
       expect(actual).toEqual(expected);
       expect.assertions(1);
     });
@@ -275,11 +309,15 @@ describe('ServerlessVpcPlugin', () => {
     it('builds multiple AZs with a NAT Gateway and DBSubnet', () => {
       const expected = Object.assign({}, vpcMultipleAZNatGWDB);
 
-      const actual = ServerlessVpcPlugin.buildAvailabilityZones('dev', '10.0.0.0/16', {
-        zones: ['us-east-1a', 'us-east-1b'],
-        numNatGateway: 2,
-        skipDbCreation: false,
-      });
+      const actual = ServerlessVpcPlugin.buildAvailabilityZones(
+        'dev',
+        '10.0.0.0/16',
+        {
+          zones: ['us-east-1a', 'us-east-1b'],
+          numNatGateway: 2,
+          skipDbCreation: false
+        }
+      );
       expect(actual).toEqual(expected);
       expect.assertions(1);
     });
@@ -287,11 +325,15 @@ describe('ServerlessVpcPlugin', () => {
     it('builds multiple AZs without a NAT Gateway and DBSubnet', () => {
       const expected = Object.assign({}, vpcMultipleAZNoNatGWDB);
 
-      const actual = ServerlessVpcPlugin.buildAvailabilityZones('dev', '10.0.0.0/16', {
-        zones: ['us-east-1a', 'us-east-1b'],
-        numNatGateway: 0,
-        skipDbCreation: false,
-      });
+      const actual = ServerlessVpcPlugin.buildAvailabilityZones(
+        'dev',
+        '10.0.0.0/16',
+        {
+          zones: ['us-east-1a', 'us-east-1b'],
+          numNatGateway: 0,
+          skipDbCreation: false
+        }
+      );
       expect(actual).toEqual(expected);
       expect.assertions(1);
     });
@@ -299,11 +341,15 @@ describe('ServerlessVpcPlugin', () => {
     it('builds multiple AZs with a NAT Gateway and no DBSubnet', () => {
       const expected = Object.assign({}, vpcMultipleAZNatGWNoDB);
 
-      const actual = ServerlessVpcPlugin.buildAvailabilityZones('dev', '10.0.0.0/16', {
-        zones: ['us-east-1a', 'us-east-1b'],
-        numNatGateway: 2,
-        skipDbCreation: true,
-      });
+      const actual = ServerlessVpcPlugin.buildAvailabilityZones(
+        'dev',
+        '10.0.0.0/16',
+        {
+          zones: ['us-east-1a', 'us-east-1b'],
+          numNatGateway: 2,
+          skipDbCreation: true
+        }
+      );
       expect(actual).toEqual(expected);
       expect.assertions(1);
     });
@@ -311,11 +357,15 @@ describe('ServerlessVpcPlugin', () => {
     it('builds multiple AZs without a NAT Gateway and no DBSubnet', () => {
       const expected = Object.assign({}, vpcMultipleAZNoNatGWNoDB);
 
-      const actual = ServerlessVpcPlugin.buildAvailabilityZones('dev', '10.0.0.0/16', {
-        zones: ['us-east-1a', 'us-east-1b'],
-        numNatGateway: 0,
-        skipDbCreation: true,
-      });
+      const actual = ServerlessVpcPlugin.buildAvailabilityZones(
+        'dev',
+        '10.0.0.0/16',
+        {
+          zones: ['us-east-1a', 'us-east-1b'],
+          numNatGateway: 0,
+          skipDbCreation: true
+        }
+      );
       expect(actual).toEqual(expected);
       expect.assertions(1);
     });
@@ -323,11 +373,15 @@ describe('ServerlessVpcPlugin', () => {
     it('builds multiple AZs with a single NAT Gateway and no DBSubnet', () => {
       const expected = Object.assign({}, vpcMultipleAZSingleNatGWNoDB);
 
-      const actual = ServerlessVpcPlugin.buildAvailabilityZones('dev', '10.0.0.0/16', {
-        zones: ['us-east-1a', 'us-east-1b'],
-        numNatGateway: 1,
-        skipDbCreation: true,
-      });
+      const actual = ServerlessVpcPlugin.buildAvailabilityZones(
+        'dev',
+        '10.0.0.0/16',
+        {
+          zones: ['us-east-1a', 'us-east-1b'],
+          numNatGateway: 1,
+          skipDbCreation: true
+        }
+      );
       expect(actual).toEqual(expected);
       expect.assertions(1);
     });
@@ -335,11 +389,15 @@ describe('ServerlessVpcPlugin', () => {
     it('builds multiple AZs with a multple NAT Gateways and no DBSubnet', () => {
       const expected = Object.assign({}, vpcMultipleAZMultipleNatGWNoDB);
 
-      const actual = ServerlessVpcPlugin.buildAvailabilityZones('dev', '10.0.0.0/16', {
-        zones: ['us-east-1a', 'us-east-1b', 'us-east-1c'],
-        numNatGateway: 2,
-        skipDbCreation: true,
-      });
+      const actual = ServerlessVpcPlugin.buildAvailabilityZones(
+        'dev',
+        '10.0.0.0/16',
+        {
+          zones: ['us-east-1a', 'us-east-1b', 'us-east-1c'],
+          numNatGateway: 2,
+          skipDbCreation: true
+        }
+      );
       expect(actual).toEqual(expected);
       expect.assertions(1);
     });
@@ -347,12 +405,16 @@ describe('ServerlessVpcPlugin', () => {
     it('builds a single AZ without a NAT Gateway and no DBSubnet and NACL', () => {
       const expected = Object.assign({}, vpcSingleAZNoNatGWNoDBNACL);
 
-      const actual = ServerlessVpcPlugin.buildAvailabilityZones('dev', '10.0.0.0/16', {
-        zones: ['us-east-1a'],
-        numNatGateway: 0,
-        skipDbCreation: true,
-        useNetworkAcl: true,
-      });
+      const actual = ServerlessVpcPlugin.buildAvailabilityZones(
+        'dev',
+        '10.0.0.0/16',
+        {
+          zones: ['us-east-1a'],
+          numNatGateway: 0,
+          skipDbCreation: true,
+          useNetworkAcl: true
+        }
+      );
       expect(actual).toEqual(expected);
       expect.assertions(1);
     });

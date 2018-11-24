@@ -1,7 +1,7 @@
 const {
   buildEndpointServices,
   buildVPCEndpoint,
-  buildLambdaVPCEndpointSecurityGroup,
+  buildLambdaVPCEndpointSecurityGroup
 } = require('../src/vpce');
 
 describe('vpce', () => {
@@ -19,8 +19,8 @@ describe('vpce', () => {
           Properties: {
             RouteTableIds: [
               {
-                Ref: 'AppRouteTable1',
-              },
+                Ref: 'AppRouteTable1'
+              }
             ],
             ServiceName: {
               'Fn::Join': [
@@ -28,29 +28,32 @@ describe('vpce', () => {
                 [
                   'com.amazonaws',
                   {
-                    Ref: 'AWS::Region',
+                    Ref: 'AWS::Region'
                   },
-                  's3',
-                ],
-              ],
+                  's3'
+                ]
+              ]
             },
             PolicyDocument: {
-              Statement: [{
-                Effect: 'Allow',
-                Principal: '*',
-                Action: 's3:*',
-                Resource: '*',
-              }],
+              Statement: [
+                {
+                  Effect: 'Allow',
+                  Principal: '*',
+                  Action: 's3:*',
+                  Resource: '*'
+                }
+              ]
             },
             VpcEndpointType: 'Gateway',
             VpcId: {
-              Ref: 'VPC',
-            },
-          },
-        },
+              Ref: 'VPC'
+            }
+          }
+        }
       };
       const actual = buildEndpointServices({
-        services: ['s3'], numZones: 1,
+        services: ['s3'],
+        numZones: 1
       });
       expect(actual).toEqual(expected);
       expect.assertions(1);
@@ -63,8 +66,8 @@ describe('vpce', () => {
           Properties: {
             RouteTableIds: [
               {
-                Ref: 'AppRouteTable1',
-              },
+                Ref: 'AppRouteTable1'
+              }
             ],
             ServiceName: {
               'Fn::Join': [
@@ -72,29 +75,32 @@ describe('vpce', () => {
                 [
                   'com.amazonaws',
                   {
-                    Ref: 'AWS::Region',
+                    Ref: 'AWS::Region'
                   },
-                  'dynamodb',
-                ],
-              ],
+                  'dynamodb'
+                ]
+              ]
             },
             PolicyDocument: {
-              Statement: [{
-                Effect: 'Allow',
-                Principal: '*',
-                Action: 'dynamodb:*',
-                Resource: '*',
-              }],
+              Statement: [
+                {
+                  Effect: 'Allow',
+                  Principal: '*',
+                  Action: 'dynamodb:*',
+                  Resource: '*'
+                }
+              ]
             },
             VpcEndpointType: 'Gateway',
             VpcId: {
-              Ref: 'VPC',
-            },
-          },
-        },
+              Ref: 'VPC'
+            }
+          }
+        }
       };
       const actual = buildEndpointServices({
-        services: ['dynamodb'], numZones: 1,
+        services: ['dynamodb'],
+        numZones: 1
       });
       expect(actual).toEqual(expected);
       expect.assertions(1);
@@ -108,13 +114,13 @@ describe('vpce', () => {
             PrivateDnsEnabled: true,
             SecurityGroupIds: [
               {
-                Ref: 'LambdaEndpointSecurityGroup',
-              },
+                Ref: 'LambdaEndpointSecurityGroup'
+              }
             ],
             SubnetIds: [
               {
-                Ref: 'AppSubnet1',
-              },
+                Ref: 'AppSubnet1'
+              }
             ],
             ServiceName: {
               'Fn::Join': [
@@ -122,21 +128,22 @@ describe('vpce', () => {
                 [
                   'com.amazonaws',
                   {
-                    Ref: 'AWS::Region',
+                    Ref: 'AWS::Region'
                   },
-                  'kms',
-                ],
-              ],
+                  'kms'
+                ]
+              ]
             },
             VpcEndpointType: 'Interface',
             VpcId: {
-              Ref: 'VPC',
-            },
-          },
-        },
+              Ref: 'VPC'
+            }
+          }
+        }
       };
       const actual = buildEndpointServices({
-        services: ['kms'], numZones: 1,
+        services: ['kms'],
+        numZones: 1
       });
       expect(actual).toEqual(expected);
       expect.assertions(1);
@@ -150,13 +157,13 @@ describe('vpce', () => {
             PrivateDnsEnabled: true,
             SecurityGroupIds: [
               {
-                Ref: 'LambdaEndpointSecurityGroup',
-              },
+                Ref: 'LambdaEndpointSecurityGroup'
+              }
             ],
             SubnetIds: [
               {
-                Ref: 'AppSubnet1',
-              },
+                Ref: 'AppSubnet1'
+              }
             ],
             ServiceName: {
               'Fn::Join': [
@@ -164,21 +171,22 @@ describe('vpce', () => {
                 [
                   'com.amazonaws',
                   {
-                    Ref: 'AWS::Region',
+                    Ref: 'AWS::Region'
                   },
-                  'sagemaker.runtime-fips',
-                ],
-              ],
+                  'sagemaker.runtime-fips'
+                ]
+              ]
             },
             VpcEndpointType: 'Interface',
             VpcId: {
-              Ref: 'VPC',
-            },
-          },
-        },
+              Ref: 'VPC'
+            }
+          }
+        }
       };
       const actual = buildEndpointServices({
-        services: ['sagemaker.runtime-fips'], numZones: 1,
+        services: ['sagemaker.runtime-fips'],
+        numZones: 1
       });
       expect(actual).toEqual(expected);
       expect.assertions(1);
@@ -193,8 +201,8 @@ describe('vpce', () => {
           Properties: {
             RouteTableIds: [
               {
-                Ref: 'AppRouteTable1',
-              },
+                Ref: 'AppRouteTable1'
+              }
             ],
             ServiceName: {
               'Fn::Join': [
@@ -202,30 +210,32 @@ describe('vpce', () => {
                 [
                   'com.amazonaws',
                   {
-                    Ref: 'AWS::Region',
+                    Ref: 'AWS::Region'
                   },
-                  's3',
-                ],
-              ],
+                  's3'
+                ]
+              ]
             },
             PolicyDocument: {
-              Statement: [{
-                Effect: 'Allow',
-                Principal: '*',
-                Action: 's3:*',
-                Resource: '*',
-              }],
+              Statement: [
+                {
+                  Effect: 'Allow',
+                  Principal: '*',
+                  Action: 's3:*',
+                  Resource: '*'
+                }
+              ]
             },
             VpcEndpointType: 'Gateway',
             VpcId: {
-              Ref: 'VPC',
-            },
-          },
-        },
+              Ref: 'VPC'
+            }
+          }
+        }
       };
-      const actual = buildVPCEndpoint(
-        's3', { routeTableIds: [{ Ref: 'AppRouteTable1' }] },
-      );
+      const actual = buildVPCEndpoint('s3', {
+        routeTableIds: [{ Ref: 'AppRouteTable1' }]
+      });
       expect(actual).toEqual(expected);
       expect.assertions(1);
     });
@@ -238,13 +248,13 @@ describe('vpce', () => {
             PrivateDnsEnabled: true,
             SecurityGroupIds: [
               {
-                Ref: 'LambdaEndpointSecurityGroup',
-              },
+                Ref: 'LambdaEndpointSecurityGroup'
+              }
             ],
             SubnetIds: [
               {
-                Ref: 'AppSubnet1',
-              },
+                Ref: 'AppSubnet1'
+              }
             ],
             ServiceName: {
               'Fn::Join': [
@@ -252,22 +262,22 @@ describe('vpce', () => {
                 [
                   'com.amazonaws',
                   {
-                    Ref: 'AWS::Region',
+                    Ref: 'AWS::Region'
                   },
-                  'sagemaker.runtime-fips',
-                ],
-              ],
+                  'sagemaker.runtime-fips'
+                ]
+              ]
             },
             VpcEndpointType: 'Interface',
             VpcId: {
-              Ref: 'VPC',
-            },
-          },
-        },
+              Ref: 'VPC'
+            }
+          }
+        }
       };
-      const actual = buildVPCEndpoint(
-        'sagemaker.runtime-fips', { subnetIds: [{ Ref: 'AppSubnet1' }] },
-      );
+      const actual = buildVPCEndpoint('sagemaker.runtime-fips', {
+        subnetIds: [{ Ref: 'AppSubnet1' }]
+      });
       expect(actual).toEqual(expected);
       expect.assertions(1);
     });
@@ -281,22 +291,22 @@ describe('vpce', () => {
           Properties: {
             GroupDescription: 'Lambda access to VPC endpoints',
             VpcId: {
-              Ref: 'VPC',
+              Ref: 'VPC'
             },
             SecurityGroupIngress: [
               {
                 SourceSecurityGroupId: {
-                  Ref: 'LambdaExecutionSecurityGroup',
+                  Ref: 'LambdaExecutionSecurityGroup'
                 },
                 IpProtocol: 'tcp',
                 FromPort: 443,
-                ToPort: 443,
-              },
+                ToPort: 443
+              }
             ],
             Tags: [
               {
                 Key: 'STAGE',
-                Value: 'dev',
+                Value: 'dev'
               },
               {
                 Key: 'Name',
@@ -305,16 +315,16 @@ describe('vpce', () => {
                     '-',
                     [
                       {
-                        Ref: 'AWS::StackName',
+                        Ref: 'AWS::StackName'
                       },
-                      'lambda-endpoint',
-                    ],
-                  ],
-                },
-              },
-            ],
-          },
-        },
+                      'lambda-endpoint'
+                    ]
+                  ]
+                }
+              }
+            ]
+          }
+        }
       };
       const actual = buildLambdaVPCEndpointSecurityGroup('dev');
       expect(actual).toEqual(expected);
@@ -328,22 +338,22 @@ describe('vpce', () => {
           Properties: {
             GroupDescription: 'Lambda access to VPC endpoints',
             VpcId: {
-              Ref: 'VPC',
+              Ref: 'VPC'
             },
             SecurityGroupIngress: [
               {
                 SourceSecurityGroupId: {
-                  Ref: 'LambdaExecutionSecurityGroup',
+                  Ref: 'LambdaExecutionSecurityGroup'
                 },
                 IpProtocol: 'tcp',
                 FromPort: 443,
-                ToPort: 443,
-              },
+                ToPort: 443
+              }
             ],
             Tags: [
               {
                 Key: 'STAGE',
-                Value: 'dev',
+                Value: 'dev'
               },
               {
                 Key: 'Name',
@@ -352,19 +362,19 @@ describe('vpce', () => {
                     '-',
                     [
                       {
-                        Ref: 'AWS::StackName',
+                        Ref: 'AWS::StackName'
                       },
-                      'lambda-endpoint',
-                    ],
-                  ],
-                },
-              },
-            ],
-          },
-        },
+                      'lambda-endpoint'
+                    ]
+                  ]
+                }
+              }
+            ]
+          }
+        }
       };
       const actual = buildLambdaVPCEndpointSecurityGroup('dev', {
-        name: 'MyLambdaEndpointSecurityGroup',
+        name: 'MyLambdaEndpointSecurityGroup'
       });
       expect(actual).toEqual(expected);
       expect.assertions(1);
