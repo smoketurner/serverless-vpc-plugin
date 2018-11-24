@@ -9,7 +9,7 @@ const { DB_SUBNET } = require('./constants');
  */
 function buildRDSSubnetGroup(
   stage,
-  { name = 'RDSSubnetGroup', numZones = 0 } = {}
+  { name = 'RDSSubnetGroup', numZones = 0 } = {},
 ) {
   if (numZones < 1) {
     return {};
@@ -25,20 +25,20 @@ function buildRDSSubnetGroup(
       Type: 'AWS::RDS::DBSubnetGroup',
       Properties: {
         DBSubnetGroupName: {
-          Ref: 'AWS::StackName'
+          Ref: 'AWS::StackName',
         },
         DBSubnetGroupDescription: {
-          Ref: 'AWS::StackName'
+          Ref: 'AWS::StackName',
         },
         SubnetIds: subnetIds,
         Tags: [
           {
             Key: 'STAGE',
-            Value: stage
-          }
-        ]
-      }
-    }
+            Value: stage,
+          },
+        ],
+      },
+    },
   };
 }
 
@@ -50,7 +50,7 @@ function buildRDSSubnetGroup(
  */
 function buildElastiCacheSubnetGroup({
   name = 'ElastiCacheSubnetGroup',
-  numZones = 0
+  numZones = 0,
 } = {}) {
   if (numZones < 1) {
     return {};
@@ -66,14 +66,14 @@ function buildElastiCacheSubnetGroup({
       Type: 'AWS::ElastiCache::SubnetGroup',
       Properties: {
         CacheSubnetGroupName: {
-          Ref: 'AWS::StackName'
+          Ref: 'AWS::StackName',
         },
         Description: {
-          Ref: 'AWS::StackName'
+          Ref: 'AWS::StackName',
         },
-        SubnetIds: subnetIds
-      }
-    }
+        SubnetIds: subnetIds,
+      },
+    },
   };
 }
 
@@ -86,7 +86,7 @@ function buildElastiCacheSubnetGroup({
  */
 function buildRedshiftSubnetGroup(
   stage,
-  { name = 'RedshiftSubnetGroup', numZones = 0 } = {}
+  { name = 'RedshiftSubnetGroup', numZones = 0 } = {},
 ) {
   if (numZones < 1) {
     return {};
@@ -102,17 +102,17 @@ function buildRedshiftSubnetGroup(
       Type: 'AWS::Redshift::ClusterSubnetGroup',
       Properties: {
         Description: {
-          Ref: 'AWS::StackName'
+          Ref: 'AWS::StackName',
         },
         SubnetIds: subnetIds,
         Tags: [
           {
             Key: 'STAGE',
-            Value: stage
-          }
-        ]
-      }
-    }
+            Value: stage,
+          },
+        ],
+      },
+    },
   };
 }
 
@@ -137,14 +137,14 @@ function buildDAXSubnetGroup({ name = 'DAXSubnetGroup', numZones = 0 } = {}) {
       Type: 'AWS::DAX::SubnetGroup',
       Properties: {
         SubnetGroupName: {
-          Ref: 'AWS::StackName'
+          Ref: 'AWS::StackName',
         },
         Description: {
-          Ref: 'AWS::StackName'
+          Ref: 'AWS::StackName',
         },
-        SubnetIds: subnetIds
-      }
-    }
+        SubnetIds: subnetIds,
+      },
+    },
   };
 }
 
@@ -152,5 +152,5 @@ module.exports = {
   buildRDSSubnetGroup,
   buildRedshiftSubnetGroup,
   buildElastiCacheSubnetGroup,
-  buildDAXSubnetGroup
+  buildDAXSubnetGroup,
 };

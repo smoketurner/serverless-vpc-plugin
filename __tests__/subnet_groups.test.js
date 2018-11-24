@@ -2,7 +2,7 @@ const {
   buildRDSSubnetGroup,
   buildElastiCacheSubnetGroup,
   buildRedshiftSubnetGroup,
-  buildDAXSubnetGroup
+  buildDAXSubnetGroup,
 } = require('../src/subnet_groups');
 
 describe('subnet_groups', () => {
@@ -19,27 +19,27 @@ describe('subnet_groups', () => {
           Type: 'AWS::RDS::DBSubnetGroup',
           Properties: {
             DBSubnetGroupName: {
-              Ref: 'AWS::StackName'
+              Ref: 'AWS::StackName',
             },
             DBSubnetGroupDescription: {
-              Ref: 'AWS::StackName'
+              Ref: 'AWS::StackName',
             },
             SubnetIds: [
               {
-                Ref: 'DBSubnet1'
+                Ref: 'DBSubnet1',
               },
               {
-                Ref: 'DBSubnet2'
-              }
+                Ref: 'DBSubnet2',
+              },
             ],
             Tags: [
               {
                 Key: 'STAGE',
-                Value: 'dev'
-              }
-            ]
-          }
-        }
+                Value: 'dev',
+              },
+            ],
+          },
+        },
       };
       const actual = buildRDSSubnetGroup('dev', { numZones: 2 });
       expect(actual).toEqual(expected);
@@ -52,31 +52,31 @@ describe('subnet_groups', () => {
           Type: 'AWS::RDS::DBSubnetGroup',
           Properties: {
             DBSubnetGroupName: {
-              Ref: 'AWS::StackName'
+              Ref: 'AWS::StackName',
             },
             DBSubnetGroupDescription: {
-              Ref: 'AWS::StackName'
+              Ref: 'AWS::StackName',
             },
             SubnetIds: [
               {
-                Ref: 'DBSubnet1'
+                Ref: 'DBSubnet1',
               },
               {
-                Ref: 'DBSubnet2'
-              }
+                Ref: 'DBSubnet2',
+              },
             ],
             Tags: [
               {
                 Key: 'STAGE',
-                Value: 'dev'
-              }
-            ]
-          }
-        }
+                Value: 'dev',
+              },
+            ],
+          },
+        },
       };
       const actual = buildRDSSubnetGroup('dev', {
         name: 'MyRDSSubnetGroup',
-        numZones: 2
+        numZones: 2,
       });
       expect(actual).toEqual(expected);
       expect.assertions(1);
@@ -96,21 +96,21 @@ describe('subnet_groups', () => {
           Type: 'AWS::ElastiCache::SubnetGroup',
           Properties: {
             CacheSubnetGroupName: {
-              Ref: 'AWS::StackName'
+              Ref: 'AWS::StackName',
             },
             Description: {
-              Ref: 'AWS::StackName'
+              Ref: 'AWS::StackName',
             },
             SubnetIds: [
               {
-                Ref: 'DBSubnet1'
+                Ref: 'DBSubnet1',
               },
               {
-                Ref: 'DBSubnet2'
-              }
-            ]
-          }
-        }
+                Ref: 'DBSubnet2',
+              },
+            ],
+          },
+        },
       };
       const actual = buildElastiCacheSubnetGroup({ numZones: 2 });
       expect(actual).toEqual(expected);
@@ -123,25 +123,25 @@ describe('subnet_groups', () => {
           Type: 'AWS::ElastiCache::SubnetGroup',
           Properties: {
             CacheSubnetGroupName: {
-              Ref: 'AWS::StackName'
+              Ref: 'AWS::StackName',
             },
             Description: {
-              Ref: 'AWS::StackName'
+              Ref: 'AWS::StackName',
             },
             SubnetIds: [
               {
-                Ref: 'DBSubnet1'
+                Ref: 'DBSubnet1',
               },
               {
-                Ref: 'DBSubnet2'
-              }
-            ]
-          }
-        }
+                Ref: 'DBSubnet2',
+              },
+            ],
+          },
+        },
       };
       const actual = buildElastiCacheSubnetGroup({
         name: 'MyElastiCacheSubnetGroup',
-        numZones: 2
+        numZones: 2,
       });
       expect(actual).toEqual(expected);
       expect.assertions(1);
@@ -161,24 +161,24 @@ describe('subnet_groups', () => {
           Type: 'AWS::Redshift::ClusterSubnetGroup',
           Properties: {
             Description: {
-              Ref: 'AWS::StackName'
+              Ref: 'AWS::StackName',
             },
             SubnetIds: [
               {
-                Ref: 'DBSubnet1'
+                Ref: 'DBSubnet1',
               },
               {
-                Ref: 'DBSubnet2'
-              }
+                Ref: 'DBSubnet2',
+              },
             ],
             Tags: [
               {
                 Key: 'STAGE',
-                Value: 'dev'
-              }
-            ]
-          }
-        }
+                Value: 'dev',
+              },
+            ],
+          },
+        },
       };
       const actual = buildRedshiftSubnetGroup('dev', { numZones: 2 });
       expect(actual).toEqual(expected);
@@ -191,28 +191,28 @@ describe('subnet_groups', () => {
           Type: 'AWS::Redshift::ClusterSubnetGroup',
           Properties: {
             Description: {
-              Ref: 'AWS::StackName'
+              Ref: 'AWS::StackName',
             },
             SubnetIds: [
               {
-                Ref: 'DBSubnet1'
+                Ref: 'DBSubnet1',
               },
               {
-                Ref: 'DBSubnet2'
-              }
+                Ref: 'DBSubnet2',
+              },
             ],
             Tags: [
               {
                 Key: 'STAGE',
-                Value: 'dev'
-              }
-            ]
-          }
-        }
+                Value: 'dev',
+              },
+            ],
+          },
+        },
       };
       const actual = buildRedshiftSubnetGroup('dev', {
         name: 'MyRedshiftSubnetGroup',
-        numZones: 2
+        numZones: 2,
       });
       expect(actual).toEqual(expected);
       expect.assertions(1);
@@ -232,21 +232,21 @@ describe('subnet_groups', () => {
           Type: 'AWS::DAX::SubnetGroup',
           Properties: {
             SubnetGroupName: {
-              Ref: 'AWS::StackName'
+              Ref: 'AWS::StackName',
             },
             Description: {
-              Ref: 'AWS::StackName'
+              Ref: 'AWS::StackName',
             },
             SubnetIds: [
               {
-                Ref: 'DBSubnet1'
+                Ref: 'DBSubnet1',
               },
               {
-                Ref: 'DBSubnet2'
-              }
-            ]
-          }
-        }
+                Ref: 'DBSubnet2',
+              },
+            ],
+          },
+        },
       };
       const actual = buildDAXSubnetGroup({ numZones: 2 });
       expect(actual).toEqual(expected);
@@ -259,25 +259,25 @@ describe('subnet_groups', () => {
           Type: 'AWS::DAX::SubnetGroup',
           Properties: {
             SubnetGroupName: {
-              Ref: 'AWS::StackName'
+              Ref: 'AWS::StackName',
             },
             Description: {
-              Ref: 'AWS::StackName'
+              Ref: 'AWS::StackName',
             },
             SubnetIds: [
               {
-                Ref: 'DBSubnet1'
+                Ref: 'DBSubnet1',
               },
               {
-                Ref: 'DBSubnet2'
-              }
-            ]
-          }
-        }
+                Ref: 'DBSubnet2',
+              },
+            ],
+          },
+        },
       };
       const actual = buildDAXSubnetGroup({
         name: 'MyDAXSubnetGroup',
-        numZones: 2
+        numZones: 2,
       });
       expect(actual).toEqual(expected);
       expect.assertions(1);

@@ -11,7 +11,7 @@ const { APP_SUBNET } = require('./constants');
  */
 function buildVPCEndpoint(
   service,
-  { routeTableIds = [], subnetIds = [] } = {}
+  { routeTableIds = [], subnetIds = [] } = {},
 ) {
   const endpoint = {
     Type: 'AWS::EC2::VPCEndpoint',
@@ -22,16 +22,16 @@ function buildVPCEndpoint(
           [
             'com.amazonaws',
             {
-              Ref: 'AWS::Region'
+              Ref: 'AWS::Region',
             },
-            service
-          ]
-        ]
+            service,
+          ],
+        ],
       },
       VpcId: {
-        Ref: 'VPC'
-      }
-    }
+        Ref: 'VPC',
+      },
+    },
   };
 
   // @see https://docs.aws.amazon.com/vpc/latest/userguide/vpc-endpoints.html
@@ -55,9 +55,9 @@ function buildVPCEndpoint(
             },
           }, */
           Principal: '*',
-          Resource: '*'
-        }
-      ]
+          Resource: '*',
+        },
+      ],
     };
     if (service === 's3') {
       endpoint.Properties.PolicyDocument.Statement[0].Action = 's3:*';
@@ -70,8 +70,8 @@ function buildVPCEndpoint(
     endpoint.Properties.PrivateDnsEnabled = true;
     endpoint.Properties.SecurityGroupIds = [
       {
-        Ref: 'LambdaEndpointSecurityGroup'
-      }
+        Ref: 'LambdaEndpointSecurityGroup',
+      },
     ];
   }
 
@@ -82,7 +82,7 @@ function buildVPCEndpoint(
     .join('');
 
   return {
-    [cfName]: endpoint
+    [cfName]: endpoint,
   };
 }
 
@@ -124,7 +124,7 @@ function buildEndpointServices({ services = [], numZones = 0 } = {}) {
  */
 function buildLambdaVPCEndpointSecurityGroup(
   stage,
-  { name = 'LambdaEndpointSecurityGroup' } = {}
+  { name = 'LambdaEndpointSecurityGroup' } = {},
 ) {
   return {
     [name]: {
@@ -132,22 +132,22 @@ function buildLambdaVPCEndpointSecurityGroup(
       Properties: {
         GroupDescription: 'Lambda access to VPC endpoints',
         VpcId: {
-          Ref: 'VPC'
+          Ref: 'VPC',
         },
         SecurityGroupIngress: [
           {
             SourceSecurityGroupId: {
-              Ref: 'LambdaExecutionSecurityGroup'
+              Ref: 'LambdaExecutionSecurityGroup',
             },
             IpProtocol: 'tcp',
             FromPort: 443,
-            ToPort: 443
-          }
+            ToPort: 443,
+          },
         ],
         Tags: [
           {
             Key: 'STAGE',
-            Value: stage
+            Value: stage,
           },
           {
             Key: 'Name',
@@ -156,21 +156,21 @@ function buildLambdaVPCEndpointSecurityGroup(
                 '-',
                 [
                   {
-                    Ref: 'AWS::StackName'
+                    Ref: 'AWS::StackName',
                   },
-                  'lambda-endpoint'
-                ]
-              ]
-            }
-          }
-        ]
-      }
-    }
+                  'lambda-endpoint',
+                ],
+              ],
+            },
+          },
+        ],
+      },
+    },
   };
 }
 
 module.exports = {
   buildEndpointServices,
   buildVPCEndpoint,
-  buildLambdaVPCEndpointSecurityGroup
+  buildLambdaVPCEndpointSecurityGroup,
 };

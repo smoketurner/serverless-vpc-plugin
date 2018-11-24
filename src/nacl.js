@@ -19,7 +19,7 @@ function buildNetworkAcl(stage, name) {
         Tags: [
           {
             Key: 'STAGE',
-            Value: stage
+            Value: stage,
           },
           {
             Key: 'Name',
@@ -28,19 +28,19 @@ function buildNetworkAcl(stage, name) {
                 '-',
                 [
                   {
-                    Ref: 'AWS::StackName'
+                    Ref: 'AWS::StackName',
                   },
-                  name.toLowerCase()
-                ]
-              ]
-            }
-          }
+                  name.toLowerCase(),
+                ],
+              ],
+            },
+          },
         ],
         VpcId: {
-          Ref: 'VPC'
-        }
-      }
-    }
+          Ref: 'VPC',
+        },
+      },
+    },
   };
 }
 
@@ -55,7 +55,12 @@ function buildNetworkAcl(stage, name) {
 function buildNetworkAclEntry(
   name,
   CidrBlock,
-  { Egress = false, Protocol = -1, RuleAction = 'allow', RuleNumber = 100 } = {}
+  {
+    Egress = false,
+    Protocol = -1,
+    RuleAction = 'allow',
+    RuleNumber = 100,
+  } = {},
 ) {
   const direction = Egress ? 'Egress' : 'Ingress';
   const cfName = `${name}${direction}${RuleNumber}`;
@@ -65,14 +70,14 @@ function buildNetworkAclEntry(
       Properties: {
         CidrBlock,
         NetworkAclId: {
-          Ref: name
+          Ref: name,
         },
         Egress,
         Protocol,
         RuleAction,
-        RuleNumber
-      }
-    }
+        RuleNumber,
+      },
+    },
   };
 }
 
@@ -89,13 +94,13 @@ function buildNetworkAclAssociation(name, position) {
       Type: 'AWS::EC2::SubnetNetworkAclAssociation',
       Properties: {
         SubnetId: {
-          Ref: `${name}Subnet${position}`
+          Ref: `${name}Subnet${position}`,
         },
         NetworkAclId: {
-          Ref: `${name}NetworkAcl`
-        }
-      }
-    }
+          Ref: `${name}NetworkAcl`,
+        },
+      },
+    },
   };
 }
 
@@ -117,8 +122,8 @@ function buildPublicNetworkAcl(stage, numZones) {
     buildNetworkAcl(stage, PUBLIC_SUBNET),
     buildNetworkAclEntry(`${PUBLIC_SUBNET}NetworkAcl`, '0.0.0.0/0'),
     buildNetworkAclEntry(`${PUBLIC_SUBNET}NetworkAcl`, '0.0.0.0/0', {
-      Egress: true
-    })
+      Egress: true,
+    }),
   );
 
   for (let i = 1; i <= numZones; i += 1) {
@@ -146,8 +151,8 @@ function buildAppNetworkAcl(stage, numZones) {
     buildNetworkAcl(stage, APP_SUBNET),
     buildNetworkAclEntry(`${APP_SUBNET}NetworkAcl`, '0.0.0.0/0'),
     buildNetworkAclEntry(`${APP_SUBNET}NetworkAcl`, '0.0.0.0/0', {
-      Egress: true
-    })
+      Egress: true,
+    }),
   );
 
   for (let i = 1; i <= numZones; i += 1) {
@@ -174,13 +179,13 @@ function buildDBNetworkAcl(stage, appSubnets) {
     merge(
       resources,
       buildNetworkAclEntry(`${DB_SUBNET}NetworkAcl`, subnet, {
-        RuleNumber: 100 + index
+        RuleNumber: 100 + index,
       }),
       buildNetworkAclEntry(`${DB_SUBNET}NetworkAcl`, subnet, {
         RuleNumber: 100 + index,
-        Egress: true
+        Egress: true,
       }),
-      buildNetworkAclAssociation(DB_SUBNET, index + 1)
+      buildNetworkAclAssociation(DB_SUBNET, index + 1),
     );
   });
 
@@ -193,5 +198,5 @@ module.exports = {
   buildNetworkAclAssociation,
   buildPublicNetworkAcl,
   buildAppNetworkAcl,
-  buildDBNetworkAcl
+  buildDBNetworkAcl,
 };

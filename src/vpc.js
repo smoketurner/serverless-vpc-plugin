@@ -17,17 +17,17 @@ function buildVpc(stage, { name = 'VPC', cidrBlock = '10.0.0.0/16' } = {}) {
         Tags: [
           {
             Key: 'STAGE',
-            Value: stage
+            Value: stage,
           },
           {
             Key: 'Name',
             Value: {
-              Ref: 'AWS::StackName'
-            }
-          }
-        ]
-      }
-    }
+              Ref: 'AWS::StackName',
+            },
+          },
+        ],
+      },
+    },
   };
 }
 
@@ -46,17 +46,17 @@ function buildInternetGateway(stage, { name = 'InternetGateway' } = {}) {
         Tags: [
           {
             Key: 'STAGE',
-            Value: stage
+            Value: stage,
           },
           {
             Key: 'Name',
             Value: {
-              Ref: 'AWS::StackName'
-            }
-          }
-        ]
-      }
-    }
+              Ref: 'AWS::StackName',
+            },
+          },
+        ],
+      },
+    },
   };
 }
 
@@ -67,20 +67,20 @@ function buildInternetGateway(stage, { name = 'InternetGateway' } = {}) {
  * @return {Object}
  */
 function buildInternetGatewayAttachment({
-  name = 'InternetGatewayAttachment'
+  name = 'InternetGatewayAttachment',
 } = {}) {
   return {
     [name]: {
       Type: 'AWS::EC2::VPCGatewayAttachment',
       Properties: {
         InternetGatewayId: {
-          Ref: 'InternetGateway'
+          Ref: 'InternetGateway',
         },
         VpcId: {
-          Ref: 'VPC'
-        }
-      }
-    }
+          Ref: 'VPC',
+        },
+      },
+    },
   };
 }
 
@@ -105,7 +105,7 @@ function buildSubnet(stage, name, position, zone, cidrBlock) {
         Tags: [
           {
             Key: 'STAGE',
-            Value: stage
+            Value: stage,
           },
           {
             Key: 'Name',
@@ -114,20 +114,20 @@ function buildSubnet(stage, name, position, zone, cidrBlock) {
                 '-',
                 [
                   {
-                    Ref: 'AWS::StackName'
+                    Ref: 'AWS::StackName',
                   },
                   name.toLowerCase(),
-                  zone
-                ]
-              ]
-            }
-          }
+                  zone,
+                ],
+              ],
+            },
+          },
         ],
         VpcId: {
-          Ref: 'VPC'
-        }
-      }
-    }
+          Ref: 'VPC',
+        },
+      },
+    },
   };
 }
 
@@ -147,12 +147,12 @@ function buildRouteTable(stage, name, position, zone) {
       Type: 'AWS::EC2::RouteTable',
       Properties: {
         VpcId: {
-          Ref: 'VPC'
+          Ref: 'VPC',
         },
         Tags: [
           {
             Key: 'STAGE',
-            Value: stage
+            Value: stage,
           },
           {
             Key: 'Name',
@@ -161,17 +161,17 @@ function buildRouteTable(stage, name, position, zone) {
                 '-',
                 [
                   {
-                    Ref: 'AWS::StackName'
+                    Ref: 'AWS::StackName',
                   },
                   name.toLowerCase(),
-                  zone
-                ]
-              ]
-            }
-          }
-        ]
-      }
-    }
+                  zone,
+                ],
+              ],
+            },
+          },
+        ],
+      },
+    },
   };
 }
 
@@ -189,13 +189,13 @@ function buildRouteTableAssociation(name, position) {
       Type: 'AWS::EC2::SubnetRouteTableAssociation',
       Properties: {
         RouteTableId: {
-          Ref: `${name}RouteTable${position}`
+          Ref: `${name}RouteTable${position}`,
         },
         SubnetId: {
-          Ref: `${name}Subnet${position}`
-        }
-      }
-    }
+          Ref: `${name}Subnet${position}`,
+        },
+      },
+    },
   };
 }
 
@@ -210,35 +210,35 @@ function buildRouteTableAssociation(name, position) {
 function buildRoute(
   name,
   position,
-  { NatGatewayId = null, GatewayId = null } = {}
+  { NatGatewayId = null, GatewayId = null } = {},
 ) {
   const route = {
     Type: 'AWS::EC2::Route',
     Properties: {
       DestinationCidrBlock: '0.0.0.0/0',
       RouteTableId: {
-        Ref: `${name}RouteTable${position}`
-      }
-    }
+        Ref: `${name}RouteTable${position}`,
+      },
+    },
   };
 
   if (NatGatewayId) {
     route.Properties.NatGatewayId = {
-      Ref: NatGatewayId
+      Ref: NatGatewayId,
     };
   } else if (GatewayId) {
     route.Properties.GatewayId = {
-      Ref: GatewayId
+      Ref: GatewayId,
     };
   } else {
     throw new Error(
-      'Unable to create route: either NatGatewayId or GatewayId must be provided'
+      'Unable to create route: either NatGatewayId or GatewayId must be provided',
     );
   }
 
   const cfName = `${name}Route${position}`;
   return {
-    [cfName]: route
+    [cfName]: route,
   };
 }
 
@@ -251,7 +251,7 @@ function buildRoute(
  */
 function buildLambdaSecurityGroup(
   stage,
-  { name = 'LambdaExecutionSecurityGroup' } = {}
+  { name = 'LambdaExecutionSecurityGroup' } = {},
 ) {
   return {
     [name]: {
@@ -259,12 +259,12 @@ function buildLambdaSecurityGroup(
       Properties: {
         GroupDescription: 'Lambda Execution Group',
         VpcId: {
-          Ref: 'VPC'
+          Ref: 'VPC',
         },
         Tags: [
           {
             Key: 'STAGE',
-            Value: stage
+            Value: stage,
           },
           {
             Key: 'Name',
@@ -273,16 +273,16 @@ function buildLambdaSecurityGroup(
                 '-',
                 [
                   {
-                    Ref: 'AWS::StackName'
+                    Ref: 'AWS::StackName',
                   },
-                  'lambda-exec'
-                ]
-              ]
-            }
-          }
-        ]
-      }
-    }
+                  'lambda-exec',
+                ],
+              ],
+            },
+          },
+        ],
+      },
+    },
   };
 }
 
@@ -294,5 +294,5 @@ module.exports = {
   buildSubnet,
   buildRoute,
   buildRouteTable,
-  buildRouteTableAssociation
+  buildRouteTableAssociation,
 };
