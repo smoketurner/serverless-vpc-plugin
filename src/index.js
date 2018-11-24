@@ -103,6 +103,8 @@ class ServerlessVpcPlugin {
       }
       if (typeof useNatGateway === 'boolean') {
         useNatGateway = (useNatGateway) ? numZones : 0;
+      } else if (useNatGateway > numZones) {
+        useNatGateway = numZones;
       }
     }
 
