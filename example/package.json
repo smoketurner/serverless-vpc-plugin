@@ -19,6 +19,6 @@
   },
   "devDependencies": {
     "serverless": "1.33.2",
-    "serverless-vpc-plugin": "smoketurner/serverless-vpc-plugin#jp-gh6"
+    "serverless-vpc-plugin": "smoketurner/serverless-vpc-plugin#master"
   }
 }
