@@ -104,16 +104,16 @@ class ServerlessVpcPlugin {
       ) {
         throw new Error('useNatGateway must be either a boolean or a number');
       }
-      if (numZones > DEFAULT_VPC_EIP_LIMIT) {
-        this.serverless.cli.log(
-          `WARNING: Number of zones (${numZones} is greater than default EIP limit (${DEFAULT_VPC_EIP_LIMIT}). Please ensure you requested an AWS EIP limit increase.`,
-        );
-      }
       if (typeof useNatGateway === 'boolean') {
         useNatGateway = useNatGateway ? numZones : 0;
       } else if (useNatGateway > numZones) {
         useNatGateway = numZones;
       }
+      if (useNatGateway > DEFAULT_VPC_EIP_LIMIT) {
+        this.serverless.cli.log(
+          `WARNING: Number of gateways (${useNatGateway} is greater than default EIP limit (${DEFAULT_VPC_EIP_LIMIT}). Please ensure you requested an AWS EIP limit increase.`,
+        );
+      }      
     }
 
     this.serverless.cli.log(
