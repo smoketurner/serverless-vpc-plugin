@@ -95,7 +95,7 @@ class ServerlessVpcPlugin {
     const numZones = zones.length;
 
     if (useNatGateway) {
-      if (typeof useNatGateway !== 'boolean' || typeof useNatGateway !== 'number') {
+      if (typeof useNatGateway !== 'boolean' && typeof useNatGateway !== 'number') {
         throw new Error('useNatGateway must be either a boolean or a number');
       }
       if (numZones > DEFAULT_VPC_EIP_LIMIT) {
