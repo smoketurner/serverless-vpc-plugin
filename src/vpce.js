@@ -1,5 +1,3 @@
-const merge = require('lodash.merge');
-
 const { APP_SUBNET } = require('./constants');
 
 /**
@@ -109,7 +107,10 @@ function buildEndpointServices({ services = [], numZones = 0 } = {}) {
 
   const resources = {};
   services.forEach(service => {
-    merge(resources, buildVPCEndpoint(service, { routeTableIds, subnetIds }));
+    Object.assign(
+      resources,
+      buildVPCEndpoint(service, { routeTableIds, subnetIds }),
+    );
   });
 
   return resources;
