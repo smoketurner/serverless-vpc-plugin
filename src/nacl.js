@@ -1,5 +1,3 @@
-const merge = require('lodash.merge');
-
 const { APP_SUBNET, PUBLIC_SUBNET, DB_SUBNET } = require('./constants');
 
 /**
@@ -110,14 +108,14 @@ function buildNetworkAclAssociation(name, position) {
  * @param {String} stage
  * @param {Number} numZones
  */
-function buildPublicNetworkAcl(stage, numZones) {
+function buildPublicNetworkAcl(stage, numZones = 0) {
   if (numZones < 1) {
     return {};
   }
 
   const resources = {};
 
-  merge(
+  Object.assign(
     resources,
     buildNetworkAcl(stage, PUBLIC_SUBNET),
     buildNetworkAclEntry(`${PUBLIC_SUBNET}NetworkAcl`, '0.0.0.0/0'),
@@ -127,7 +125,7 @@ function buildPublicNetworkAcl(stage, numZones) {
   );
 
   for (let i = 1; i <= numZones; i += 1) {
-    merge(resources, buildNetworkAclAssociation(PUBLIC_SUBNET, i));
+    Object.assign(resources, buildNetworkAclAssociation(PUBLIC_SUBNET, i));
   }
 
   return resources;
@@ -139,14 +137,14 @@ function buildPublicNetworkAcl(stage, numZones) {
  * @param {String} stage
  * @param {Number} numZones
  */
-function buildAppNetworkAcl(stage, numZones) {
+function buildAppNetworkAcl(stage, numZones = 0) {
   if (numZones < 1) {
     return {};
   }
 
   const resources = {};
 
-  merge(
+  Object.assign(
     resources,
     buildNetworkAcl(stage, APP_SUBNET),
     buildNetworkAclEntry(`${APP_SUBNET}NetworkAcl`, '0.0.0.0/0'),
@@ -156,7 +154,7 @@ function buildAppNetworkAcl(stage, numZones) {
   );
 
   for (let i = 1; i <= numZones; i += 1) {
-    merge(resources, buildNetworkAclAssociation(APP_SUBNET, i));
+    Object.assign(resources, buildNetworkAclAssociation(APP_SUBNET, i));
   }
 
   return resources;
@@ -168,7 +166,7 @@ function buildAppNetworkAcl(stage, numZones) {
  * @param {String} stage
  * @param {Array} appSubnets
  */
-function buildDBNetworkAcl(stage, appSubnets) {
+function buildDBNetworkAcl(stage, appSubnets = []) {
   if (!Array.isArray(appSubnets) || appSubnets.length < 1) {
     return {};
   }
@@ -176,7 +174,7 @@ function buildDBNetworkAcl(stage, appSubnets) {
   const resources = buildNetworkAcl(stage, DB_SUBNET);
 
   appSubnets.forEach((subnet, index) => {
-    merge(
+    Object.assign(
       resources,
       buildNetworkAclEntry(`${DB_SUBNET}NetworkAcl`, subnet, {
         RuleNumber: 100 + index,

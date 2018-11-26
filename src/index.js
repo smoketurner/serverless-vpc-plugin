@@ -1,5 +1,4 @@
 const CIDR = require('cidr-split');
-const merge = require('lodash.merge');
 
 const {
   DEFAULT_VPC_EIP_LIMIT,
@@ -113,14 +112,14 @@ class ServerlessVpcPlugin {
         this.serverless.cli.log(
           `WARNING: Number of gateways (${useNatGateway} is greater than default EIP limit (${DEFAULT_VPC_EIP_LIMIT}). Please ensure you requested an AWS EIP limit increase.`,
         );
-      }      
+      }
     }
 
     this.serverless.cli.log(
       `Generating a VPC in ${region} (${cidrBlock}) across ${numZones} availability zones: ${zones}`,
     );
 
-    merge(
+    Object.assign(
       this.serverless.service.provider.compiledCloudFormationTemplate.Resources,
       buildVpc(stage, { cidrBlock }),
       buildInternetGateway(stage),
@@ -147,7 +146,7 @@ class ServerlessVpcPlugin {
         `Provisioning VPC endpoints for: ${services.join(', ')}`,
       );
 
-      merge(
+      Object.assign(
         this.serverless.service.provider.compiledCloudFormationTemplate
           .Resources,
         buildEndpointServices({ services, numZones }),
@@ -161,7 +160,7 @@ class ServerlessVpcPlugin {
           'WARNING: less than 2 AZs; skipping subnet group provisioning',
         );
       } else {
-        merge(
+        Object.assign(
           this.serverless.service.provider.compiledCloudFormationTemplate
             .Resources,
           buildRDSSubnetGroup(stage, { numZones }),
@@ -253,7 +252,7 @@ class ServerlessVpcPlugin {
    * @param {Array} zones Array of availability zones
    * @return {Map}
    */
-  static splitSubnets(cidrBlock, zones) {
+  static splitSubnets(cidrBlock, zones = []) {
     const mapping = new Map();
 
     if (!cidrBlock || !Array.isArray(zones) || zones.length < 1) {
@@ -339,7 +338,7 @@ class ServerlessVpcPlugin {
 
     if (numNatGateway > 0) {
       for (let index = 0; index < numNatGateway; index += 1) {
-        merge(
+        Object.assign(
           resources,
           buildEIP(index + 1),
           buildNatGateway(stage, index + 1, zones[index]),
@@ -357,7 +356,7 @@ class ServerlessVpcPlugin {
         params.GatewayId = 'InternetGateway';
       }
 
-      merge(
+      Object.assign(
         resources,
 
         // App Subnet
@@ -389,7 +388,7 @@ class ServerlessVpcPlugin {
 
       if (!skipDbCreation) {
         // DB Subnet
-        merge(
+        Object.assign(
           resources,
           buildSubnet(
             stage,
@@ -406,13 +405,16 @@ class ServerlessVpcPlugin {
 
     if (useNetworkAcl) {
       // Add Network ACLs
-      merge(
+      Object.assign(
         resources,
         buildPublicNetworkAcl(stage, zones.length),
         buildAppNetworkAcl(stage, zones.length),
       );
       if (!skipDbCreation) {
-        merge(resources, buildDBNetworkAcl(stage, subnets.get(APP_SUBNET)));
+        Object.assign(
+          resources,
+          buildDBNetworkAcl(stage, subnets.get(APP_SUBNET)),
+        );
       }
     }
 

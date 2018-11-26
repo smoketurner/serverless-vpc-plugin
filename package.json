@@ -27,8 +27,7 @@
     "lint": "eslint . --fix"
   },
   "dependencies": {
-    "cidr-split": "0.1.2",
-    "lodash.merge": "4.6.1"
+    "cidr-split": "0.1.2"
   },
   "devDependencies": {
     "aws-sdk-mock": "4.2.0",
