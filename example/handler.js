@@ -8,9 +8,9 @@ module.exports.s3 = async (event, context) => {
 
   const params = {
     Bucket: BUCKET_NAME,
-    Key: 'test.txt',
-    Body: 'this is a test',
-    ContentType: 'text/plain',
+    Key: 'event.json',
+    Body: JSON.stringify(event),
+    ContentType: 'application/json',
     ServerSideEncryption: 'AES256',
   };
 
