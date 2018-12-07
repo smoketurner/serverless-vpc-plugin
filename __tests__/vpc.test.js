@@ -323,9 +323,7 @@ describe('vpc', () => {
     it('throws an error if no gateway provided', () => {
       expect(() => {
         buildRoute('App', 1);
-      }).toThrow(
-        'Unable to create route: either NatGatewayId or GatewayId must be provided',
-      );
+      }).toThrow('Unable to create route: either NatGatewayId or GatewayId must be provided');
       expect.assertions(1);
     });
   });

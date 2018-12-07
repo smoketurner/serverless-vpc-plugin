@@ -7,10 +7,7 @@ const { DB_SUBNET } = require('./constants');
  * @param {Objects} params
  * @return {Object}
  */
-function buildRDSSubnetGroup(
-  stage,
-  { name = 'RDSSubnetGroup', numZones = 0 } = {},
-) {
+function buildRDSSubnetGroup(stage, { name = 'RDSSubnetGroup', numZones = 0 } = {}) {
   if (numZones < 1) {
     return {};
   }
@@ -48,10 +45,7 @@ function buildRDSSubnetGroup(
  * @param {Object} params
  * @return {Object}
  */
-function buildElastiCacheSubnetGroup({
-  name = 'ElastiCacheSubnetGroup',
-  numZones = 0,
-} = {}) {
+function buildElastiCacheSubnetGroup({ name = 'ElastiCacheSubnetGroup', numZones = 0 } = {}) {
   if (numZones < 1) {
     return {};
   }
@@ -84,10 +78,7 @@ function buildElastiCacheSubnetGroup({
  * @param {Object} params
  * @return {Object}
  */
-function buildRedshiftSubnetGroup(
-  stage,
-  { name = 'RedshiftSubnetGroup', numZones = 0 } = {},
-) {
+function buildRedshiftSubnetGroup(stage, { name = 'RedshiftSubnetGroup', numZones = 0 } = {}) {
   if (numZones < 1) {
     return {};
   }

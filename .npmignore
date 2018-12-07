@@ -8,3 +8,4 @@
 jest-config.json
 __tests__/
 example/
+coverage/

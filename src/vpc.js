@@ -66,9 +66,7 @@ function buildInternetGateway(stage, { name = 'InternetGateway' } = {}) {
  * @param {Object} params
  * @return {Object}
  */
-function buildInternetGatewayAttachment({
-  name = 'InternetGatewayAttachment',
-} = {}) {
+function buildInternetGatewayAttachment({ name = 'InternetGatewayAttachment' } = {}) {
   return {
     [name]: {
       Type: 'AWS::EC2::VPCGatewayAttachment',
@@ -207,11 +205,7 @@ function buildRouteTableAssociation(name, position) {
  * @param {Object} params
  * @return {Object}
  */
-function buildRoute(
-  name,
-  position,
-  { NatGatewayId = null, GatewayId = null } = {},
-) {
+function buildRoute(name, position, { NatGatewayId = null, GatewayId = null } = {}) {
   const route = {
     Type: 'AWS::EC2::Route',
     Properties: {
@@ -231,9 +225,7 @@ function buildRoute(
       Ref: GatewayId,
     };
   } else {
-    throw new Error(
-      'Unable to create route: either NatGatewayId or GatewayId must be provided',
-    );
+    throw new Error('Unable to create route: either NatGatewayId or GatewayId must be provided');
   }
 
   const cfName = `${name}Route${position}`;
@@ -249,10 +241,7 @@ function buildRoute(
  * @param {Object} params
  * @return {Object}
  */
-function buildLambdaSecurityGroup(
-  stage,
-  { name = 'LambdaExecutionSecurityGroup' } = {},
-) {
+function buildLambdaSecurityGroup(stage, { name = 'LambdaExecutionSecurityGroup' } = {}) {
   return {
     [name]: {
       Type: 'AWS::EC2::SecurityGroup',

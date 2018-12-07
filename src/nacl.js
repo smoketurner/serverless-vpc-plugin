@@ -53,12 +53,7 @@ function buildNetworkAcl(stage, name) {
 function buildNetworkAclEntry(
   name,
   CidrBlock,
-  {
-    Egress = false,
-    Protocol = -1,
-    RuleAction = 'allow',
-    RuleNumber = 100,
-  } = {},
+  { Egress = false, Protocol = -1, RuleAction = 'allow', RuleNumber = 100 } = {},
 ) {
   const direction = Egress ? 'Egress' : 'Ingress';
   const cfName = `${name}${direction}${RuleNumber}`;

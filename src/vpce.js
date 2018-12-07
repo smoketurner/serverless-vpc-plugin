@@ -7,10 +7,7 @@ const { APP_SUBNET } = require('./constants');
  * @param {Object} params
  * @return {Object}
  */
-function buildVPCEndpoint(
-  service,
-  { routeTableIds = [], subnetIds = [] } = {},
-) {
+function buildVPCEndpoint(service, { routeTableIds = [], subnetIds = [] } = {}) {
   const endpoint = {
     Type: 'AWS::EC2::VPCEndpoint',
     Properties: {
@@ -75,9 +72,7 @@ function buildVPCEndpoint(
 
   const parts = service.split(/[-_.]/g);
   parts.push('VPCEndpoint');
-  const cfName = parts
-    .map(part => part.charAt(0).toUpperCase() + part.slice(1))
-    .join('');
+  const cfName = parts.map(part => part.charAt(0).toUpperCase() + part.slice(1)).join('');
 
   return {
     [cfName]: endpoint,
@@ -107,10 +102,7 @@ function buildEndpointServices({ services = [], numZones = 0 } = {}) {
 
   const resources = {};
   services.forEach(service => {
-    Object.assign(
-      resources,
-      buildVPCEndpoint(service, { routeTableIds, subnetIds }),
-    );
+    Object.assign(resources, buildVPCEndpoint(service, { routeTableIds, subnetIds }));
   });
 
   return resources;
@@ -123,10 +115,7 @@ function buildEndpointServices({ services = [], numZones = 0 } = {}) {
  * @param {Object} params
  * @return {Object}
  */
-function buildLambdaVPCEndpointSecurityGroup(
-  stage,
-  { name = 'LambdaEndpointSecurityGroup' } = {},
-) {
+function buildLambdaVPCEndpointSecurityGroup(stage, { name = 'LambdaEndpointSecurityGroup' } = {}) {
   return {
     [name]: {
       Type: 'AWS::EC2::SecurityGroup',

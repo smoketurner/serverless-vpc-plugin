@@ -1,11 +1,6 @@
 const CIDR = require('cidr-split');
 
-const {
-  DEFAULT_VPC_EIP_LIMIT,
-  APP_SUBNET,
-  PUBLIC_SUBNET,
-  DB_SUBNET,
-} = require('./constants');
+const { DEFAULT_VPC_EIP_LIMIT, APP_SUBNET, PUBLIC_SUBNET, DB_SUBNET } = require('./constants');
 
 const {
   buildVpc,
@@ -18,11 +13,7 @@ const {
   buildRouteTableAssociation,
 } = require('./vpc');
 
-const {
-  buildAppNetworkAcl,
-  buildPublicNetworkAcl,
-  buildDBNetworkAcl,
-} = require('./nacl');
+const { buildAppNetworkAcl, buildPublicNetworkAcl, buildDBNetworkAcl } = require('./nacl');
 
 const {
   buildRDSSubnetGroup,
@@ -31,10 +22,7 @@ const {
   buildDAXSubnetGroup,
 } = require('./subnet_groups');
 
-const {
-  buildEndpointServices,
-  buildLambdaVPCEndpointSecurityGroup,
-} = require('./vpce');
+const { buildEndpointServices, buildLambdaVPCEndpointSecurityGroup } = require('./vpce');
 
 const { buildEIP, buildNatGateway } = require('./natgw');
 
@@ -67,10 +55,7 @@ class ServerlessVpcPlugin {
       if ('useNatGateway' in vpcConfig) {
         ({ useNatGateway } = vpcConfig);
       }
-      if (
-        'useNetworkAcl' in vpcConfig &&
-        typeof vpcConfig.useNetworkAcl === 'boolean'
-      ) {
+      if ('useNetworkAcl' in vpcConfig && typeof vpcConfig.useNetworkAcl === 'boolean') {
         ({ useNetworkAcl } = vpcConfig);
       }
       if (Array.isArray(vpcConfig.zones) && vpcConfig.zones.length > 0) {
@@ -79,10 +64,7 @@ class ServerlessVpcPlugin {
       if (Array.isArray(vpcConfig.services) && vpcConfig.services.length > 0) {
         services = vpcConfig.services.map(s => s.trim().toLowerCase());
       }
-      if (
-        'skipDbCreation' in vpcConfig &&
-        typeof vpcConfig.skipDbCreation === 'boolean'
-      ) {
+      if ('skipDbCreation' in vpcConfig && typeof vpcConfig.skipDbCreation === 'boolean') {
         ({ skipDbCreation } = vpcConfig);
       }
     }
@@ -97,11 +79,10 @@ class ServerlessVpcPlugin {
     const numZones = zones.length;
 
     if (useNatGateway) {
-      if (
-        typeof useNatGateway !== 'boolean' &&
-        typeof useNatGateway !== 'number'
-      ) {
-        throw new Error('useNatGateway must be either a boolean or a number');
+      if (typeof useNatGateway !== 'boolean' && typeof useNatGateway !== 'number') {
+        throw new this.serverless.classes.Error(
+          'useNatGateway must be either a boolean or a number',
+        );
       }
       if (typeof useNatGateway === 'boolean') {
         useNatGateway = useNatGateway ? numZones : 0;
@@ -110,13 +91,16 @@ class ServerlessVpcPlugin {
       }
       if (useNatGateway > DEFAULT_VPC_EIP_LIMIT) {
         this.serverless.cli.log(
-          `WARNING: Number of gateways (${useNatGateway} is greater than default EIP limit (${DEFAULT_VPC_EIP_LIMIT}). Please ensure you requested an AWS EIP limit increase.`,
+          `WARNING: Number of gateways (${useNatGateway} is greater than default ` +
+            `EIP limit (${DEFAULT_VPC_EIP_LIMIT}). Please ensure you requested ` +
+            `an AWS EIP limit increase.`,
         );
       }
     }
 
     this.serverless.cli.log(
-      `Generating a VPC in ${region} (${cidrBlock}) across ${numZones} availability zones: ${zones}`,
+      `Generating a VPC in ${region} (${cidrBlock}) ` +
+        `across ${numZones} availability zones: ${zones}`,
     );
 
     Object.assign(
@@ -136,19 +120,14 @@ class ServerlessVpcPlugin {
     if (services.length > 0) {
       const invalid = await this.validateServices(region, services);
       if (invalid.length > 0) {
-        throw new Error(
-          `WARNING: Requested services are not available in ${region}: ${invalid.join(
-            ', ',
-          )}`,
+        throw new this.serverless.classes.Error(
+          `WARNING: Requested services are not available in ${region}: ${invalid.join(', ')}`,
         );
       }
-      this.serverless.cli.log(
-        `Provisioning VPC endpoints for: ${services.join(', ')}`,
-      );
+      this.serverless.cli.log(`Provisioning VPC endpoints for: ${services.join(', ')}`);
 
       Object.assign(
-        this.serverless.service.provider.compiledCloudFormationTemplate
-          .Resources,
+        this.serverless.service.provider.compiledCloudFormationTemplate.Resources,
         buildEndpointServices({ services, numZones }),
         buildLambdaVPCEndpointSecurityGroup(stage),
       );
@@ -156,13 +135,10 @@ class ServerlessVpcPlugin {
 
     if (!skipDbCreation) {
       if (numZones < 2) {
-        this.serverless.cli.log(
-          'WARNING: less than 2 AZs; skipping subnet group provisioning',
-        );
+        this.serverless.cli.log('WARNING: less than 2 AZs; skipping subnet group provisioning');
       } else {
         Object.assign(
-          this.serverless.service.provider.compiledCloudFormationTemplate
-            .Resources,
+          this.serverless.service.provider.compiledCloudFormationTemplate.Resources,
           buildRDSSubnetGroup(stage, { numZones }),
           buildRedshiftSubnetGroup(stage, { numZones }),
           buildElastiCacheSubnetGroup({ numZones }),
@@ -187,13 +163,11 @@ class ServerlessVpcPlugin {
         },
       ],
     };
-    return this.provider
-      .request('EC2', 'describeAvailabilityZones', params)
-      .then(data =>
-        data.AvailabilityZones.filter(z => z.State === 'available')
-          .map(z => z.ZoneName)
-          .sort(),
-      );
+    return this.provider.request('EC2', 'describeAvailabilityZones', params).then(data =>
+      data.AvailabilityZones.filter(z => z.State === 'available')
+        .map(z => z.ZoneName)
+        .sort(),
+    );
   }
 
   /**
@@ -319,12 +293,7 @@ class ServerlessVpcPlugin {
   static buildAvailabilityZones(
     stage,
     cidrBlock,
-    {
-      zones = [],
-      numNatGateway = 0,
-      skipDbCreation = false,
-      useNetworkAcl = false,
-    } = {},
+    { zones = [], numNatGateway = 0, skipDbCreation = false, useNetworkAcl = false } = {},
   ) {
     if (!cidrBlock) {
       return {};
@@ -360,25 +329,13 @@ class ServerlessVpcPlugin {
         resources,
 
         // App Subnet
-        buildSubnet(
-          stage,
-          APP_SUBNET,
-          position,
-          zone,
-          subnets.get(zone).get(APP_SUBNET),
-        ),
+        buildSubnet(stage, APP_SUBNET, position, zone, subnets.get(zone).get(APP_SUBNET)),
         buildRouteTable(stage, APP_SUBNET, position, zone),
         buildRouteTableAssociation(APP_SUBNET, position),
         buildRoute(APP_SUBNET, position, params),
 
         // Public Subnet
-        buildSubnet(
-          stage,
-          PUBLIC_SUBNET,
-          position,
-          zone,
-          subnets.get(zone).get(PUBLIC_SUBNET),
-        ),
+        buildSubnet(stage, PUBLIC_SUBNET, position, zone, subnets.get(zone).get(PUBLIC_SUBNET)),
         buildRouteTable(stage, PUBLIC_SUBNET, position, zone),
         buildRouteTableAssociation(PUBLIC_SUBNET, position),
         buildRoute(PUBLIC_SUBNET, position, {
@@ -390,13 +347,7 @@ class ServerlessVpcPlugin {
         // DB Subnet
         Object.assign(
           resources,
-          buildSubnet(
-            stage,
-            DB_SUBNET,
-            position,
-            zone,
-            subnets.get(zone).get(DB_SUBNET),
-          ),
+          buildSubnet(stage, DB_SUBNET, position, zone, subnets.get(zone).get(DB_SUBNET)),
           buildRouteTable(stage, DB_SUBNET, position, zone),
           buildRouteTableAssociation(DB_SUBNET, position),
         );
@@ -411,10 +362,7 @@ class ServerlessVpcPlugin {
         buildAppNetworkAcl(stage, zones.length),
       );
       if (!skipDbCreation) {
-        Object.assign(
-          resources,
-          buildDBNetworkAcl(stage, subnets.get(APP_SUBNET)),
-        );
+        Object.assign(resources, buildDBNetworkAcl(stage, subnets.get(APP_SUBNET)));
       }
     }
 
