@@ -1,5 +1,5 @@
 .git
-node_modules
 .vscode
 .serverless
 coverage
+node_modules
