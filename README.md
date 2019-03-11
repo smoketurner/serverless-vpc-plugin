@@ -74,14 +74,6 @@ provider:
       #- Ref: AppSubnet4
       #- Ref: AppSubnet5
       #- Ref: AppSubnet6
-  iamRoleStatements:
-    - Effect: Allow
-      Action:
-        - 'ec2:CreateNetworkInterface'
-        - 'ec2:DescribeNetworkInterfaces'
-        - 'ec2:DetachNetworkInterface'
-        - 'ec2:DeleteNetworkInterface'
-      Resource: '*'
 
 custom:
   vpcConfig:

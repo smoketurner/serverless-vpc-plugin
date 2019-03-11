@@ -5,7 +5,6 @@ provider:
   runtime: nodejs8.10
   stage: ${opt:stage, 'dev'}
   region: ${opt:region, 'us-east-1'}
-  profile: whatif-dev
   versionFunctions: false
   logRetentionInDays: 1
   deploymentBucket:
@@ -18,14 +17,6 @@ provider:
       - Ref: AppSubnet1
       - Ref: AppSubnet2
       - Ref: AppSubnet3
-  iamRoleStatements:
-    - Effect: Allow
-      Action:
-        - 'ec2:CreateNetworkInterface'
-        - 'ec2:DescribeNetworkInterfaces'
-        - 'ec2:DetachNetworkInterface'
-        - 'ec2:DeleteNetworkInterface'
-      Resource: '*'
 
 plugins:
   - serverless-vpc-plugin
@@ -34,13 +25,13 @@ package:
   individually: true
   excludeDevDependencies: true
   exclude:
+    - .npmrc
     - package*.json
     - .git/**
     - resources/**
     - node_modules/**
 
 custom:
-  bucketName: sls-vpc-example
   vpcConfig:
     cidrBlock: '10.0.0.0/16'
     useNatGateway: false
@@ -55,10 +46,11 @@ custom:
 
 functions:
   s3:
-    handler: handler.s3
+    handler: s3.handler
     description: S3 Test Handler
     environment:
-      BUCKET_NAME: ${self:custom.bucketName}
+      BUCKET_NAME:
+        Ref: TestBucket
 
 resources:
   - ${file(resources/s3_cf.yml)}
