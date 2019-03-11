@@ -1,7 +1,7 @@
 module.exports = {
   root: true,
   extends: ['airbnb-base', 'plugin:jest/recommended', 'plugin:prettier/recommended'],
-  plugins: ['jest'],
+  plugins: ['jest', 'prettier'],
   settings: {
     'import/core-modules': ['aws-sdk'],
   },
