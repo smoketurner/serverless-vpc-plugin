@@ -10,15 +10,13 @@
   },
   "main": "handler.js",
   "scripts": {
-    "deploy": "./node_modules/.bin/sls deploy -v --force",
-    "remove": "./node_modules/.bin/sls remove -v",
-    "test": "./node_modules/.bin/sls invoke -f s3"
-  },
-  "dependencies": {
-    "aws-sdk": "2.290.0"
+    "deploy": "npx sls deploy -v --force",
+    "remove": "npx sls remove -v",
+    "test": "npx sls invoke -f s3"
   },
   "devDependencies": {
-    "serverless": "1.37.1",
+    "aws-sdk": "2.290.0",
+    "serverless": "1.38.0",
     "serverless-vpc-plugin": "smoketurner/serverless-vpc-plugin#master"
   }
 }

@@ -31,6 +31,8 @@ plugins:
   - serverless-vpc-plugin
 
 package:
+  individually: true
+  excludeDevDependencies: true
   exclude:
     - package*.json
     - .git/**
