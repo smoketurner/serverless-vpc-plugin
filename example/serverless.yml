@@ -17,6 +17,16 @@ provider:
       - Ref: AppSubnet1
       - Ref: AppSubnet2
       - Ref: AppSubnet3
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - 's3:PutObject'
+      Resource:
+        'Fn::Join':
+          - ''
+          - - 'arn:aws:s3:::'
+            - Ref: TestBucket
+            - '/*'
 
 plugins:
   - serverless-vpc-plugin
@@ -27,7 +37,6 @@ package:
   exclude:
     - .npmrc
     - package*.json
-    - .git/**
     - resources/**
     - node_modules/**
 

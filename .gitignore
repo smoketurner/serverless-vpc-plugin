@@ -3,3 +3,4 @@
 .serverless
 coverage
 node_modules
+example/package-lock.json
