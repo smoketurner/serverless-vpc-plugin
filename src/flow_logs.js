@@ -113,7 +113,7 @@ function buildVpcFlowLogs({ name = 'S3FlowLog' } = {}) {
   return {
     [name]: {
       Type: 'AWS::EC2::FlowLog',
-      DependsOn: 'LogBucketPolicy',
+      DependsOn: ['LogBucketPolicy'],
       Properties: {
         LogDestinationType: 's3',
         LogDestination: {
