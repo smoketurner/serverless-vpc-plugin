@@ -79,17 +79,17 @@ custom:
   vpcConfig:
     cidrBlock: '10.0.0.0/16'
 
-    # if useNatGateway is a boolean "true", a NAT Gateway and EIP will be provisioned
-    # in each zone auto-discovered or specified below.
-    # if useNatGateway is a number, that number of NAT Gateways will be provisioned
-    useNatGateway: 2
+    # if createNatGateway is a boolean "true", a NAT Gateway and EIP will be
+    # provisioned in each zone auto-discovered or specified below.
+    # if createNatGateway is a number, that number of NAT Gateways will be provisioned
+    createNatGateway: 2
 
     # When enabled, the DB subnet will only be accessible from the Application subnet
     # Both the Public and Application subnets will be accessible from 0.0.0.0/0
-    useNetworkAcl: false
+    createNetworkAcl: false
 
     # Whether to create the DB subnet
-    skipDbCreation: false
+    createDbSubnet: false
 
     # optionally specify AZs (defaults to auto-discover all availabile AZs)
     zones:

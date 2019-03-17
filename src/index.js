@@ -40,11 +40,11 @@ class ServerlessVpcPlugin {
 
   async afterInitialize() {
     let cidrBlock = '10.0.0.0/16';
-    let useNatGateway = false;
-    let useNetworkAcl = false;
     let zones = [];
     let services = ['s3', 'dynamodb'];
-    let skipDbCreation = false;
+    let createNatGateway = false;
+    let createNetworkAcl = false;
+    let createDbSubnet = true;
 
     const { vpcConfig } = this.serverless.service.custom;
 
@@ -52,20 +52,30 @@ class ServerlessVpcPlugin {
       if (vpcConfig.cidrBlock && typeof vpcConfig.cidrBlock === 'string') {
         ({ cidrBlock } = vpcConfig);
       }
-      if ('useNatGateway' in vpcConfig) {
-        ({ useNatGateway } = vpcConfig);
+
+      if ('createNatGateway' in vpcConfig) {
+        ({ createNatGateway } = vpcConfig);
+      } else if ('useNatGateway' in vpcConfig) {
+        createNatGateway = vpcConfig.useNatGateway;
       }
-      if ('useNetworkAcl' in vpcConfig && typeof vpcConfig.useNetworkAcl === 'boolean') {
-        ({ useNetworkAcl } = vpcConfig);
+
+      if ('createNetworkAcl' in vpcConfig && typeof vpcConfig.createNetworkAcl === 'boolean') {
+        ({ createNetworkAcl } = vpcConfig);
+      } else if ('useNetworkAcl' in vpcConfig && typeof vpcConfig.useNetworkAcl === 'boolean') {
+        createNetworkAcl = vpcConfig.useNetworkAcl;
       }
+
       if (Array.isArray(vpcConfig.zones) && vpcConfig.zones.length > 0) {
         ({ zones } = vpcConfig);
       }
       if (Array.isArray(vpcConfig.services) && vpcConfig.services.length > 0) {
         services = vpcConfig.services.map(s => s.trim().toLowerCase());
       }
-      if ('skipDbCreation' in vpcConfig && typeof vpcConfig.skipDbCreation === 'boolean') {
-        ({ skipDbCreation } = vpcConfig);
+
+      if ('createDbSubnet' in vpcConfig && typeof vpcConfig.createDbSubnet === 'boolean') {
+        ({ createDbSubnet } = vpcConfig);
+      } else if ('skipDbCreation' in vpcConfig && typeof vpcConfig.skipDbCreation === 'boolean') {
+        createDbSubnet = !vpcConfig.skipDbCreation;
       }
     }
 
@@ -78,20 +88,20 @@ class ServerlessVpcPlugin {
     }
     const numZones = zones.length;
 
-    if (useNatGateway) {
-      if (typeof useNatGateway !== 'boolean' && typeof useNatGateway !== 'number') {
+    if (createNatGateway) {
+      if (typeof createNatGateway !== 'boolean' && typeof createNatGateway !== 'number') {
         throw new this.serverless.classes.Error(
-          'useNatGateway must be either a boolean or a number',
+          'createNatGateway must be either a boolean or a number',
         );
       }
-      if (typeof useNatGateway === 'boolean') {
-        useNatGateway = useNatGateway ? numZones : 0;
-      } else if (useNatGateway > numZones) {
-        useNatGateway = numZones;
+      if (typeof createNatGateway === 'boolean') {
+        createNatGateway = createNatGateway ? numZones : 0;
+      } else if (createNatGateway > numZones) {
+        createNatGateway = numZones;
       }
-      if (useNatGateway > DEFAULT_VPC_EIP_LIMIT) {
+      if (createNatGateway > DEFAULT_VPC_EIP_LIMIT) {
         this.serverless.cli.log(
-          `WARNING: Number of gateways (${useNatGateway} is greater than default ` +
+          `WARNING: Number of gateways (${createNatGateway} is greater than default ` +
             `EIP limit (${DEFAULT_VPC_EIP_LIMIT}). Please ensure you requested ` +
             `an AWS EIP limit increase.`,
         );
@@ -110,9 +120,9 @@ class ServerlessVpcPlugin {
       buildInternetGatewayAttachment(),
       ServerlessVpcPlugin.buildAvailabilityZones(stage, cidrBlock, {
         zones,
-        numNatGateway: useNatGateway,
-        skipDbCreation,
-        useNetworkAcl,
+        numNatGateway: createNatGateway,
+        createDbSubnet,
+        createNetworkAcl,
       }),
       buildLambdaSecurityGroup(stage),
     );
@@ -133,7 +143,7 @@ class ServerlessVpcPlugin {
       );
     }
 
-    if (!skipDbCreation) {
+    if (createDbSubnet) {
       if (numZones < 2) {
         this.serverless.cli.log('WARNING: less than 2 AZs; skipping subnet group provisioning');
       } else {
@@ -286,14 +296,14 @@ class ServerlessVpcPlugin {
    * @param {String} cidrBlock VPC CIDR Block
    * @param {Array} zones Array of availability zones
    * @param {Number} numNatGateway Number of NAT gateways (and EIPs) to provision
-   * @param {Boolean} skipDbCreation Whether to skip creating the DBSubnet or not
-   * @param {Boolean} useNetworkAcl Whether to create Network ACLs or not
+   * @param {Boolean} createDbSubnet Whether to create the DBSubnet or not
+   * @param {Boolean} createNetworkAcl Whether to create Network ACLs or not
    * @return {Object}
    */
   static buildAvailabilityZones(
     stage,
     cidrBlock,
-    { zones = [], numNatGateway = 0, skipDbCreation = false, useNetworkAcl = false } = {},
+    { zones = [], numNatGateway = 0, createDbSubnet = true, createNetworkAcl = false } = {},
   ) {
     if (!cidrBlock) {
       return {};
@@ -343,7 +353,7 @@ class ServerlessVpcPlugin {
         }),
       );
 
-      if (!skipDbCreation) {
+      if (createDbSubnet) {
         // DB Subnet
         Object.assign(
           resources,
@@ -354,14 +364,14 @@ class ServerlessVpcPlugin {
       }
     });
 
-    if (useNetworkAcl) {
+    if (createNetworkAcl) {
       // Add Network ACLs
       Object.assign(
         resources,
         buildPublicNetworkAcl(stage, zones.length),
         buildAppNetworkAcl(stage, zones.length),
       );
-      if (!skipDbCreation) {
+      if (createDbSubnet) {
         Object.assign(resources, buildDBNetworkAcl(stage, subnets.get(APP_SUBNET)));
       }
     }
