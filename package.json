@@ -23,8 +23,7 @@
   ],
   "main": "src/index.js",
   "scripts": {
-    "test": "jest --config jest-config.json",
-    "lint": "eslint . --fix"
+    "test": "jest"
   },
   "dependencies": {
     "cidr-split": "0.1.2"

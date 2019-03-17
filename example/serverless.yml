@@ -46,6 +46,7 @@ custom:
     createNatGateway: false
     createDbSubnet: true
     createNetworkAcl: true
+    createFlowLogs: true
     zones:
       - us-east-1a
       - us-east-1b

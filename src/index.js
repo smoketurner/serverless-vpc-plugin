@@ -1,7 +1,6 @@
 const CIDR = require('cidr-split');
 
 const { DEFAULT_VPC_EIP_LIMIT, APP_SUBNET, PUBLIC_SUBNET, DB_SUBNET } = require('./constants');
-
 const {
   buildVpc,
   buildInternetGateway,
@@ -12,19 +11,16 @@ const {
   buildRouteTable,
   buildRouteTableAssociation,
 } = require('./vpc');
-
 const { buildAppNetworkAcl, buildPublicNetworkAcl, buildDBNetworkAcl } = require('./nacl');
-
 const {
   buildRDSSubnetGroup,
   buildElastiCacheSubnetGroup,
   buildRedshiftSubnetGroup,
   buildDAXSubnetGroup,
 } = require('./subnet_groups');
-
 const { buildEndpointServices, buildLambdaVPCEndpointSecurityGroup } = require('./vpce');
-
 const { buildEIP, buildNatGateway } = require('./natgw');
+const { buildLogBucket, buildLogBucketPolicy, buildVpcFlowLogs } = require('./flow_logs');
 
 class ServerlessVpcPlugin {
   constructor(serverless, options) {
@@ -45,6 +41,7 @@ class ServerlessVpcPlugin {
     let createNatGateway = false;
     let createNetworkAcl = false;
     let createDbSubnet = true;
+    let createFlowLogs = false;
 
     const { vpcConfig } = this.serverless.service.custom;
 
@@ -76,6 +73,10 @@ class ServerlessVpcPlugin {
         ({ createDbSubnet } = vpcConfig);
       } else if ('skipDbCreation' in vpcConfig && typeof vpcConfig.skipDbCreation === 'boolean') {
         createDbSubnet = !vpcConfig.skipDbCreation;
+      }
+
+      if ('createFlowLogs' in vpcConfig && typeof vpcConfig.createFlowLogs === 'boolean') {
+        ({ createFlowLogs } = vpcConfig);
       }
     }
 
@@ -155,6 +156,16 @@ class ServerlessVpcPlugin {
           buildDAXSubnetGroup({ numZones }),
         );
       }
+    }
+
+    if (createFlowLogs) {
+      this.serverless.cli.log('Enabling VPC Flow Logs to S3');
+      Object.assign(
+        this.serverless.service.provider.compiledCloudFormationTemplate.Resources,
+        buildLogBucket(stage),
+        buildLogBucketPolicy(),
+        buildVpcFlowLogs(),
+      );
     }
   }
 
