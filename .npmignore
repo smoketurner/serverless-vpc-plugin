@@ -1,7 +1,9 @@
-.eslintrc.js
+.eslintrc
 .eslintignore
 .editorconfig
+.gitattributes
 .gitignore
+.prettierrc
 .serverless/
 .travis.yml
 .vscode/
