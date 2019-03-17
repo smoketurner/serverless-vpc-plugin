@@ -89,7 +89,10 @@ custom:
     createNetworkAcl: false
 
     # Whether to create the DB subnet
-    createDbSubnet: false
+    createDbSubnet: true
+
+    # Whether to enable VPC flow logging to an S3 bucket
+    createFlowLogs: false
 
     # optionally specify AZs (defaults to auto-discover all availabile AZs)
     zones:
