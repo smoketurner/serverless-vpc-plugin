@@ -162,9 +162,9 @@ class ServerlessVpcPlugin {
       this.serverless.cli.log('Enabling VPC Flow Logs to S3');
       Object.assign(
         this.serverless.service.provider.compiledCloudFormationTemplate.Resources,
-        buildLogBucket(),
+        buildLogBucket(stage),
         buildLogBucketPolicy(),
-        buildVpcFlowLogs(stage),
+        buildVpcFlowLogs(),
       );
     }
   }
