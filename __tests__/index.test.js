@@ -72,7 +72,7 @@ describe('ServerlessVpcPlugin', () => {
     });
   });
 
-  describe.only('#getZonesPerRegion', () => {
+  describe.skip('#getZonesPerRegion', () => {
     it('returns the zones in a region', async () => {
       const mockCallback = jest.fn((params, callback) => {
         expect(params.Filters[0].Values[0]).toEqual('us-east-1');
@@ -228,7 +228,7 @@ describe('ServerlessVpcPlugin', () => {
       const actual = ServerlessVpcPlugin.buildAvailabilityZones('dev', '10.0.0.0/16', {
         zones: ['us-east-1a'],
         numNatGateway: 1,
-        skipDbCreation: false,
+        createDbSubnet: true,
       });
       expect(actual).toEqual(expected);
       expect.assertions(1);
@@ -240,7 +240,7 @@ describe('ServerlessVpcPlugin', () => {
       const actual = ServerlessVpcPlugin.buildAvailabilityZones('dev', '10.0.0.0/16', {
         zones: ['us-east-1a'],
         numNatGateway: 0,
-        skipDbCreation: false,
+        createDbSubnet: true,
       });
       expect(actual).toEqual(expected);
       expect.assertions(1);
@@ -252,7 +252,7 @@ describe('ServerlessVpcPlugin', () => {
       const actual = ServerlessVpcPlugin.buildAvailabilityZones('dev', '10.0.0.0/16', {
         zones: ['us-east-1a'],
         numNatGateway: 1,
-        skipDbCreation: true,
+        createDbSubnet: false,
       });
       expect(actual).toEqual(expected);
       expect.assertions(1);
@@ -264,7 +264,7 @@ describe('ServerlessVpcPlugin', () => {
       const actual = ServerlessVpcPlugin.buildAvailabilityZones('dev', '10.0.0.0/16', {
         zones: ['us-east-1a'],
         numNatGateway: 0,
-        skipDbCreation: true,
+        createDbSubnet: false,
       });
       expect(actual).toEqual(expected);
       expect.assertions(1);
@@ -276,7 +276,7 @@ describe('ServerlessVpcPlugin', () => {
       const actual = ServerlessVpcPlugin.buildAvailabilityZones('dev', '10.0.0.0/16', {
         zones: ['us-east-1a', 'us-east-1b'],
         numNatGateway: 2,
-        skipDbCreation: false,
+        createDbSubnet: true,
       });
       expect(actual).toEqual(expected);
       expect.assertions(1);
@@ -288,7 +288,7 @@ describe('ServerlessVpcPlugin', () => {
       const actual = ServerlessVpcPlugin.buildAvailabilityZones('dev', '10.0.0.0/16', {
         zones: ['us-east-1a', 'us-east-1b'],
         numNatGateway: 0,
-        skipDbCreation: false,
+        createDbSubnet: true,
       });
       expect(actual).toEqual(expected);
       expect.assertions(1);
@@ -300,7 +300,7 @@ describe('ServerlessVpcPlugin', () => {
       const actual = ServerlessVpcPlugin.buildAvailabilityZones('dev', '10.0.0.0/16', {
         zones: ['us-east-1a', 'us-east-1b'],
         numNatGateway: 2,
-        skipDbCreation: true,
+        createDbSubnet: false,
       });
       expect(actual).toEqual(expected);
       expect.assertions(1);
@@ -312,7 +312,7 @@ describe('ServerlessVpcPlugin', () => {
       const actual = ServerlessVpcPlugin.buildAvailabilityZones('dev', '10.0.0.0/16', {
         zones: ['us-east-1a', 'us-east-1b'],
         numNatGateway: 0,
-        skipDbCreation: true,
+        createDbSubnet: false,
       });
       expect(actual).toEqual(expected);
       expect.assertions(1);
@@ -324,7 +324,7 @@ describe('ServerlessVpcPlugin', () => {
       const actual = ServerlessVpcPlugin.buildAvailabilityZones('dev', '10.0.0.0/16', {
         zones: ['us-east-1a', 'us-east-1b'],
         numNatGateway: 1,
-        skipDbCreation: true,
+        createDbSubnet: false,
       });
       expect(actual).toEqual(expected);
       expect.assertions(1);
@@ -336,7 +336,7 @@ describe('ServerlessVpcPlugin', () => {
       const actual = ServerlessVpcPlugin.buildAvailabilityZones('dev', '10.0.0.0/16', {
         zones: ['us-east-1a', 'us-east-1b', 'us-east-1c'],
         numNatGateway: 2,
-        skipDbCreation: true,
+        createDbSubnet: false,
       });
       expect(actual).toEqual(expected);
       expect.assertions(1);
@@ -348,8 +348,8 @@ describe('ServerlessVpcPlugin', () => {
       const actual = ServerlessVpcPlugin.buildAvailabilityZones('dev', '10.0.0.0/16', {
         zones: ['us-east-1a'],
         numNatGateway: 0,
-        skipDbCreation: true,
-        useNetworkAcl: true,
+        createDbSubnet: false,
+        createNetworkAcl: true,
       });
       expect(actual).toEqual(expected);
       expect.assertions(1);

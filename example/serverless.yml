@@ -43,9 +43,9 @@ package:
 custom:
   vpcConfig:
     cidrBlock: '10.0.0.0/16'
-    useNatGateway: false
-    skipDbCreation: false
-    useNetworkAcl: true
+    createNatGateway: false
+    createDbSubnet: true
+    createNetworkAcl: true
     zones:
       - us-east-1a
       - us-east-1b
