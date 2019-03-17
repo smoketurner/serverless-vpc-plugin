@@ -77,6 +77,7 @@ class ServerlessVpcPlugin {
 
       if ('createFlowLogs' in vpcConfig && typeof vpcConfig.createFlowLogs === 'boolean') {
         ({ createFlowLogs } = vpcConfig);
+      }
     }
 
     const region = this.provider.getRegion();
@@ -163,7 +164,7 @@ class ServerlessVpcPlugin {
         this.serverless.service.provider.compiledCloudFormationTemplate.Resources,
         buildLogBucket(),
         buildLogBucketPolicy(),
-        buildVpcFlowLogs(stage)
+        buildVpcFlowLogs(stage),
       );
     }
   }
