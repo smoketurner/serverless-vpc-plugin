@@ -1,6 +1,7 @@
 .git
 .serverless
 .vscode
+.webpack
 coverage
 node_modules
 tmp
