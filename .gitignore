@@ -1,6 +1,7 @@
 .git
 .vscode
 .serverless
+.webpack
 coverage
 node_modules
 example/package-lock.json
