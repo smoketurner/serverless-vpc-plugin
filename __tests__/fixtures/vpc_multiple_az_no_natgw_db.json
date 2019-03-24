@@ -6,10 +6,6 @@
       "CidrBlock": "10.0.0.0/21",
       "Tags": [
         {
-          "Key": "STAGE",
-          "Value": "dev"
-        },
-        {
           "Key": "Name",
           "Value": {
             "Fn::Join": [
@@ -37,10 +33,6 @@
         "Ref": "VPC"
       },
       "Tags": [
-        {
-          "Key": "STAGE",
-          "Value": "dev"
-        },
         {
           "Key": "Name",
           "Value": {
@@ -89,10 +81,6 @@
       "CidrBlock": "10.0.8.0/22",
       "Tags": [
         {
-          "Key": "STAGE",
-          "Value": "dev"
-        },
-        {
           "Key": "Name",
           "Value": {
             "Fn::Join": [
@@ -120,10 +108,6 @@
         "Ref": "VPC"
       },
       "Tags": [
-        {
-          "Key": "STAGE",
-          "Value": "dev"
-        },
         {
           "Key": "Name",
           "Value": {
@@ -172,10 +156,6 @@
       "CidrBlock": "10.0.12.0/22",
       "Tags": [
         {
-          "Key": "STAGE",
-          "Value": "dev"
-        },
-        {
           "Key": "Name",
           "Value": {
             "Fn::Join": [
@@ -203,10 +183,6 @@
         "Ref": "VPC"
       },
       "Tags": [
-        {
-          "Key": "STAGE",
-          "Value": "dev"
-        },
         {
           "Key": "Name",
           "Value": {
@@ -243,10 +219,6 @@
       "CidrBlock": "10.0.16.0/21",
       "Tags": [
         {
-          "Key": "STAGE",
-          "Value": "dev"
-        },
-        {
           "Key": "Name",
           "Value": {
             "Fn::Join": [
@@ -274,10 +246,6 @@
         "Ref": "VPC"
       },
       "Tags": [
-        {
-          "Key": "STAGE",
-          "Value": "dev"
-        },
         {
           "Key": "Name",
           "Value": {
@@ -326,10 +294,6 @@
       "CidrBlock": "10.0.24.0/22",
       "Tags": [
         {
-          "Key": "STAGE",
-          "Value": "dev"
-        },
-        {
           "Key": "Name",
           "Value": {
             "Fn::Join": [
@@ -357,10 +321,6 @@
         "Ref": "VPC"
       },
       "Tags": [
-        {
-          "Key": "STAGE",
-          "Value": "dev"
-        },
         {
           "Key": "Name",
           "Value": {
@@ -409,10 +369,6 @@
       "CidrBlock": "10.0.28.0/22",
       "Tags": [
         {
-          "Key": "STAGE",
-          "Value": "dev"
-        },
-        {
           "Key": "Name",
           "Value": {
             "Fn::Join": [
@@ -440,10 +396,6 @@
         "Ref": "VPC"
       },
       "Tags": [
-        {
-          "Key": "STAGE",
-          "Value": "dev"
-        },
         {
           "Key": "Name",
           "Value": {

@@ -32,16 +32,10 @@ describe('subnet_groups', () => {
                 Ref: 'DBSubnet2',
               },
             ],
-            Tags: [
-              {
-                Key: 'STAGE',
-                Value: 'dev',
-              },
-            ],
           },
         },
       };
-      const actual = buildRDSSubnetGroup('dev', { numZones: 2 });
+      const actual = buildRDSSubnetGroup({ numZones: 2 });
       expect(actual).toEqual(expected);
       expect.assertions(1);
     });
@@ -65,16 +59,10 @@ describe('subnet_groups', () => {
                 Ref: 'DBSubnet2',
               },
             ],
-            Tags: [
-              {
-                Key: 'STAGE',
-                Value: 'dev',
-              },
-            ],
           },
         },
       };
-      const actual = buildRDSSubnetGroup('dev', {
+      const actual = buildRDSSubnetGroup({
         name: 'MyRDSSubnetGroup',
         numZones: 2,
       });
@@ -171,16 +159,10 @@ describe('subnet_groups', () => {
                 Ref: 'DBSubnet2',
               },
             ],
-            Tags: [
-              {
-                Key: 'STAGE',
-                Value: 'dev',
-              },
-            ],
           },
         },
       };
-      const actual = buildRedshiftSubnetGroup('dev', { numZones: 2 });
+      const actual = buildRedshiftSubnetGroup({ numZones: 2 });
       expect(actual).toEqual(expected);
       expect.assertions(1);
     });
@@ -201,16 +183,10 @@ describe('subnet_groups', () => {
                 Ref: 'DBSubnet2',
               },
             ],
-            Tags: [
-              {
-                Key: 'STAGE',
-                Value: 'dev',
-              },
-            ],
           },
         },
       };
-      const actual = buildRedshiftSubnetGroup('dev', {
+      const actual = buildRedshiftSubnetGroup({
         name: 'MyRedshiftSubnetGroup',
         numZones: 2,
       });

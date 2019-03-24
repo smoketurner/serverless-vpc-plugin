@@ -13,9 +13,6 @@ Resources:
         BlockPublicPolicy: true
         IgnorePublicAcls: true
         RestrictPublicBuckets: true
-      Tags:
-        - Key: STAGE
-          Value: ${self:provider.stage}
 
   TestBucketPolicy:
     Type: 'AWS::S3::BucketPolicy'
@@ -35,13 +32,13 @@ Resources:
                   - Arn
             Resource:
               - 'Fn::GetAtt':
-                - TestBucket
-                - Arn
+                  - TestBucket
+                  - Arn
               - 'Fn::Join':
-                - ''
-                - - 'arn:aws:s3:::'
-                  - Ref: TestBucket
-                  - '/*'
+                  - ''
+                  - - 'arn:aws:s3:::'
+                    - Ref: TestBucket
+                    - '/*'
             Condition:
               StringEquals:
                 'aws:sourceVpce':

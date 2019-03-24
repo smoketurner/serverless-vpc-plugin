@@ -81,7 +81,6 @@ class ServerlessVpcPlugin {
     }
 
     const region = this.provider.getRegion();
-    const stage = this.provider.getStage();
 
     if (zones.length < 1) {
       this.serverless.cli.log(`Discovering available zones in ${region}...`);
@@ -116,16 +115,16 @@ class ServerlessVpcPlugin {
 
     Object.assign(
       this.serverless.service.provider.compiledCloudFormationTemplate.Resources,
-      buildVpc(stage, { cidrBlock }),
-      buildInternetGateway(stage),
+      buildVpc({ cidrBlock }),
+      buildInternetGateway(),
       buildInternetGatewayAttachment(),
-      ServerlessVpcPlugin.buildAvailabilityZones(stage, cidrBlock, {
+      ServerlessVpcPlugin.buildAvailabilityZones(cidrBlock, {
         zones,
         numNatGateway: createNatGateway,
         createDbSubnet,
         createNetworkAcl,
       }),
-      buildLambdaSecurityGroup(stage),
+      buildLambdaSecurityGroup(),
     );
 
     if (services.length > 0) {
@@ -140,7 +139,7 @@ class ServerlessVpcPlugin {
       Object.assign(
         this.serverless.service.provider.compiledCloudFormationTemplate.Resources,
         buildEndpointServices({ services, numZones }),
-        buildLambdaVPCEndpointSecurityGroup(stage),
+        buildLambdaVPCEndpointSecurityGroup(),
       );
     }
 
@@ -150,8 +149,8 @@ class ServerlessVpcPlugin {
       } else {
         Object.assign(
           this.serverless.service.provider.compiledCloudFormationTemplate.Resources,
-          buildRDSSubnetGroup(stage, { numZones }),
-          buildRedshiftSubnetGroup(stage, { numZones }),
+          buildRDSSubnetGroup({ numZones }),
+          buildRedshiftSubnetGroup({ numZones }),
           buildElastiCacheSubnetGroup({ numZones }),
           buildDAXSubnetGroup({ numZones }),
         );
@@ -162,7 +161,7 @@ class ServerlessVpcPlugin {
       this.serverless.cli.log('Enabling VPC Flow Logs to S3');
       Object.assign(
         this.serverless.service.provider.compiledCloudFormationTemplate.Resources,
-        buildLogBucket(stage),
+        buildLogBucket(),
         buildLogBucketPolicy(),
         buildVpcFlowLogs(),
       );
@@ -303,7 +302,6 @@ class ServerlessVpcPlugin {
    * 3.) Split the second /21 subnet into two /22 subnets: one Public subnet (for load balancers),
    *     and one for databases (RDS, ElastiCache, and Redshift)
    *
-   * @param {String} stage Serverless Stage
    * @param {String} cidrBlock VPC CIDR Block
    * @param {Array} zones Array of availability zones
    * @param {Number} numNatGateway Number of NAT gateways (and EIPs) to provision
@@ -312,7 +310,6 @@ class ServerlessVpcPlugin {
    * @return {Object}
    */
   static buildAvailabilityZones(
-    stage,
     cidrBlock,
     { zones = [], numNatGateway = 0, createDbSubnet = true, createNetworkAcl = false } = {},
   ) {
@@ -328,11 +325,7 @@ class ServerlessVpcPlugin {
 
     if (numNatGateway > 0) {
       for (let index = 0; index < numNatGateway; index += 1) {
-        Object.assign(
-          resources,
-          buildEIP(index + 1),
-          buildNatGateway(stage, index + 1, zones[index]),
-        );
+        Object.assign(resources, buildEIP(index + 1), buildNatGateway(index + 1, zones[index]));
       }
     }
 
@@ -350,14 +343,14 @@ class ServerlessVpcPlugin {
         resources,
 
         // App Subnet
-        buildSubnet(stage, APP_SUBNET, position, zone, subnets.get(zone).get(APP_SUBNET)),
-        buildRouteTable(stage, APP_SUBNET, position, zone),
+        buildSubnet(APP_SUBNET, position, zone, subnets.get(zone).get(APP_SUBNET)),
+        buildRouteTable(APP_SUBNET, position, zone),
         buildRouteTableAssociation(APP_SUBNET, position),
         buildRoute(APP_SUBNET, position, params),
 
         // Public Subnet
-        buildSubnet(stage, PUBLIC_SUBNET, position, zone, subnets.get(zone).get(PUBLIC_SUBNET)),
-        buildRouteTable(stage, PUBLIC_SUBNET, position, zone),
+        buildSubnet(PUBLIC_SUBNET, position, zone, subnets.get(zone).get(PUBLIC_SUBNET)),
+        buildRouteTable(PUBLIC_SUBNET, position, zone),
         buildRouteTableAssociation(PUBLIC_SUBNET, position),
         buildRoute(PUBLIC_SUBNET, position, {
           GatewayId: 'InternetGateway',
@@ -368,8 +361,8 @@ class ServerlessVpcPlugin {
         // DB Subnet
         Object.assign(
           resources,
-          buildSubnet(stage, DB_SUBNET, position, zone, subnets.get(zone).get(DB_SUBNET)),
-          buildRouteTable(stage, DB_SUBNET, position, zone),
+          buildSubnet(DB_SUBNET, position, zone, subnets.get(zone).get(DB_SUBNET)),
+          buildRouteTable(DB_SUBNET, position, zone),
           buildRouteTableAssociation(DB_SUBNET, position),
         );
       }
@@ -379,11 +372,11 @@ class ServerlessVpcPlugin {
       // Add Network ACLs
       Object.assign(
         resources,
-        buildPublicNetworkAcl(stage, zones.length),
-        buildAppNetworkAcl(stage, zones.length),
+        buildPublicNetworkAcl(zones.length),
+        buildAppNetworkAcl(zones.length),
       );
       if (createDbSubnet) {
-        Object.assign(resources, buildDBNetworkAcl(stage, subnets.get(APP_SUBNET)));
+        Object.assign(resources, buildDBNetworkAcl(subnets.get(APP_SUBNET)));
       }
     }
 
