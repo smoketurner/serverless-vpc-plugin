@@ -183,11 +183,11 @@ class ServerlessVpcPlugin {
         },
       ],
     };
-
-    const data = await this.provider.request('EC2', 'describeAvailabilityZones', params).promise();
-    return data.AvailabilityZones.filter(z => z.State === 'available')
-      .map(z => z.ZoneName)
-      .sort();
+    return this.provider.request('EC2', 'describeAvailabilityZones', params).then(data =>
+      data.AvailabilityZones.filter(z => z.State === 'available')
+        .map(z => z.ZoneName)
+        .sort(),
+    );
   }
 
   /**
@@ -199,10 +199,9 @@ class ServerlessVpcPlugin {
     const params = {
       MaxResults: 1000,
     };
-    const data = await this.provider
+    return this.provider
       .request('EC2', 'describeVpcEndpointServices', params)
-      .promise();
-    return data.ServiceNames.sort();
+      .then(data => data.ServiceNames.sort());
   }
 
   /**
