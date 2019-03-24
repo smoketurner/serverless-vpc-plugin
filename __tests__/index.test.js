@@ -72,11 +72,11 @@ describe('ServerlessVpcPlugin', () => {
     });
   });
 
-  describe.skip('#getZonesPerRegion', () => {
+  describe('#getZonesPerRegion', () => {
     it('returns the zones in a region', async () => {
       const mockCallback = jest.fn((params, callback) => {
         expect(params.Filters[0].Values[0]).toEqual('us-east-1');
-        const data = {
+        const response = {
           AvailabilityZones: [
             {
               State: 'available',
@@ -92,7 +92,7 @@ describe('ServerlessVpcPlugin', () => {
             },
           ],
         };
-        return callback(null, data);
+        return callback(null, response);
       });
 
       AWS.mock('EC2', 'describeAvailabilityZones', mockCallback);
@@ -107,10 +107,10 @@ describe('ServerlessVpcPlugin', () => {
     });
   });
 
-  describe.skip('#getVpcEndpointServicesPerRegion', () => {
+  describe('#getVpcEndpointServicesPerRegion', () => {
     it('returns the endpoint services in a region', async () => {
       const mockCallback = jest.fn((params, callback) => {
-        const data = {
+        const response = {
           ServiceNames: [
             'com.amazonaws.us-east-1.dynamodb',
             'com.amazonaws.us-east-1.s3',
@@ -118,18 +118,23 @@ describe('ServerlessVpcPlugin', () => {
             'com.amazonaws.us-east-1.kinesis-streams',
           ],
         };
-        return callback(null, data);
+        return callback(null, response);
       });
 
       AWS.mock('EC2', 'describeVpcEndpointServices', mockCallback);
 
       const actual = await plugin.getVpcEndpointServicesPerRegion('us-east-1');
 
-      const expected = ['dynamodb', 'kinesis-streams', 'kms', 's3'];
+      const expected = [
+        'com.amazonaws.us-east-1.dynamodb',
+        'com.amazonaws.us-east-1.kinesis-streams',
+        'com.amazonaws.us-east-1.kms',
+        'com.amazonaws.us-east-1.s3',
+      ];
 
       expect(mockCallback).toHaveBeenCalled();
       expect(actual).toEqual(expected);
-      expect.assertions(1);
+      expect.assertions(2);
     });
   });
 
