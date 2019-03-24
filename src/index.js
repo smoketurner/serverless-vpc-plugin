@@ -113,8 +113,10 @@ class ServerlessVpcPlugin {
         `across ${numZones} availability zones: ${zones}`,
     );
 
+    const resources = this.serverless.service.provider.compiledCloudFormationTemplate.Resources;
+
     Object.assign(
-      this.serverless.service.provider.compiledCloudFormationTemplate.Resources,
+      resources,
       buildVpc({ cidrBlock }),
       buildInternetGateway(),
       buildInternetGatewayAttachment(),
@@ -137,7 +139,7 @@ class ServerlessVpcPlugin {
       this.serverless.cli.log(`Provisioning VPC endpoints for: ${services.join(', ')}`);
 
       Object.assign(
-        this.serverless.service.provider.compiledCloudFormationTemplate.Resources,
+        resources,
         buildEndpointServices({ services, numZones }),
         buildLambdaVPCEndpointSecurityGroup(),
       );
@@ -148,7 +150,7 @@ class ServerlessVpcPlugin {
         this.serverless.cli.log('WARNING: less than 2 AZs; skipping subnet group provisioning');
       } else {
         Object.assign(
-          this.serverless.service.provider.compiledCloudFormationTemplate.Resources,
+          resources,
           buildRDSSubnetGroup({ numZones }),
           buildRedshiftSubnetGroup({ numZones }),
           buildElastiCacheSubnetGroup({ numZones }),
@@ -159,12 +161,7 @@ class ServerlessVpcPlugin {
 
     if (createFlowLogs) {
       this.serverless.cli.log('Enabling VPC Flow Logs to S3');
-      Object.assign(
-        this.serverless.service.provider.compiledCloudFormationTemplate.Resources,
-        buildLogBucket(),
-        buildLogBucketPolicy(),
-        buildVpcFlowLogs(),
-      );
+      Object.assign(resources, buildLogBucket(), buildLogBucketPolicy(), buildVpcFlowLogs());
     }
   }
 
@@ -211,7 +208,11 @@ class ServerlessVpcPlugin {
    * @param {Array} services
    * @return {Array}
    */
-  async validateServices(region, services) {
+  async validateServices(region, services = []) {
+    if (!Array.isArray(services) || services.length < 1) {
+      return [];
+    }
+
     const available = await this.getVpcEndpointServicesPerRegion();
     return services
       .map(service => `com.amazonaws.${region}.${service}`)
