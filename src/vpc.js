@@ -5,7 +5,7 @@
  * @param {Object} params
  * @return {Object}
  */
-function buildVpc(stage, { name = 'VPC', cidrBlock = '10.0.0.0/16' } = {}) {
+function buildVpc({ name = 'VPC', cidrBlock = '10.0.0.0/16' } = {}) {
   return {
     [name]: {
       Type: 'AWS::EC2::VPC',
@@ -15,10 +15,6 @@ function buildVpc(stage, { name = 'VPC', cidrBlock = '10.0.0.0/16' } = {}) {
         EnableDnsHostnames: true,
         InstanceTenancy: 'default',
         Tags: [
-          {
-            Key: 'STAGE',
-            Value: stage,
-          },
           {
             Key: 'Name',
             Value: {
@@ -34,20 +30,15 @@ function buildVpc(stage, { name = 'VPC', cidrBlock = '10.0.0.0/16' } = {}) {
 /**
  * Build an InternetGateway
  *
- * @param {String} stage Serverless Stage
  * @param {Object} params
  * @return {Object}
  */
-function buildInternetGateway(stage, { name = 'InternetGateway' } = {}) {
+function buildInternetGateway({ name = 'InternetGateway' } = {}) {
   return {
     [name]: {
       Type: 'AWS::EC2::InternetGateway',
       Properties: {
         Tags: [
-          {
-            Key: 'STAGE',
-            Value: stage,
-          },
           {
             Key: 'Name',
             Value: {
@@ -85,14 +76,13 @@ function buildInternetGatewayAttachment({ name = 'InternetGatewayAttachment' } =
 /**
  * Create a subnet
  *
- * @param {String} stage Serverless Stage
  * @param {String} name Name of subnet
  * @param {Number} position Subnet position
  * @param {String} zone Availability zone
  * @param {String} cidrBlock Subnet CIDR block
  * @return {Object}
  */
-function buildSubnet(stage, name, position, zone, cidrBlock) {
+function buildSubnet(name, position, zone, cidrBlock) {
   const cfName = `${name}Subnet${position}`;
   return {
     [cfName]: {
@@ -101,10 +91,6 @@ function buildSubnet(stage, name, position, zone, cidrBlock) {
         AvailabilityZone: zone,
         CidrBlock: cidrBlock,
         Tags: [
-          {
-            Key: 'STAGE',
-            Value: stage,
-          },
           {
             Key: 'Name',
             Value: {
@@ -132,13 +118,12 @@ function buildSubnet(stage, name, position, zone, cidrBlock) {
 /**
  * Build a RouteTable in a given AZ
  *
- * @param {String} stage Serverless Stage
  * @param {String} name
  * @param {Number} position
  * @param {String} zone
  * @return {Object}
  */
-function buildRouteTable(stage, name, position, zone) {
+function buildRouteTable(name, position, zone) {
   const cfName = `${name}RouteTable${position}`;
   return {
     [cfName]: {
@@ -148,10 +133,6 @@ function buildRouteTable(stage, name, position, zone) {
           Ref: 'VPC',
         },
         Tags: [
-          {
-            Key: 'STAGE',
-            Value: stage,
-          },
           {
             Key: 'Name',
             Value: {
@@ -237,11 +218,10 @@ function buildRoute(name, position, { NatGatewayId = null, GatewayId = null } = 
 /**
  * Build a SecurityGroup to be used by Lambda's when they execute.
  *
- * @param {String} stage
  * @param {Object} params
  * @return {Object}
  */
-function buildLambdaSecurityGroup(stage, { name = 'LambdaExecutionSecurityGroup' } = {}) {
+function buildLambdaSecurityGroup({ name = 'LambdaExecutionSecurityGroup' } = {}) {
   return {
     [name]: {
       Type: 'AWS::EC2::SecurityGroup',
@@ -251,10 +231,6 @@ function buildLambdaSecurityGroup(stage, { name = 'LambdaExecutionSecurityGroup'
           Ref: 'VPC',
         },
         Tags: [
-          {
-            Key: 'STAGE',
-            Value: stage,
-          },
           {
             Key: 'Name',
             Value: {

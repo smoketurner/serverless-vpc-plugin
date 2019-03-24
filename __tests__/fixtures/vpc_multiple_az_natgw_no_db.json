@@ -9,19 +9,12 @@
     "Type": "AWS::EC2::NatGateway",
     "Properties": {
       "AllocationId": {
-        "Fn::GetAtt": [
-          "EIP1",
-          "AllocationId"
-        ]
+        "Fn::GetAtt": ["EIP1", "AllocationId"]
       },
       "SubnetId": {
         "Ref": "PublicSubnet1"
       },
       "Tags": [
-        {
-          "Key": "STAGE",
-          "Value": "dev"
-        },
         {
           "Key": "Name",
           "Value": {
@@ -49,19 +42,12 @@
     "Type": "AWS::EC2::NatGateway",
     "Properties": {
       "AllocationId": {
-        "Fn::GetAtt": [
-          "EIP2",
-          "AllocationId"
-        ]
+        "Fn::GetAtt": ["EIP2", "AllocationId"]
       },
       "SubnetId": {
         "Ref": "PublicSubnet2"
       },
       "Tags": [
-        {
-          "Key": "STAGE",
-          "Value": "dev"
-        },
         {
           "Key": "Name",
           "Value": {
@@ -85,10 +71,6 @@
       "AvailabilityZone": "us-east-1a",
       "CidrBlock": "10.0.0.0/21",
       "Tags": [
-        {
-          "Key": "STAGE",
-          "Value": "dev"
-        },
         {
           "Key": "Name",
           "Value": {
@@ -117,10 +99,6 @@
         "Ref": "VPC"
       },
       "Tags": [
-        {
-          "Key": "STAGE",
-          "Value": "dev"
-        },
         {
           "Key": "Name",
           "Value": {
@@ -169,10 +147,6 @@
       "CidrBlock": "10.0.8.0/22",
       "Tags": [
         {
-          "Key": "STAGE",
-          "Value": "dev"
-        },
-        {
           "Key": "Name",
           "Value": {
             "Fn::Join": [
@@ -200,10 +174,6 @@
         "Ref": "VPC"
       },
       "Tags": [
-        {
-          "Key": "STAGE",
-          "Value": "dev"
-        },
         {
           "Key": "Name",
           "Value": {
@@ -252,10 +222,6 @@
       "CidrBlock": "10.0.16.0/21",
       "Tags": [
         {
-          "Key": "STAGE",
-          "Value": "dev"
-        },
-        {
           "Key": "Name",
           "Value": {
             "Fn::Join": [
@@ -283,10 +249,6 @@
         "Ref": "VPC"
       },
       "Tags": [
-        {
-          "Key": "STAGE",
-          "Value": "dev"
-        },
         {
           "Key": "Name",
           "Value": {
@@ -335,10 +297,6 @@
       "CidrBlock": "10.0.24.0/22",
       "Tags": [
         {
-          "Key": "STAGE",
-          "Value": "dev"
-        },
-        {
           "Key": "Name",
           "Value": {
             "Fn::Join": [
@@ -366,10 +324,6 @@
         "Ref": "VPC"
       },
       "Tags": [
-        {
-          "Key": "STAGE",
-          "Value": "dev"
-        },
         {
           "Key": "Name",
           "Value": {

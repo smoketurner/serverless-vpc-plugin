@@ -111,10 +111,6 @@ describe('flow_logs', () => {
             },
             Tags: [
               {
-                Key: 'STAGE',
-                Value: 'dev',
-              },
-              {
                 Key: 'Name',
                 Value: {
                   'Fn::Join': [' ', [{ Ref: 'AWS::StackName' }, 'Logs']],
@@ -124,7 +120,7 @@ describe('flow_logs', () => {
           },
         },
       };
-      const actual = buildLogBucket('dev');
+      const actual = buildLogBucket();
       expect(actual).toEqual(expected);
       expect.assertions(1);
     });

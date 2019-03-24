@@ -21,12 +21,11 @@ function buildEIP(position) {
 /**
  * Build a NatGateway in a given AZ
  *
- * @param {String} stage
  * @param {Number} position
  * @param {String} zone
  * @return {Object}
  */
-function buildNatGateway(stage, position, zone) {
+function buildNatGateway(position, zone) {
   const cfName = `NatGateway${position}`;
   return {
     [cfName]: {
@@ -39,10 +38,6 @@ function buildNatGateway(stage, position, zone) {
           Ref: `${PUBLIC_SUBNET}Subnet${position}`,
         },
         Tags: [
-          {
-            Key: 'STAGE',
-            Value: stage,
-          },
           {
             Key: 'Name',
             Value: {

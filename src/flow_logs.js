@@ -1,10 +1,9 @@
 /**
  * Build an S3 bucket for logging
  *
- * @param {String} stage
  * @return {Object}
  */
-function buildLogBucket(stage) {
+function buildLogBucket() {
   return {
     LogBucket: {
       Type: 'AWS::S3::Bucket',
@@ -27,10 +26,6 @@ function buildLogBucket(stage) {
           RestrictPublicBuckets: true,
         },
         Tags: [
-          {
-            Key: 'STAGE',
-            Value: stage,
-          },
           {
             Key: 'Name',
             Value: {

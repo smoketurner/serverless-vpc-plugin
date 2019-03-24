@@ -16,10 +16,6 @@ describe('nacl', () => {
           Properties: {
             Tags: [
               {
-                Key: 'STAGE',
-                Value: 'dev',
-              },
-              {
                 Key: 'Name',
                 Value: {
                   'Fn::Join': [
@@ -40,7 +36,7 @@ describe('nacl', () => {
           },
         },
       };
-      const actual = buildNetworkAcl('dev', 'App');
+      const actual = buildNetworkAcl('App');
       expect(actual).toEqual(expected);
     });
   });
@@ -116,10 +112,6 @@ describe('nacl', () => {
           Type: 'AWS::EC2::NetworkAcl',
           Properties: {
             Tags: [
-              {
-                Key: 'STAGE',
-                Value: 'dev',
-              },
               {
                 Key: 'Name',
                 Value: {
@@ -200,7 +192,7 @@ describe('nacl', () => {
           },
         },
       };
-      const actual = buildPublicNetworkAcl('dev', 3);
+      const actual = buildPublicNetworkAcl(3);
       expect(actual).toEqual(expected);
       expect.assertions(1);
     });
@@ -213,10 +205,6 @@ describe('nacl', () => {
           Type: 'AWS::EC2::NetworkAcl',
           Properties: {
             Tags: [
-              {
-                Key: 'STAGE',
-                Value: 'dev',
-              },
               {
                 Key: 'Name',
                 Value: {
@@ -297,7 +285,7 @@ describe('nacl', () => {
           },
         },
       };
-      const actual = buildAppNetworkAcl('dev', 3);
+      const actual = buildAppNetworkAcl(3);
       expect(actual).toEqual(expected);
       expect.assertions(1);
     });
@@ -310,10 +298,6 @@ describe('nacl', () => {
           Type: 'AWS::EC2::NetworkAcl',
           Properties: {
             Tags: [
-              {
-                Key: 'STAGE',
-                Value: 'dev',
-              },
               {
                 Key: 'Name',
                 Value: {
@@ -447,7 +431,7 @@ describe('nacl', () => {
         },
       };
       const appSubnets = ['10.0.0.0/21', '10.0.16.0/21', '10.0.32.0/21'];
-      const actual = buildDBNetworkAcl('dev', appSubnets);
+      const actual = buildDBNetworkAcl(appSubnets);
       expect(actual).toEqual(expected);
       expect.assertions(1);
     });

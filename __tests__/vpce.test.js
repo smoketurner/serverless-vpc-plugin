@@ -305,10 +305,6 @@ describe('vpce', () => {
             ],
             Tags: [
               {
-                Key: 'STAGE',
-                Value: 'dev',
-              },
-              {
                 Key: 'Name',
                 Value: {
                   'Fn::Join': [
@@ -326,7 +322,7 @@ describe('vpce', () => {
           },
         },
       };
-      const actual = buildLambdaVPCEndpointSecurityGroup('dev');
+      const actual = buildLambdaVPCEndpointSecurityGroup();
       expect(actual).toEqual(expected);
       expect.assertions(1);
     });
@@ -352,10 +348,6 @@ describe('vpce', () => {
             ],
             Tags: [
               {
-                Key: 'STAGE',
-                Value: 'dev',
-              },
-              {
                 Key: 'Name',
                 Value: {
                   'Fn::Join': [
@@ -373,7 +365,7 @@ describe('vpce', () => {
           },
         },
       };
-      const actual = buildLambdaVPCEndpointSecurityGroup('dev', {
+      const actual = buildLambdaVPCEndpointSecurityGroup({
         name: 'MyLambdaEndpointSecurityGroup',
       });
       expect(actual).toEqual(expected);

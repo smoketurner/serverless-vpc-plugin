@@ -3,11 +3,10 @@ const { APP_SUBNET, PUBLIC_SUBNET, DB_SUBNET } = require('./constants');
 /**
  * Build a Network Access Control List (ACL)
  *
- * @param {String} stage
  * @param {String} name
  * @return {Object}
  */
-function buildNetworkAcl(stage, name) {
+function buildNetworkAcl(name) {
   const cfName = `${name}NetworkAcl`;
 
   return {
@@ -15,10 +14,6 @@ function buildNetworkAcl(stage, name) {
       Type: 'AWS::EC2::NetworkAcl',
       Properties: {
         Tags: [
-          {
-            Key: 'STAGE',
-            Value: stage,
-          },
           {
             Key: 'Name',
             Value: {
@@ -100,10 +95,9 @@ function buildNetworkAclAssociation(name, position) {
 /**
  * Build the Public Network ACL
  *
- * @param {String} stage
  * @param {Number} numZones
  */
-function buildPublicNetworkAcl(stage, numZones = 0) {
+function buildPublicNetworkAcl(numZones = 0) {
   if (numZones < 1) {
     return {};
   }
@@ -112,7 +106,7 @@ function buildPublicNetworkAcl(stage, numZones = 0) {
 
   Object.assign(
     resources,
-    buildNetworkAcl(stage, PUBLIC_SUBNET),
+    buildNetworkAcl(PUBLIC_SUBNET),
     buildNetworkAclEntry(`${PUBLIC_SUBNET}NetworkAcl`, '0.0.0.0/0'),
     buildNetworkAclEntry(`${PUBLIC_SUBNET}NetworkAcl`, '0.0.0.0/0', {
       Egress: true,
@@ -129,10 +123,9 @@ function buildPublicNetworkAcl(stage, numZones = 0) {
 /**
  * Build the Application Network ACL
  *
- * @param {String} stage
  * @param {Number} numZones
  */
-function buildAppNetworkAcl(stage, numZones = 0) {
+function buildAppNetworkAcl(numZones = 0) {
   if (numZones < 1) {
     return {};
   }
@@ -141,7 +134,7 @@ function buildAppNetworkAcl(stage, numZones = 0) {
 
   Object.assign(
     resources,
-    buildNetworkAcl(stage, APP_SUBNET),
+    buildNetworkAcl(APP_SUBNET),
     buildNetworkAclEntry(`${APP_SUBNET}NetworkAcl`, '0.0.0.0/0'),
     buildNetworkAclEntry(`${APP_SUBNET}NetworkAcl`, '0.0.0.0/0', {
       Egress: true,
@@ -158,15 +151,14 @@ function buildAppNetworkAcl(stage, numZones = 0) {
 /**
  * Build the Database Network ACL
  *
- * @param {String} stage
  * @param {Array} appSubnets
  */
-function buildDBNetworkAcl(stage, appSubnets = []) {
+function buildDBNetworkAcl(appSubnets = []) {
   if (!Array.isArray(appSubnets) || appSubnets.length < 1) {
     return {};
   }
 
-  const resources = buildNetworkAcl(stage, DB_SUBNET);
+  const resources = buildNetworkAcl(DB_SUBNET);
 
   appSubnets.forEach((subnet, index) => {
     Object.assign(

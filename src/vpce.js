@@ -111,11 +111,10 @@ function buildEndpointServices({ services = [], numZones = 0 } = {}) {
 /**
  * Build a SecurityGroup to allow the Lambda's access to VPC endpoints over HTTPS.
  *
- * @param {String} stage
  * @param {Object} params
  * @return {Object}
  */
-function buildLambdaVPCEndpointSecurityGroup(stage, { name = 'LambdaEndpointSecurityGroup' } = {}) {
+function buildLambdaVPCEndpointSecurityGroup({ name = 'LambdaEndpointSecurityGroup' } = {}) {
   return {
     [name]: {
       Type: 'AWS::EC2::SecurityGroup',
@@ -135,10 +134,6 @@ function buildLambdaVPCEndpointSecurityGroup(stage, { name = 'LambdaEndpointSecu
           },
         ],
         Tags: [
-          {
-            Key: 'STAGE',
-            Value: stage,
-          },
           {
             Key: 'Name',
             Value: {

@@ -31,10 +31,6 @@ describe('natgw', () => {
             },
             Tags: [
               {
-                Key: 'STAGE',
-                Value: 'dev',
-              },
-              {
                 Key: 'Name',
                 Value: {
                   'Fn::Join': [
@@ -52,7 +48,7 @@ describe('natgw', () => {
           },
         },
       };
-      const actual = buildNatGateway('dev', 1, 'us-east-1a');
+      const actual = buildNatGateway(1, 'us-east-1a');
       expect(actual).toEqual(expected);
       expect.assertions(1);
     });

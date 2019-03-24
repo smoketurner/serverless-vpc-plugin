@@ -3,11 +3,10 @@ const { DB_SUBNET } = require('./constants');
 /**
  * Build an RDSubnetGroup for a given number of zones
  *
- * @param {String} stage
  * @param {Objects} params
  * @return {Object}
  */
-function buildRDSSubnetGroup(stage, { name = 'RDSSubnetGroup', numZones = 0 } = {}) {
+function buildRDSSubnetGroup({ name = 'RDSSubnetGroup', numZones = 0 } = {}) {
   if (numZones < 1) {
     return {};
   }
@@ -28,12 +27,6 @@ function buildRDSSubnetGroup(stage, { name = 'RDSSubnetGroup', numZones = 0 } = 
           Ref: 'AWS::StackName',
         },
         SubnetIds: subnetIds,
-        Tags: [
-          {
-            Key: 'STAGE',
-            Value: stage,
-          },
-        ],
       },
     },
   };
@@ -74,11 +67,10 @@ function buildElastiCacheSubnetGroup({ name = 'ElastiCacheSubnetGroup', numZones
 /**
  * Build an RedshiftSubnetGroup for a given number of zones
  *
- * @param {String} stage
  * @param {Object} params
  * @return {Object}
  */
-function buildRedshiftSubnetGroup(stage, { name = 'RedshiftSubnetGroup', numZones = 0 } = {}) {
+function buildRedshiftSubnetGroup({ name = 'RedshiftSubnetGroup', numZones = 0 } = {}) {
   if (numZones < 1) {
     return {};
   }
@@ -96,12 +88,6 @@ function buildRedshiftSubnetGroup(stage, { name = 'RedshiftSubnetGroup', numZone
           Ref: 'AWS::StackName',
         },
         SubnetIds: subnetIds,
-        Tags: [
-          {
-            Key: 'STAGE',
-            Value: stage,
-          },
-        ],
       },
     },
   };

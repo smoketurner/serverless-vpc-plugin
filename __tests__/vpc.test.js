@@ -22,10 +22,6 @@ describe('vpc', () => {
             InstanceTenancy: 'default',
             Tags: [
               {
-                Key: 'STAGE',
-                Value: 'dev',
-              },
-              {
                 Key: 'Name',
                 Value: {
                   Ref: 'AWS::StackName',
@@ -36,7 +32,7 @@ describe('vpc', () => {
         },
       };
 
-      const actual = buildVpc('dev');
+      const actual = buildVpc();
       expect(actual).toEqual(expected);
       expect.assertions(1);
     });
@@ -52,10 +48,6 @@ describe('vpc', () => {
             InstanceTenancy: 'default',
             Tags: [
               {
-                Key: 'STAGE',
-                Value: 'dev',
-              },
-              {
                 Key: 'Name',
                 Value: {
                   Ref: 'AWS::StackName',
@@ -66,7 +58,7 @@ describe('vpc', () => {
         },
       };
 
-      const actual = buildVpc('dev', {
+      const actual = buildVpc({
         name: 'MyVpc',
         cidrBlock: '192.168.0.0/16',
       });
@@ -83,10 +75,6 @@ describe('vpc', () => {
           Properties: {
             Tags: [
               {
-                Key: 'STAGE',
-                Value: 'dev',
-              },
-              {
                 Key: 'Name',
                 Value: {
                   Ref: 'AWS::StackName',
@@ -97,7 +85,7 @@ describe('vpc', () => {
         },
       };
 
-      const actual = buildInternetGateway('dev');
+      const actual = buildInternetGateway();
       expect(actual).toEqual(expected);
       expect.assertions(1);
     });
@@ -109,10 +97,6 @@ describe('vpc', () => {
           Properties: {
             Tags: [
               {
-                Key: 'STAGE',
-                Value: 'dev',
-              },
-              {
                 Key: 'Name',
                 Value: {
                   Ref: 'AWS::StackName',
@@ -123,7 +107,7 @@ describe('vpc', () => {
         },
       };
 
-      const actual = buildInternetGateway('dev', { name: 'MyInternetGateway' });
+      const actual = buildInternetGateway({ name: 'MyInternetGateway' });
       expect(actual).toEqual(expected);
       expect.assertions(1);
     });
@@ -184,10 +168,6 @@ describe('vpc', () => {
             CidrBlock: '10.0.0.0/22',
             Tags: [
               {
-                Key: 'STAGE',
-                Value: 'dev',
-              },
-              {
                 Key: 'Name',
                 Value: {
                   'Fn::Join': [
@@ -209,7 +189,7 @@ describe('vpc', () => {
           },
         },
       };
-      const actual = buildSubnet('dev', 'App', 1, 'us-east-1a', '10.0.0.0/22');
+      const actual = buildSubnet('App', 1, 'us-east-1a', '10.0.0.0/22');
       expect(actual).toEqual(expected);
       expect.assertions(1);
     });
@@ -226,10 +206,6 @@ describe('vpc', () => {
             },
             Tags: [
               {
-                Key: 'STAGE',
-                Value: 'dev',
-              },
-              {
                 Key: 'Name',
                 Value: {
                   'Fn::Join': [
@@ -248,7 +224,7 @@ describe('vpc', () => {
           },
         },
       };
-      const actual = buildRouteTable('dev', 'App', 1, 'us-east-1a');
+      const actual = buildRouteTable('App', 1, 'us-east-1a');
       expect(actual).toEqual(expected);
       expect.assertions(1);
     });
@@ -340,10 +316,6 @@ describe('vpc', () => {
             },
             Tags: [
               {
-                Key: 'STAGE',
-                Value: 'dev',
-              },
-              {
                 Key: 'Name',
                 Value: {
                   'Fn::Join': [
@@ -361,7 +333,7 @@ describe('vpc', () => {
           },
         },
       };
-      const actual = buildLambdaSecurityGroup('dev');
+      const actual = buildLambdaSecurityGroup();
       expect(actual).toEqual(expected);
       expect.assertions(1);
     });
@@ -377,10 +349,6 @@ describe('vpc', () => {
             },
             Tags: [
               {
-                Key: 'STAGE',
-                Value: 'dev',
-              },
-              {
                 Key: 'Name',
                 Value: {
                   'Fn::Join': [
@@ -398,7 +366,7 @@ describe('vpc', () => {
           },
         },
       };
-      const actual = buildLambdaSecurityGroup('dev', {
+      const actual = buildLambdaSecurityGroup({
         name: 'MyLambdaExecutionSecurityGroup',
       });
       expect(actual).toEqual(expected);
