@@ -1,7 +1,6 @@
 /**
  * Build a VPC
  *
- * @param {String} stage Serverless Stage
  * @param {Object} params
  * @return {Object}
  */
