@@ -300,7 +300,7 @@ class ServerlessVpcPlugin {
    * 1.) Splits the VPC CIDR Block into /20 subnets, one per AZ.
    * 2.) Split each AZ /20 CIDR Block into two /21 subnets
    * 3.) Use the first /21 subnet for Applications
-   * 3.) Split the second /21 subnet into two /22 subnets: one Public subnet (for load balancers),
+   * 4.) Split the second /21 subnet into two /22 subnets: one Public subnet (for load balancers),
    *     and one for databases (RDS, ElastiCache, and Redshift)
    *
    * @param {String} cidrBlock VPC CIDR Block
