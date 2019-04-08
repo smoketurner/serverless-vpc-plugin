@@ -114,7 +114,7 @@ class ServerlessVpcPlugin {
     );
 
     const providerObj = this.serverless.service.provider;
-    const resources = providerObj.compiledCloudFormationTemplate.Resources;
+    const resources = this.serverless.service.resources.Resources;
 
     Object.assign(
       resources,
