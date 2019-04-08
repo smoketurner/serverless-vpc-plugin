@@ -30,8 +30,8 @@ class ServerlessVpcPlugin {
     this.provider = this.serverless.getProvider('aws');
 
     this.hooks = {
-      'before:deploy:resources': this.afterInitialize.bind(this),
-      // 'after:package:initialize': this.afterInitialize.bind(this),
+      // 'before:deploy:deploy': this.afterInitialize.bind(this),
+      'after:package:initialize': this.afterInitialize.bind(this),
     };
   }
 
@@ -167,10 +167,7 @@ class ServerlessVpcPlugin {
     }
 
     this.serverless.cli.log('Updating Lambda VPC configuration');
-    const { vpc } = providerObj;
-    if (!vpc) {
-      providerObj.vpc = {};
-    }
+    const { vpc = {} } = providerObj;
 
     if (!Array.isArray(vpc.securityGroupIds)) {
       vpc.securityGroupIds = [];
