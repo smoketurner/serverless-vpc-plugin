@@ -30,7 +30,8 @@ class ServerlessVpcPlugin {
     this.provider = this.serverless.getProvider('aws');
 
     this.hooks = {
-      'after:package:initialize': this.afterInitialize.bind(this),
+      'before:deploy:resources': this.afterInitialize.bind(this),
+      // 'after:package:initialize': this.afterInitialize.bind(this),
     };
   }
 
@@ -170,10 +171,12 @@ class ServerlessVpcPlugin {
     if (!vpc) {
       providerObj.vpc = {};
     }
+
     if (!Array.isArray(vpc.securityGroupIds)) {
       vpc.securityGroupIds = [];
     }
     vpc.securityGroupIds.push({ Ref: 'LambdaExecutionSecurityGroup' });
+
     if (!Array.isArray(vpc.subnetIds)) {
       vpc.subnetIds = [];
     }
