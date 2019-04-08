@@ -101,7 +101,7 @@ class ServerlessVpcPlugin {
       }
       if (createNatGateway > DEFAULT_VPC_EIP_LIMIT) {
         this.serverless.cli.log(
-          `WARNING: Number of gateways (${createNatGateway} is greater than default ` +
+          `WARNING: Number of NAT gateways (${createNatGateway} is greater than default ` +
             `EIP limit (${DEFAULT_VPC_EIP_LIMIT}). Please ensure you requested ` +
             `an AWS EIP limit increase.`,
         );
@@ -109,11 +109,11 @@ class ServerlessVpcPlugin {
     }
 
     this.serverless.cli.log(
-      `Generating a VPC in ${region} (${cidrBlock}) ` +
-        `across ${numZones} availability zones: ${zones}`,
+      `Generating a VPC in ${region} (${cidrBlock}) across ${numZones} AZs: ${zones}`,
     );
 
-    const resources = this.serverless.service.provider.compiledCloudFormationTemplate.Resources;
+    const providerObj = this.serverless.service.provider;
+    const resources = providerObj.compiledCloudFormationTemplate.Resources;
 
     Object.assign(
       resources,
@@ -163,6 +163,25 @@ class ServerlessVpcPlugin {
       this.serverless.cli.log('Enabling VPC Flow Logs to S3');
       Object.assign(resources, buildLogBucket(), buildLogBucketPolicy(), buildVpcFlowLogs());
     }
+
+    const outputs = providerObj.compiledCloudFormationTemplate.Outputs;
+    Object.assign(outputs, ServerlessVpcPlugin.buildOutputs());
+
+    this.serverless.cli.log('Updating Lambda VPC configuration');
+    const { vpc = {} } = providerObj;
+
+    if (!Array.isArray(vpc.securityGroupIds)) {
+      vpc.securityGroupIds = [];
+    }
+    vpc.securityGroupIds.push({ Ref: 'LambdaExecutionSecurityGroup' });
+
+    if (!Array.isArray(vpc.subnetIds)) {
+      vpc.subnetIds = [];
+    }
+    for (let i = 1; i <= numZones; i += 1) {
+      vpc.subnetIds.push({ Ref: `${APP_SUBNET}Subnet${i}` });
+    }
+    this.serverless.service.provider.vpc = vpc;
   }
 
   /**
@@ -382,6 +401,31 @@ class ServerlessVpcPlugin {
     }
 
     return resources;
+  }
+
+  /**
+   * Build CloudFormation Outputs on common resources
+   *
+   * @return {Object]}
+   */
+  static buildOutputs() {
+    const outputs = {
+      VPC: {
+        Description: 'VPC logical resource ID',
+        Value: {
+          Ref: 'VPC',
+        },
+      },
+      LambdaExecutionSecurityGroup: {
+        Description:
+          'Security Group logical resource ID that the Lambda functions use when executing within the VPC',
+        Value: {
+          Ref: 'LambdaExecutionSecurityGroup',
+        },
+      },
+    };
+
+    return outputs;
   }
 }
 

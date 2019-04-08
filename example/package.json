@@ -10,13 +10,14 @@
   },
   "main": "s3.js",
   "scripts": {
+    "package": "SLS_DEBUG=* npx sls package",
     "deploy": "npx sls deploy -v --force",
     "remove": "npx sls remove -v",
     "test": "npx sls invoke -f s3"
   },
   "devDependencies": {
     "aws-sdk": "2.290.0",
-    "serverless": "1.39.1",
+    "serverless": "1.40.0",
     "serverless-vpc-plugin": "smoketurner/serverless-vpc-plugin#master"
   }
 }

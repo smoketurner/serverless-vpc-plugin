@@ -10,13 +10,6 @@ provider:
   deploymentBucket:
     serverSideEncryption: AES256
   endpointType: regional
-  vpc:
-    securityGroupIds:
-      - Ref: LambdaExecutionSecurityGroup
-    subnetIds:
-      - Ref: AppSubnet1
-      - Ref: AppSubnet2
-      - Ref: AppSubnet3
   iamRoleStatements:
     - Effect: Allow
       Action:

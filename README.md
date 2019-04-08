@@ -12,7 +12,7 @@ This plugin provisions the following resources:
 - `AWS::EC2::VPC`
 - `AWS::EC2::InternetGateway` (for outbound internet access)
 - `AWS::EC2::VPCGatewayAttachment` (to attach the `InternetGateway` to the VPC)
-- `AWS::EC2::SecurityGroup` (to execute Lambda functions)
+- `AWS::EC2::SecurityGroup` (to execute Lambda functions [`LambdaExecutionSecurityGroup`])
 
 If the VPC is allocated a /16 subnet, each availability zone within the region will be allocated a /20 subnet. Within each availability zone, this plugin will further divide the subnets:
 
@@ -64,16 +64,12 @@ plugins:
   - serverless-vpc-plugin
 
 provider:
+  # you do not need to provide the "vpc" section as this plugin will populate it automatically
   vpc:
     securityGroupIds:
-      - Ref: LambdaExecutionSecurityGroup # this plugin will create this security group for you
-    subnetIds: # if specifying zones below, include the same number of subnets here
-      - Ref: AppSubnet1
-      - Ref: AppSubnet2
-      - Ref: AppSubnet3
-      #- Ref: AppSubnet4
-      #- Ref: AppSubnet5
-      #- Ref: AppSubnet6
+      -  # plugin will add LambdaExecutionSecurityGroup to this list
+    subnetIds:
+      -  # plugin will add the "Application" subnets to this list
 
 custom:
   vpcConfig:
@@ -108,3 +104,10 @@ custom:
       - kms
       - secretsmanager
 ```
+
+## CloudFormation Outputs
+
+After executing `serverless deploy`, the following CloudFormation Stack Outputs will be provided:
+
+- `VPC`: VPC logical resource ID
+- `LambdaExecutionSecurityGroup`: Security Group logical resource ID that the Lambda functions use when executing within the VPC
