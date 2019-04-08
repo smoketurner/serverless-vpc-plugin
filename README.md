@@ -64,11 +64,12 @@ plugins:
   - serverless-vpc-plugin
 
 provider:
+  # you do not need to provide the "vpc" section as this plugin will populate it automatically
   vpc:
     securityGroupIds:
       -  # plugin will add LambdaExecutionSecurityGroup to this list
     subnetIds:
-      -  # plugin will add the provisioned "Application" subnets
+      -  # plugin will add the "Application" subnets to this list
 
 custom:
   vpcConfig:
@@ -103,3 +104,10 @@ custom:
       - kms
       - secretsmanager
 ```
+
+## CloudFormation Outputs
+
+After executing `serverless deploy`, the following CloudFormation Stack Outputs will be provided:
+
+- `VPC`: VPC logical resource ID
+- `LambdaExecutionSecurityGroup`: Security Group logical resource ID that the Lambda functions use when executing within the VPC

@@ -411,13 +411,14 @@ class ServerlessVpcPlugin {
   static buildOutputs() {
     const outputs = {
       VPC: {
-        Description: 'VPC Resource ID',
+        Description: 'VPC logical resource ID',
         Value: {
           Ref: 'VPC',
         },
       },
       LambdaExecutionSecurityGroup: {
-        Description: 'Security group the Lambda functions use for execution within the VPC',
+        Description:
+          'Security Group logical resource ID that the Lambda functions use when executing within the VPC',
         Value: {
           Ref: 'LambdaExecutionSecurityGroup',
         },
