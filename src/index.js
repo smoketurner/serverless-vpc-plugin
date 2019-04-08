@@ -30,7 +30,9 @@ class ServerlessVpcPlugin {
     this.provider = this.serverless.getProvider('aws');
 
     this.hooks = {
-      'after:package:finalize': this.afterPackageFinalize.bind(this),
+      'after:aws:package:finalize:mergeCustomProviderResources': this.afterPackageFinalize.bind(
+        this,
+      ),
     };
   }
 
