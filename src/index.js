@@ -101,7 +101,7 @@ class ServerlessVpcPlugin {
       }
       if (createNatGateway > DEFAULT_VPC_EIP_LIMIT) {
         this.serverless.cli.log(
-          `WARNING: Number of gateways (${createNatGateway} is greater than default ` +
+          `WARNING: Number of NAT gateways (${createNatGateway} is greater than default ` +
             `EIP limit (${DEFAULT_VPC_EIP_LIMIT}). Please ensure you requested ` +
             `an AWS EIP limit increase.`,
         );
@@ -109,8 +109,7 @@ class ServerlessVpcPlugin {
     }
 
     this.serverless.cli.log(
-      `Generating a VPC in ${region} (${cidrBlock}) ` +
-        `across ${numZones} availability zones: ${zones}`,
+      `Generating a VPC in ${region} (${cidrBlock}) across ${numZones} AZs: ${zones}`,
     );
 
     const providerObj = this.serverless.service.provider;
@@ -165,6 +164,9 @@ class ServerlessVpcPlugin {
       Object.assign(resources, buildLogBucket(), buildLogBucketPolicy(), buildVpcFlowLogs());
     }
 
+    const outputs = providerObj.compiledCloudFormationTemplate.Outputs;
+    Object.assign(outputs, ServerlessVpcPlugin.buildOutputs());
+
     this.serverless.cli.log('Updating Lambda VPC configuration');
     const { vpc = {} } = providerObj;
 
@@ -180,7 +182,6 @@ class ServerlessVpcPlugin {
       vpc.subnetIds.push({ Ref: `${APP_SUBNET}Subnet${i}` });
     }
     this.serverless.service.provider.vpc = vpc;
-    this.serverless.cli.log('VPC Configuration:', this.serverless.service.provider.vpc);
   }
 
   /**
@@ -400,6 +401,30 @@ class ServerlessVpcPlugin {
     }
 
     return resources;
+  }
+
+  /**
+   * Build CloudFormation Outputs on common resources
+   *
+   * @return {Object]}
+   */
+  static buildOutputs() {
+    const outputs = {
+      VPC: {
+        Description: 'VPC Resource ID',
+        Value: {
+          Ref: 'VPC',
+        },
+      },
+      LambdaExecutionSecurityGroup: {
+        Description: 'Security group the Lambda functions use for execution within the VPC',
+        Value: {
+          Ref: 'LambdaExecutionSecurityGroup',
+        },
+      },
+    };
+
+    return outputs;
   }
 }
 
