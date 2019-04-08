@@ -30,13 +30,13 @@ class ServerlessVpcPlugin {
     this.provider = this.serverless.getProvider('aws');
 
     this.hooks = {
-      'after:aws:package:finalize:mergeCustomProviderResources': this.afterPackageFinalize.bind(
+      'before:aws:package:finalize:mergeCustomProviderResources': this.beforePackageFinalize.bind(
         this,
       ),
     };
   }
 
-  async afterPackageFinalize() {
+  async beforePackageFinalize() {
     let cidrBlock = '10.0.0.0/16';
     let zones = [];
     let services = ['s3', 'dynamodb'];
