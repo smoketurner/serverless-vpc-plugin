@@ -30,11 +30,11 @@ class ServerlessVpcPlugin {
     this.provider = this.serverless.getProvider('aws');
 
     this.hooks = {
-      'after:package:initialize': this.afterInitialize.bind(this),
+      'before:package:initialize': this.beforePackageInitialize.bind(this),
     };
   }
 
-  async afterInitialize() {
+  async beforePackageInitialize() {
     let cidrBlock = '10.0.0.0/16';
     let zones = [];
     let services = ['s3', 'dynamodb'];
@@ -179,6 +179,7 @@ class ServerlessVpcPlugin {
     for (let i = 1; i <= numZones; i += 1) {
       vpc.subnetIds.push({ Ref: `${APP_SUBNET}Subnet${i}` });
     }
+    this.serverless.cli.log('VPC Configuration:', this.serverless.service.provider.vpc);
   }
 
   /**
