@@ -18,6 +18,6 @@
   "devDependencies": {
     "aws-sdk": "2.290.0",
     "serverless": "1.40.0",
-    "serverless-vpc-plugin": "smoketurner/serverless-vpc-plugin#master"
+    "serverless-vpc-plugin": "smoketurner/serverless-vpc-plugin#jp-gh36"
   }
 }

@@ -21,6 +21,11 @@ const {
 const { buildEndpointServices, buildLambdaVPCEndpointSecurityGroup } = require('./vpce');
 const { buildEIP, buildNatGateway } = require('./natgw');
 const { buildLogBucket, buildLogBucketPolicy, buildVpcFlowLogs } = require('./flow_logs');
+const {
+  buildBastionAutoScalingGroup,
+  buildBastionLaunchConfiguration,
+  buildBastionSecurityGroup,
+} = require('./bastion');
 
 class ServerlessVpcPlugin {
   constructor(serverless, options) {
@@ -42,6 +47,7 @@ class ServerlessVpcPlugin {
     let createNetworkAcl = false;
     let createDbSubnet = true;
     let createFlowLogs = false;
+    let createBastionHost = false;
 
     const { vpcConfig } = this.serverless.service.custom;
 
@@ -77,6 +83,10 @@ class ServerlessVpcPlugin {
 
       if ('createFlowLogs' in vpcConfig && typeof vpcConfig.createFlowLogs === 'boolean') {
         ({ createFlowLogs } = vpcConfig);
+      }
+
+      if ('createBastionHost' in vpcConfig && typeof vpcConfig.createBastionHost === 'boolean') {
+        ({ createBastionHost } = vpcConfig);
       }
     }
 
@@ -327,11 +337,18 @@ class ServerlessVpcPlugin {
    * @param {Number} numNatGateway Number of NAT gateways (and EIPs) to provision
    * @param {Boolean} createDbSubnet Whether to create the DBSubnet or not
    * @param {Boolean} createNetworkAcl Whether to create Network ACLs or not
+   * @param {Boolean} createBastionHost Whether to create a bastion host or not
    * @return {Object}
    */
   static buildAvailabilityZones(
     cidrBlock,
-    { zones = [], numNatGateway = 0, createDbSubnet = true, createNetworkAcl = false } = {},
+    {
+      zones = [],
+      numNatGateway = 0,
+      createDbSubnet = true,
+      createNetworkAcl = false,
+      createBastionHost = false,
+    } = {},
   ) {
     if (!cidrBlock) {
       return {};
@@ -400,13 +417,27 @@ class ServerlessVpcPlugin {
       }
     }
 
+    if (createBastionHost) {
+      this.serverless.cli.log('Creating bastion host in public subnet');
+
+      Object.assign(
+        resources,
+        buildBastionSecurityGroup({ subnets: subnets.get(APP_SUBNET) }),
+        buildBastionLaunchConfiguration(),
+        buildBastionAutoScalingGroup({
+          subnets: subnets.get(PUBLIC_SUBNET),
+          zones,
+        }),
+      );
+    }
+
     return resources;
   }
 
   /**
    * Build CloudFormation Outputs on common resources
    *
-   * @return {Object]}
+   * @return {Object}
    */
   static buildOutputs() {
     const outputs = {
