@@ -113,7 +113,8 @@ class ServerlessVpcPlugin {
         `across ${numZones} availability zones: ${zones}`,
     );
 
-    const resources = this.serverless.service.provider.compiledCloudFormationTemplate.Resources;
+    const providerObj = this.serverless.service.provider;
+    const resources = providerObj.compiledCloudFormationTemplate.Resources;
 
     Object.assign(
       resources,
@@ -162,6 +163,22 @@ class ServerlessVpcPlugin {
     if (createFlowLogs) {
       this.serverless.cli.log('Enabling VPC Flow Logs to S3');
       Object.assign(resources, buildLogBucket(), buildLogBucketPolicy(), buildVpcFlowLogs());
+    }
+
+    this.serverless.cli.log('Updating Lambda VPC configuration');
+    const { vpc } = providerObj;
+    if (!vpc) {
+      providerObj.vpc = {};
+    }
+    if (!Array.isArray(vpc.securityGroupIds)) {
+      vpc.securityGroupIds = [];
+    }
+    vpc.securityGroupIds.push({ Ref: 'LambdaExecutionSecurityGroup' });
+    if (!Array.isArray(vpc.subnetIds)) {
+      vpc.subnetIds = [];
+    }
+    for (let i = 1; i <= numZones; i += 1) {
+      vpc.subnetIds.push({ Ref: `${APP_SUBNET}Subnet${i}` });
     }
   }
 
