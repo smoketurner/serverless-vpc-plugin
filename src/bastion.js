@@ -176,7 +176,7 @@ function buildBastionInstance({ name = 'BastionInstance', zones = [], subnets = 
   };
 }
 
-exports.module = {
+module.exports = {
   buildBastionIamInstanceProfile,
   buildBastionIamRole,
   buildBastionInstance,
