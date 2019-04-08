@@ -1,6 +1,55 @@
 const { APP_SUBNET } = require('./constants');
 
 /**
+ * Build an IAM Role for the bastion hosts
+ *
+ * @param {Object} params
+ * @return {Object}
+ */
+function buildBastionIamRole({ name = 'BastionIamRole' } = {}) {
+  return {
+    [name]: {
+      Type: 'AWS::IAM::Role',
+      Properties: {
+        AssumeRolePolicyDocument: {
+          Statement: [
+            {
+              Principal: {
+                Service: 'ec2.amazonaws.com',
+              },
+              Effect: 'Allow',
+              Action: 'sts:AssumeRole',
+            },
+          ],
+        },
+        ManagedPolicyArns: ['arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM'],
+      },
+    },
+  };
+}
+
+/**
+ * Build an IAM InstanceProfile for the bastion hosts
+ *
+ * @param {Object} params
+ * @return {Object}
+ */
+function buildBastionIamInstanceProfile({ name = 'BastionInstanceProfile' } = {}) {
+  return {
+    [name]: {
+      Type: 'AWS::IAM::InstanceProfile',
+      Properties: {
+        Roles: [
+          {
+            Ref: 'BastionIamRole',
+          },
+        ],
+      },
+    },
+  };
+}
+
+/**
  * Build a SecurityGroup to be used by the bastion host
  *
  * @param {Object} params
@@ -86,17 +135,18 @@ function buildBastionSecurityGroup({ name = 'BastionSecurityGroup', subnets = []
 }
 
 /**
- * Build the Bastion launch configuration
+ * Build the Bastion EC2 instance
  *
  * @param {Object} params
  * @return {Object}
  */
-function buildBastionLaunchConfiguration({ name = 'BastionLaunchConfiguration' } = {}) {
+function buildBastionInstance({ name = 'BastionInstance', zones = [], subnets = [] } = {}) {
   return {
     [name]: {
-      Type: 'AWS::AutoScaling::LaunchConfiguration',
+      Type: 'AWS::EC2::Instance',
+      DependsOn: 'InternetGatewayAttachment',
       Properties: {
-        AssociatePublicIpAddress: true,
+        AvailabilityZone: zones[0],
         BlockDeviceMappings: [
           {
             DeviceName: '/dev/xvda',
@@ -108,68 +158,27 @@ function buildBastionLaunchConfiguration({ name = 'BastionLaunchConfiguration' }
             },
           },
         ],
+        IamInstanceProfile: {
+          'Fn::GetAtt': ['BastionInstanceProfile', 'Arn'],
+        },
         ImageId: 'ami-00a9d4a05375b2763', // amzn-ami-vpc-nat-hvm-2018.03.0.20181116-x86_64-ebs
-        InstanceMonitoring: false,
         InstanceType: 't2.micro',
-        SecurityGroups: [
+        Monitoring: false,
+        SecurityGroupsIds: [
           {
             Ref: 'BastionSecurityGroup',
           },
         ],
-        SpotPrice: '0.0116', // https://aws.amazon.com/ec2/pricing/on-demand/
-      },
-    },
-  };
-}
-
-/**
- * Build the Bastion host auto scaling group
- *
- * @param {Object} params
- * @return {Object}
- */
-function buildBastionAutoScalingGroup({
-  name = 'BastionAutoScalingGroup',
-  subnets = [],
-  zones = [],
-} = {}) {
-  return {
-    [name]: {
-      Type: 'AWS::AutoScaling::AutoScalingGroup',
-      DependsOn: 'InternetGatewayAttachment',
-      Properties: {
-        AvailabilityZones: zones,
-        DesiredCapacity: '1',
-        HealthCheckType: 'EC2',
-        LaunchConfigurationName: {
-          Ref: 'BastionLaunchConfiguration',
-        },
-        MaxSize: '1',
-        MinSize: '1',
-        Tags: [
-          {
-            Key: 'Name',
-            Value: {
-              'Fn::Join': [
-                '-',
-                [
-                  {
-                    Ref: 'AWS::StackName',
-                  },
-                  'asg',
-                ],
-              ],
-            },
-          },
-        ],
-        VPCZoneIdentifier: subnets,
+        SubnetId: subnets[0],
+        SourceDestCheck: false,
       },
     },
   };
 }
 
 exports.module = {
-  buildBastionAutoScalingGroup,
-  buildBastionLaunchConfiguration,
+  buildBastionIamInstanceProfile,
+  buildBastionIamRole,
+  buildBastionInstance,
   buildBastionSecurityGroup,
 };

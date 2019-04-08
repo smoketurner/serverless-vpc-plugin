@@ -22,8 +22,9 @@ const { buildEndpointServices, buildLambdaVPCEndpointSecurityGroup } = require('
 const { buildEIP, buildNatGateway } = require('./natgw');
 const { buildLogBucket, buildLogBucketPolicy, buildVpcFlowLogs } = require('./flow_logs');
 const {
-  buildBastionAutoScalingGroup,
-  buildBastionLaunchConfiguration,
+  buildBastionIamRole,
+  buildBastionIamInstanceProfile,
+  buildBastionInstance,
   buildBastionSecurityGroup,
 } = require('./bastion');
 
@@ -135,6 +136,7 @@ class ServerlessVpcPlugin {
         numNatGateway: createNatGateway,
         createDbSubnet,
         createNetworkAcl,
+        createBastionHost,
       }),
       buildLambdaSecurityGroup(),
     );
@@ -418,16 +420,12 @@ class ServerlessVpcPlugin {
     }
 
     if (createBastionHost) {
-      this.serverless.cli.log('Creating bastion host in public subnet');
-
       Object.assign(
         resources,
+        buildBastionIamRole(),
+        buildBastionIamInstanceProfile(),
         buildBastionSecurityGroup({ subnets: subnets.get(APP_SUBNET) }),
-        buildBastionLaunchConfiguration(),
-        buildBastionAutoScalingGroup({
-          subnets: subnets.get(PUBLIC_SUBNET),
-          zones,
-        }),
+        buildBastionInstance({ subnets: subnets.get(PUBLIC_SUBNET), zones }),
       );
     }
 
