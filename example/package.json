@@ -10,6 +10,7 @@
   },
   "main": "s3.js",
   "scripts": {
+    "package": "SLS_DEBUG=* npx sls package",
     "deploy": "npx sls deploy -v --force",
     "remove": "npx sls remove -v",
     "test": "npx sls invoke -f s3"
