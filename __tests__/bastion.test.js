@@ -167,7 +167,7 @@ describe('bastion', () => {
             IamInstanceProfile: {
               Ref: 'BastionInstanceProfile',
             },
-            ImageId: 'ami-00a9d4a05375b2763', // amzn-ami-vpc-nat-hvm-2018.03.0.20181116-x86_64-ebs
+            ImageId: 'ami-00a9d4a05375b2763',
             InstanceType: 't2.micro',
             Monitoring: false,
             NetworkInterfaces: [
@@ -207,7 +207,22 @@ describe('bastion', () => {
         },
       };
 
-      const actual = buildBastionInstance({ zones: ['us-east-1a', 'us-east-1b'] });
+      const image = {
+        ImageId: 'ami-00a9d4a05375b2763',
+        BlockDeviceMappings: [
+          {
+            DeviceName: '/dev/xvda',
+            Ebs: {
+              VolumeSize: 8,
+              VolumeType: 'gp2',
+              DeleteOnTermination: true,
+              SnapshotId: 'snap-067424abc11f77a61',
+            },
+          },
+        ],
+      };
+
+      const actual = buildBastionInstance(image, { zones: ['us-east-1a', 'us-east-1b'] });
       expect(actual).toEqual(expected);
       expect.assertions(1);
     });

@@ -126,6 +126,18 @@ class ServerlessVpcPlugin {
     const providerObj = this.serverless.service.provider;
     const resources = providerObj.compiledCloudFormationTemplate.Resources;
 
+    let vpcNatAmi = null;
+    if (createBastionHost) {
+      const images = await this.getVpcNatAmi();
+      if (Array.isArray(images) && images.length > 0) {
+        [vpcNatAmi] = images;
+      } else {
+        throw new this.serverless.classes.Error(
+          `Could not find an available VPC NAT Instance AMI in ${region}`,
+        );
+      }
+    }
+
     Object.assign(
       resources,
       buildVpc({ cidrBlock }),
@@ -136,7 +148,7 @@ class ServerlessVpcPlugin {
         numNatGateway: createNatGateway,
         createDbSubnet,
         createNetworkAcl,
-        createBastionHost,
+        vpcNatAmi,
       }),
       buildLambdaSecurityGroup(),
     );
@@ -230,6 +242,63 @@ class ServerlessVpcPlugin {
     return this.provider
       .request('EC2', 'describeVpcEndpointServices', params)
       .then(data => data.ServiceNames.sort());
+  }
+
+  /**
+   * Return an array of AMI images which match the VPC NAT Instance image
+   *
+   * @return {Array}
+   */
+  async getVpcNatAmi() {
+    this.serverless.cli.log('Looking up available VPC NAT Instance AMIs');
+    const params = {
+      Owners: ['amazon'],
+      Filters: [
+        {
+          Name: 'architecture',
+          Values: ['x86_64'],
+        },
+        {
+          Name: 'ena-support',
+          Values: ['true'],
+        },
+        {
+          Name: 'image-type',
+          Values: ['machine'],
+        },
+        {
+          Name: 'is-public',
+          Values: ['true'],
+        },
+        {
+          Name: 'name',
+          Values: ['amzn-ami-vpc-nat-hvm*'],
+        },
+        {
+          Name: 'state',
+          Values: ['available'],
+        },
+        {
+          Name: 'root-device-type',
+          Values: ['ebs'],
+        },
+        {
+          Name: 'virtualization-type',
+          Values: ['hvm'],
+        },
+      ],
+    };
+    return this.provider.request('EC2', 'describeImages', params).then(data =>
+      data.Images.sort((a, b) => {
+        if (a.CreationDate > b.CreationDate) {
+          return -1;
+        }
+        if (a.CreationDate < b.CreationDate) {
+          return 1;
+        }
+        return 0;
+      }),
+    );
   }
 
   /**
@@ -339,7 +408,7 @@ class ServerlessVpcPlugin {
    * @param {Number} numNatGateway Number of NAT gateways (and EIPs) to provision
    * @param {Boolean} createDbSubnet Whether to create the DBSubnet or not
    * @param {Boolean} createNetworkAcl Whether to create Network ACLs or not
-   * @param {Boolean} createBastionHost Whether to create a bastion host or not
+   * @param {Object} vpcNatAmi AWS AMI ID of a VPC NAT Instance
    * @return {Object}
    */
   static buildAvailabilityZones(
@@ -349,7 +418,7 @@ class ServerlessVpcPlugin {
       numNatGateway = 0,
       createDbSubnet = true,
       createNetworkAcl = false,
-      createBastionHost = false,
+      vpcNatAmi = null,
     } = {},
   ) {
     if (!cidrBlock) {
@@ -374,7 +443,7 @@ class ServerlessVpcPlugin {
       const params = {};
       if (numNatGateway > 0) {
         params.NatGatewayId = `NatGateway${(index % numNatGateway) + 1}`;
-      } else if (createBastionHost) {
+      } else if (vpcNatAmi) {
         params.InstanceId = 'BastionInstance';
       } else {
         params.GatewayId = 'InternetGateway';
@@ -421,13 +490,13 @@ class ServerlessVpcPlugin {
       }
     }
 
-    if (createBastionHost) {
+    if (vpcNatAmi) {
       Object.assign(
         resources,
         buildBastionIamRole(),
         buildBastionIamInstanceProfile(),
         buildBastionSecurityGroup({ subnets: subnets.get(APP_SUBNET) }),
-        buildBastionInstance({ zones }),
+        buildBastionInstance(vpcNatAmi, { zones }),
       );
     }
 
