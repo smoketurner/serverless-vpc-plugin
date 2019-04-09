@@ -136,11 +136,15 @@ function buildBastionSecurityGroup({ name = 'BastionSecurityGroup', subnets = []
 /**
  * Build the Bastion EC2 instance
  *
+ * @param {Object} image AMI image object
  * @param {Object} params
  * @return {Object}
  */
-function buildBastionInstance({ name = 'BastionInstance', zones = [] } = {}) {
+function buildBastionInstance(image, { name = 'BastionInstance', zones = [] } = {}) {
   if (!Array.isArray(zones) || zones.length < 1) {
+    return {};
+  }
+  if (!image) {
     return {};
   }
 
@@ -159,14 +163,14 @@ function buildBastionInstance({ name = 'BastionInstance', zones = [] } = {}) {
               VolumeSize: 30,
               VolumeType: 'gp2',
               DeleteOnTermination: true,
-              SnapshotId: 'snap-067424abc11f77a61',
+              SnapshotId: image.BlockDeviceMappings[0].Ebs.SnapshotId,
             },
           },
         ],
         IamInstanceProfile: {
           Ref: 'BastionInstanceProfile',
         },
-        ImageId: 'ami-00a9d4a05375b2763', // amzn-ami-vpc-nat-hvm-2018.03.0.20181116-x86_64-ebs
+        ImageId: image.ImageId, // amzn-ami-vpc-nat-hvm-2018.03.0.20181116-x86_64-ebs
         InstanceType: 't2.micro',
         Monitoring: false,
         NetworkInterfaces: [
