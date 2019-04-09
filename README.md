@@ -16,13 +16,15 @@ This plugin provisions the following resources:
 
 If the VPC is allocated a /16 subnet, each availability zone within the region will be allocated a /20 subnet. Within each availability zone, this plugin will further divide the subnets:
 
-- `AWS::EC2::Subnet` "Application" (/21) - default route is either `InternetGateway` or `NatGateway`
+- `AWS::EC2::Subnet` "Application" (/21) - default route is either `InternetGateway`, `NatGateway` or `BastionInstance`
 - `AWS::EC2::Subnet` "Public" (/22) - default route set `InternetGateway`
 - `AWS::EC2::Subnet` "Database" (/22) - no default route set in routing table
 
 The subnetting layout was heavily inspired by the now shutdown [Skyliner](https://skyliner.io) platform. 😞
 
 Optionally, this plugin can also create `AWS::EC2::NatGateway` instances in each availability zone which requires provisioning `AWS::EC2::EIP` resources (AWS limits you to 5 per VPC, so if you want to provision your VPC across all 6 us-east availability zones, you'll need to request an VPC EIP limit increase from AWS).
+
+Instead of using the managed `AWS::EC2::NatGateway` instances, this plugin can also provision a single `t2.micro` NAT instance in `PublicSubnet1` which will allow HTTP/HTTPS traffic from the "Application" subnets to reach the Internet.
 
 Any Lambda functions executing with the "Application" subnet will only be able to access:
 
@@ -34,7 +36,7 @@ Any Lambda functions executing with the "Application" subnet will only be able t
 - DAX clusters (provisioned within the "DB" subnet)
 - Neptune clusters (provisioned with the "DB" subnet)
 
-If your Lambda functions need to access the internet, then you _MUST_ provision `NatGateway` resources.
+If your Lambda functions need to access the internet, then you _MUST_ provision `NatGateway` resources or a bastion host.
 
 By default, `AWS::EC2::VPCEndpoint` "Gateway" endpoints for S3 and DynamoDB will be provisioned within each availability zone to provide internal access to these services (there is no additional charge for using Gateway Type VPC endpoints). You can selectively control which `AWS::EC2::VPCEndpoint` "Interface" endpoints are available within your VPC using the `services` configuration option below. Not all AWS services are available in every region, so the plugin will query AWS to validate the services you have selected and notify you if any changes are required (there is an additional charge for using Interface Type VPC endpoints).
 
@@ -90,6 +92,9 @@ custom:
     # Whether to enable VPC flow logging to an S3 bucket
     createFlowLogs: false
 
+    # Whether to create a bastion NAT instance gateway
+    createBastionHost: false
+
     # optionally specify AZs (defaults to auto-discover all availabile AZs)
     zones:
       - us-east-1a
@@ -111,3 +116,4 @@ After executing `serverless deploy`, the following CloudFormation Stack Outputs 
 
 - `VPC`: VPC logical resource ID
 - `LambdaExecutionSecurityGroup`: Security Group logical resource ID that the Lambda functions use when executing within the VPC
+- `BastionPublicDnsName`: Public DNS name of the bastion host, if provisioned

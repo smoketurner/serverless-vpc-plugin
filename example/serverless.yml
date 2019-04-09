@@ -40,6 +40,7 @@ custom:
     createDbSubnet: true
     createNetworkAcl: true
     createFlowLogs: true
+    createBastionHost: true
     zones:
       - us-east-1a
       - us-east-1b

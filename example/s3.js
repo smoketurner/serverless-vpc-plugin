@@ -1,8 +1,41 @@
+const http = require('http');
+
 const AWS = require('aws-sdk');
 
 AWS.config.logger = console;
 
 const { BUCKET_NAME } = process.env;
+
+/**
+ * Return the public IP
+ *
+ * @return {Promise}
+ */
+function getPublicIp() {
+  return new Promise((resolve, reject) => {
+    const options = {
+      host: 'api.ipify.org',
+      port: 80,
+      path: '/',
+    };
+    http
+      .get(options, res => {
+        res.setEncoding('utf8');
+
+        let body = '';
+        res.on('data', chunk => {
+          body += chunk;
+        });
+
+        res.on('end', () => {
+          resolve(body);
+        });
+      })
+      .on('error', err => {
+        reject(err);
+      });
+  });
+}
 
 /**
  * S3 Uplaod Handler
@@ -17,12 +50,14 @@ exports.handler = async (event, context) => {
     throw new Error('BUCKET_NAME is not defined');
   }
 
+  const ip = await getPublicIp();
+
   const s3 = new AWS.S3();
 
   const params = {
     Bucket: BUCKET_NAME,
     Key: 'event.json',
-    Body: JSON.stringify(event),
+    Body: JSON.stringify({ ip }),
     ContentType: 'application/json',
     ServerSideEncryption: 'AES256',
   };
