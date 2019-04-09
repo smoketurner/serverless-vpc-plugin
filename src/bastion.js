@@ -189,6 +189,22 @@ function buildBastionInstance({ name = 'BastionInstance', zones = [] } = {}) {
           Ref: 'PublicSubnet1',
         },
         SourceDestCheck: false,
+        Tags: [
+          {
+            Key: 'Name',
+            Value: {
+              'Fn::Join': [
+                '-',
+                [
+                  {
+                    Ref: 'AWS::StackName',
+                  },
+                  'bastion',
+                ],
+              ],
+            },
+          },
+        ],
       },
     },
   };
