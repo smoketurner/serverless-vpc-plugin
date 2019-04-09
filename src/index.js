@@ -129,9 +129,12 @@ class ServerlessVpcPlugin {
     let vpcNatAmi = null;
     if (createBastionHost) {
       const images = await this.getVpcNatAmi();
-      console.log('images:', images);
       if (Array.isArray(images) && images.length > 0) {
         [vpcNatAmi] = images;
+      } else {
+        throw new this.serverless.classes.Error(
+          `Could not find an available VPC NAT Instance AMI in ${region}`,
+        );
       }
     }
 
@@ -287,10 +290,10 @@ class ServerlessVpcPlugin {
     };
     return this.provider.request('EC2', 'describeImages', params).then(data =>
       data.Images.sort((a, b) => {
-        if (a.Name > b.Name) {
+        if (a.CreationDate > b.CreationDate) {
           return -1;
         }
-        if (a.Name < b.Name) {
+        if (a.CreationDate < b.CreationDate) {
           return 1;
         }
         return 0;
