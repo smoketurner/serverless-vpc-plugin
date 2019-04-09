@@ -140,13 +140,20 @@ function buildBastionSecurityGroup({ name = 'BastionSecurityGroup', subnets = []
  * @param {Object} params
  * @return {Object}
  */
-function buildBastionInstance({ name = 'BastionInstance', zones = [], subnets = [] } = {}) {
+function buildBastionInstance({ name = 'BastionInstance' } = {}) {
   return {
     [name]: {
       Type: 'AWS::EC2::Instance',
       DependsOn: 'InternetGatewayAttachment',
       Properties: {
-        AvailabilityZone: zones[0],
+        AvailabilityZone: {
+          'Fn::Select': [
+            '0',
+            {
+              'Fn::GetAZs': '',
+            },
+          ],
+        },
         BlockDeviceMappings: [
           {
             DeviceName: '/dev/xvda',
@@ -169,7 +176,9 @@ function buildBastionInstance({ name = 'BastionInstance', zones = [], subnets = 
             Ref: 'BastionSecurityGroup',
           },
         ],
-        SubnetId: subnets[0],
+        SubnetId: {
+          Ref: 'PublicSubnet1',
+        },
         SourceDestCheck: false,
       },
     },

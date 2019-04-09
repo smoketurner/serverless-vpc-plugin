@@ -425,7 +425,7 @@ class ServerlessVpcPlugin {
         buildBastionIamRole(),
         buildBastionIamInstanceProfile(),
         buildBastionSecurityGroup({ subnets: subnets.get(APP_SUBNET) }),
-        buildBastionInstance({ subnets: subnets.get(PUBLIC_SUBNET), zones }),
+        buildBastionInstance(),
       );
     }
 
