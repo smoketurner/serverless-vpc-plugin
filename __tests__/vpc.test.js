@@ -296,10 +296,34 @@ describe('vpc', () => {
       expect.assertions(1);
     });
 
+    it('builds a route with an Instance Gateway', () => {
+      const expected = {
+        AppRoute1: {
+          Type: 'AWS::EC2::Route',
+          Properties: {
+            DestinationCidrBlock: '0.0.0.0/0',
+            InstanceId: {
+              Ref: 'BastionInstance',
+            },
+            RouteTableId: {
+              Ref: 'AppRouteTable1',
+            },
+          },
+        },
+      };
+      const actual = buildRoute('App', 1, {
+        InstanceId: 'BastionInstance',
+      });
+      expect(actual).toEqual(expected);
+      expect.assertions(1);
+    });
+
     it('throws an error if no gateway provided', () => {
       expect(() => {
         buildRoute('App', 1);
-      }).toThrow('Unable to create route: either NatGatewayId or GatewayId must be provided');
+      }).toThrow(
+        'Unable to create route: either NatGatewayId, GatewayId or InstanceId must be provided',
+      );
       expect.assertions(1);
     });
   });
