@@ -140,19 +140,18 @@ function buildBastionSecurityGroup({ name = 'BastionSecurityGroup', subnets = []
  * @param {Object} params
  * @return {Object}
  */
-function buildBastionInstance({ name = 'BastionInstance' } = {}) {
+function buildBastionInstance({ name = 'BastionInstance', zones = [] } = {}) {
+  if (!Array.isArray(zones) || zones.length < 1) {
+    return {};
+  }
+
   return {
     [name]: {
       Type: 'AWS::EC2::Instance',
       DependsOn: 'InternetGatewayAttachment',
       Properties: {
         AvailabilityZone: {
-          'Fn::Select': [
-            '0',
-            {
-              'Fn::GetAZs': '',
-            },
-          ],
+          'Fn::Select': ['0', zones],
         },
         BlockDeviceMappings: [
           {
@@ -166,7 +165,7 @@ function buildBastionInstance({ name = 'BastionInstance' } = {}) {
           },
         ],
         IamInstanceProfile: {
-          'Fn::GetAtt': ['BastionInstanceProfile', 'Arn'],
+          Ref: 'BastionInstanceProfile',
         },
         ImageId: 'ami-00a9d4a05375b2763', // amzn-ami-vpc-nat-hvm-2018.03.0.20181116-x86_64-ebs
         InstanceType: 't2.micro',

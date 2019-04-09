@@ -374,6 +374,8 @@ class ServerlessVpcPlugin {
       const params = {};
       if (numNatGateway > 0) {
         params.NatGatewayId = `NatGateway${(index % numNatGateway) + 1}`;
+      } else if (createBastionHost) {
+        params.InstanceId = 'BastionInstance';
       } else {
         params.GatewayId = 'InternetGateway';
       }
@@ -425,7 +427,7 @@ class ServerlessVpcPlugin {
         buildBastionIamRole(),
         buildBastionIamInstanceProfile(),
         buildBastionSecurityGroup({ subnets: subnets.get(APP_SUBNET) }),
-        buildBastionInstance(),
+        buildBastionInstance({ zones }),
       );
     }
 

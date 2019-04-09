@@ -185,7 +185,11 @@ function buildRouteTableAssociation(name, position) {
  * @param {Object} params
  * @return {Object}
  */
-function buildRoute(name, position, { NatGatewayId = null, GatewayId = null } = {}) {
+function buildRoute(
+  name,
+  position,
+  { NatGatewayId = null, GatewayId = null, InstanceId = null } = {},
+) {
   const route = {
     Type: 'AWS::EC2::Route',
     Properties: {
@@ -204,8 +208,14 @@ function buildRoute(name, position, { NatGatewayId = null, GatewayId = null } = 
     route.Properties.GatewayId = {
       Ref: GatewayId,
     };
+  } else if (InstanceId) {
+    route.Properties.InstanceId = {
+      Ref: InstanceId,
+    };
   } else {
-    throw new Error('Unable to create route: either NatGatewayId or GatewayId must be provided');
+    throw new Error(
+      'Unable to create route: either NatGatewayId, GatewayId or InstanceId must be provided',
+    );
   }
 
   const cfName = `${name}Route${position}`;
