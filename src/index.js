@@ -177,7 +177,7 @@ class ServerlessVpcPlugin {
     }
 
     const outputs = providerObj.compiledCloudFormationTemplate.Outputs;
-    Object.assign(outputs, ServerlessVpcPlugin.buildOutputs());
+    Object.assign(outputs, ServerlessVpcPlugin.buildOutputs(createBastionHost));
 
     this.serverless.cli.log('Updating Lambda VPC configuration');
     const { vpc = {} } = providerObj;
@@ -437,9 +437,10 @@ class ServerlessVpcPlugin {
   /**
    * Build CloudFormation Outputs on common resources
    *
+   * @param {Boolean} createBastionHost
    * @return {Object}
    */
-  static buildOutputs() {
+  static buildOutputs(createBastionHost = false) {
     const outputs = {
       VPC: {
         Description: 'VPC logical resource ID',
@@ -447,7 +448,7 @@ class ServerlessVpcPlugin {
           Ref: 'VPC',
         },
       },
-      LambdaExecutionSecurityGroup: {
+      LambdaExecutionSecurityGroupId: {
         Description:
           'Security Group logical resource ID that the Lambda functions use when executing within the VPC',
         Value: {
@@ -455,6 +456,15 @@ class ServerlessVpcPlugin {
         },
       },
     };
+
+    if (createBastionHost) {
+      outputs.BastionPublicDnsName = {
+        Description: 'Public DNS of Bastion host',
+        Value: {
+          'Fn::GetAtt': ['BastionInstance', 'PublicDnsName'],
+        },
+      };
+    }
 
     return outputs;
   }
