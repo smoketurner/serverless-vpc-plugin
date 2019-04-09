@@ -164,7 +164,7 @@ function buildBastionInstance({ name = 'BastionInstance', zones = [], subnets = 
         ImageId: 'ami-00a9d4a05375b2763', // amzn-ami-vpc-nat-hvm-2018.03.0.20181116-x86_64-ebs
         InstanceType: 't2.micro',
         Monitoring: false,
-        SecurityGroupsIds: [
+        SecurityGroupIds: [
           {
             Ref: 'BastionSecurityGroup',
           },
