@@ -176,14 +176,14 @@ function buildBastionInstance({ name = 'BastionInstance', zones = [] } = {}) {
             DeleteOnTermination: true,
             Description: 'eth0',
             DeviceIndex: '0',
+            GroupSet: [
+              {
+                Ref: 'BastionSecurityGroup',
+              },
+            ],
             SubnetId: {
               Ref: 'PublicSubnet1',
             },
-          },
-        ],
-        SecurityGroupIds: [
-          {
-            Ref: 'BastionSecurityGroup',
           },
         ],
         SourceDestCheck: false,
