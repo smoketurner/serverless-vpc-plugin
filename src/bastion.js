@@ -22,7 +22,6 @@ function buildBastionIamRole({ name = 'BastionIamRole' } = {}) {
             },
           ],
         },
-        ManagedPolicyArns: ['arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM'],
       },
     },
   };

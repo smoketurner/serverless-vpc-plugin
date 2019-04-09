@@ -44,7 +44,6 @@ describe('bastion', () => {
                 },
               ],
             },
-            ManagedPolicyArns: ['arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM'],
           },
         },
       };
