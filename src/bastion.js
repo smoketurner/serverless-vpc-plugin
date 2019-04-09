@@ -186,9 +186,6 @@ function buildBastionInstance({ name = 'BastionInstance', zones = [] } = {}) {
             Ref: 'BastionSecurityGroup',
           },
         ],
-        SubnetId: {
-          Ref: 'PublicSubnet1',
-        },
         SourceDestCheck: false,
         Tags: [
           {
