@@ -174,7 +174,8 @@ function buildBastionInstance({ name = 'BastionInstance', zones = [] } = {}) {
           {
             AssociatePublicIpAddress: true,
             DeleteOnTermination: true,
-            DeviceIndex: 'eth0',
+            Description: 'eth0',
+            DeviceIndex: '0',
             SubnetId: {
               Ref: 'PublicSubnet1',
             },
