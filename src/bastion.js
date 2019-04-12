@@ -74,7 +74,7 @@ function buildBastionIamRole({ name = 'BastionIamRole' } = {}) {
         },
         Policies: [
           {
-            PolicyName: 'Allow EIP Association',
+            PolicyName: 'AllowEIPAssociation',
             PolicyDocument: {
               Version: '2012-10-17',
               Statement: [
