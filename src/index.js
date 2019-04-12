@@ -199,7 +199,7 @@ class ServerlessVpcPlugin {
         },
       };
 
-      Object.assign(resources, buildBastion(bastionHostKeyName, zones.length));
+      Object.assign(resources, await buildBastion(bastionHostKeyName, zones.length));
     }
 
     if (services.length > 0) {

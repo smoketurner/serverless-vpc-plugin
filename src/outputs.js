@@ -22,10 +22,10 @@ function buildOutputs(createBastionHost = false) {
   };
 
   if (createBastionHost) {
-    outputs.BastionPublicDnsName = {
-      Description: 'Public DNS of Bastion host',
+    outputs.BastionEIP = {
+      Description: 'Public IP of Bastion host',
       Value: {
-        'Fn::GetAtt': ['BastionInstance', 'PublicDnsName'],
+        Ref: 'BastionEIP',
       },
     };
   }

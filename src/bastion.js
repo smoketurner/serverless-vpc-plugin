@@ -385,6 +385,8 @@ function buildBastionInstance(keyPairName, zones = [], { name = 'BastionInstance
 /**
  * Build the bastion host
  *
+ * @param {String} keyPairName Existing key pair name
+ * @param {Number} numZones Number of availability zones
  * @return {Object}
  */
 async function buildBastion(keyPairName, numZones = 0) {
