@@ -1,0 +1,8 @@
+.git
+.serverless
+.vscode
+.webpack
+coverage
+node_modules
+package-lock.json
+tmp

@@ -1,10 +1,11 @@
 /**
  * Build a VPC
  *
+ * @param {String} cidrBlock
  * @param {Object} params
  * @return {Object}
  */
-function buildVpc({ name = 'VPC', cidrBlock = '10.0.0.0/16' } = {}) {
+function buildVpc(cidrBlock = '10.0.0.0/16', { name = 'VPC' } = {}) {
   return {
     [name]: {
       Type: 'AWS::EC2::VPC',

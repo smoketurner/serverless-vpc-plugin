@@ -51,10 +51,7 @@ describe('vpce', () => {
           },
         },
       };
-      const actual = buildEndpointServices({
-        services: ['s3'],
-        numZones: 1,
-      });
+      const actual = buildEndpointServices(['s3'], 1);
       expect(actual).toEqual(expected);
       expect.assertions(1);
     });
@@ -98,10 +95,7 @@ describe('vpce', () => {
           },
         },
       };
-      const actual = buildEndpointServices({
-        services: ['dynamodb'],
-        numZones: 1,
-      });
+      const actual = buildEndpointServices(['dynamodb'], 1);
       expect(actual).toEqual(expected);
       expect.assertions(1);
     });
@@ -141,10 +135,7 @@ describe('vpce', () => {
           },
         },
       };
-      const actual = buildEndpointServices({
-        services: ['kms'],
-        numZones: 1,
-      });
+      const actual = buildEndpointServices(['kms'], 1);
       expect(actual).toEqual(expected);
       expect.assertions(1);
     });
@@ -184,10 +175,7 @@ describe('vpce', () => {
           },
         },
       };
-      const actual = buildEndpointServices({
-        services: ['sagemaker.runtime-fips'],
-        numZones: 1,
-      });
+      const actual = buildEndpointServices(['sagemaker.runtime-fips'], 1);
       expect(actual).toEqual(expected);
       expect.assertions(1);
     });

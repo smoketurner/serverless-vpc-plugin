@@ -58,9 +58,8 @@ describe('vpc', () => {
         },
       };
 
-      const actual = buildVpc({
+      const actual = buildVpc('192.168.0.0/16', {
         name: 'MyVpc',
-        cidrBlock: '192.168.0.0/16',
       });
       expect(actual).toEqual(expected);
       expect.assertions(1);

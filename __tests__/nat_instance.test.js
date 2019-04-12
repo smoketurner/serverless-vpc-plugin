@@ -1,66 +1,60 @@
-const { buildBastionInstance, buildBastionSecurityGroup } = require('../src/bastion');
+const { buildNatInstance, buildNatSecurityGroup } = require('../src/nat_instance');
 
-describe('bastion', () => {
-  describe('#buildBastionSecurityGroup', () => {
-    it('builds a security group with open access', () => {
+describe('nat_instance', () => {
+  describe('#buildNatSecurityGroup', () => {
+    it('builds a security group', () => {
       const expected = {
-        BastionSecurityGroup: {
+        NatSecurityGroup: {
           Type: 'AWS::EC2::SecurityGroup',
           Properties: {
-            GroupDescription: 'Bastion Host',
+            GroupDescription: 'NAT Instance',
             VpcId: {
               Ref: 'VPC',
             },
-            SecurityGroupIngress: [
+            SecurityGroupEgress: [
               {
-                Description: 'Allow inbound SSH access to the bastion host',
+                Description: 'Allow outbound HTTP access to the Internet',
                 IpProtocol: 'tcp',
-                FromPort: 22,
-                ToPort: 22,
+                FromPort: 80,
+                ToPort: 80,
+                CidrIp: '0.0.0.0/0',
+              },
+              {
+                Description: 'Allow outbound HTTPS access to the Internet',
+                IpProtocol: 'tcp',
+                FromPort: 443,
+                ToPort: 443,
                 CidrIp: '0.0.0.0/0',
               },
             ],
-            Tags: [
-              {
-                Key: 'Name',
-                Value: {
-                  'Fn::Join': [
-                    '-',
-                    [
-                      {
-                        Ref: 'AWS::StackName',
-                      },
-                      'bastion',
-                    ],
-                  ],
-                },
-              },
-            ],
-          },
-        },
-      };
-
-      const actual = buildBastionSecurityGroup();
-      expect(actual).toEqual(expected);
-      expect.assertions(1);
-    });
-
-    it('builds a security group with restricted access', () => {
-      const expected = {
-        BastionSecurityGroup: {
-          Type: 'AWS::EC2::SecurityGroup',
-          Properties: {
-            GroupDescription: 'Bastion Host',
-            VpcId: {
-              Ref: 'VPC',
-            },
             SecurityGroupIngress: [
               {
-                Description: 'Allow inbound SSH access to the bastion host',
+                Description: 'Allow inbound HTTP traffic from AppSubnet1',
                 IpProtocol: 'tcp',
-                FromPort: 22,
-                ToPort: 22,
-                CidrIp: '127.0.0.1/32',
+                FromPort: 80,
+                ToPort: 80,
+                CidrIp: '10.0.0.0/21',
+              },
+              {
+                Description: 'Allow inbound HTTPS traffic from AppSubnet1',
+                IpProtocol: 'tcp',
+                FromPort: 443,
+                ToPort: 443,
+                CidrIp: '10.0.0.0/21',
+              },
+              {
+                Description: 'Allow inbound HTTP traffic from AppSubnet2',
+                IpProtocol: 'tcp',
+                FromPort: 80,
+                ToPort: 80,
+                CidrIp: '10.0.6.0/21',
+              },
+              {
+                Description: 'Allow inbound HTTPS traffic from AppSubnet2',
+                IpProtocol: 'tcp',
+                FromPort: 443,
+                ToPort: 443,
+                CidrIp: '10.0.6.0/21',
               },
             ],
             Tags: [
@@ -73,7 +67,7 @@ describe('bastion', () => {
                       {
                         Ref: 'AWS::StackName',
                       },
-                      'bastion',
+                      'nat',
                     ],
                   ],
                 },
@@ -83,16 +77,16 @@ describe('bastion', () => {
         },
       };
 
-      const actual = buildBastionSecurityGroup('127.0.0.1/32');
+      const actual = buildNatSecurityGroup(['10.0.0.0/21', '10.0.6.0/21']);
       expect(actual).toEqual(expected);
       expect.assertions(1);
     });
   });
 
-  describe('#buildBastionInstance', () => {
+  describe('#buildNatInstance', () => {
     it('builds an EC2 instance', () => {
       const expected = {
-        BastionInstance: {
+        NatInstance: {
           Type: 'AWS::EC2::Instance',
           DependsOn: 'InternetGatewayAttachment',
           Properties: {
@@ -110,7 +104,6 @@ describe('bastion', () => {
                 },
               },
             ],
-            KeyName: 'MyKey',
             ImageId: 'ami-00a9d4a05375b2763',
             InstanceType: 't2.micro',
             Monitoring: false,
@@ -122,7 +115,7 @@ describe('bastion', () => {
                 DeviceIndex: '0',
                 GroupSet: [
                   {
-                    Ref: 'BastionSecurityGroup',
+                    Ref: 'NatSecurityGroup',
                   },
                 ],
                 SubnetId: {
@@ -130,7 +123,7 @@ describe('bastion', () => {
                 },
               },
             ],
-            SourceDestCheck: true,
+            SourceDestCheck: false,
             Tags: [
               {
                 Key: 'Name',
@@ -141,7 +134,7 @@ describe('bastion', () => {
                       {
                         Ref: 'AWS::StackName',
                       },
-                      'bastion',
+                      'nat',
                     ],
                   ],
                 },
@@ -166,7 +159,7 @@ describe('bastion', () => {
         ],
       };
 
-      const actual = buildBastionInstance(image, 'MyKey', ['us-east-1a', 'us-east-1b']);
+      const actual = buildNatInstance(image, ['us-east-1a', 'us-east-1b']);
       expect(actual).toEqual(expected);
       expect.assertions(1);
     });

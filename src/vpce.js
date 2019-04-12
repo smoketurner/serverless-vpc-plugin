@@ -82,10 +82,11 @@ function buildVPCEndpoint(service, { routeTableIds = [], subnetIds = [] } = {}) 
 /**
  * Build VPC endpoints for a given number of services and zones
  *
- * @param {Object} params
+ * @param {Array} services Array of VPC endpoint services
+ * @param {Number} numZones Number of availability zones
  * @return {Object}
  */
-function buildEndpointServices({ services = [], numZones = 0 } = {}) {
+function buildEndpointServices(services = [], numZones = 0) {
   if (!Array.isArray(services) || services.length < 1) {
     return {};
   }

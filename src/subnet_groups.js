@@ -3,10 +3,11 @@ const { DB_SUBNET } = require('./constants');
 /**
  * Build an RDSubnetGroup for a given number of zones
  *
+ * @param {Number} numZones Number of availability zones
  * @param {Objects} params
  * @return {Object}
  */
-function buildRDSSubnetGroup({ name = 'RDSSubnetGroup', numZones = 0 } = {}) {
+function buildRDSSubnetGroup(numZones = 0, { name = 'RDSSubnetGroup' } = {}) {
   if (numZones < 1) {
     return {};
   }
@@ -35,10 +36,11 @@ function buildRDSSubnetGroup({ name = 'RDSSubnetGroup', numZones = 0 } = {}) {
 /**
  * Build an ElastiCacheSubnetGroup for a given number of zones
  *
+ * @param {Number} numZones Number of availability zones
  * @param {Object} params
  * @return {Object}
  */
-function buildElastiCacheSubnetGroup({ name = 'ElastiCacheSubnetGroup', numZones = 0 } = {}) {
+function buildElastiCacheSubnetGroup(numZones = 0, { name = 'ElastiCacheSubnetGroup' } = {}) {
   if (numZones < 1) {
     return {};
   }
@@ -67,10 +69,11 @@ function buildElastiCacheSubnetGroup({ name = 'ElastiCacheSubnetGroup', numZones
 /**
  * Build an RedshiftSubnetGroup for a given number of zones
  *
+ * @param {Number} numZones Number of availability zones
  * @param {Object} params
  * @return {Object}
  */
-function buildRedshiftSubnetGroup({ name = 'RedshiftSubnetGroup', numZones = 0 } = {}) {
+function buildRedshiftSubnetGroup(numZones = 0, { name = 'RedshiftSubnetGroup' } = {}) {
   if (numZones < 1) {
     return {};
   }
@@ -96,10 +99,11 @@ function buildRedshiftSubnetGroup({ name = 'RedshiftSubnetGroup', numZones = 0 }
 /**
  * Build an DAXSubnetGroup for a given number of zones
  *
+ * @param {Number} numZones Number of availability zones
  * @param {Object} params
  * @return {Object}
  */
-function buildDAXSubnetGroup({ name = 'DAXSubnetGroup', numZones = 0 } = {}) {
+function buildDAXSubnetGroup(numZones = 0, { name = 'DAXSubnetGroup' } = {}) {
   if (numZones < 1) {
     return {};
   }
@@ -125,9 +129,29 @@ function buildDAXSubnetGroup({ name = 'DAXSubnetGroup', numZones = 0 } = {}) {
   };
 }
 
+/**
+ * Build the database subnet groups
+ *
+ * @param {Number} numZones Number of availability zones
+ * @return {Object}
+ */
+function buildSubnetGroups(numZones = 0) {
+  if (numZones < 2) {
+    return {};
+  }
+  return Object.assign(
+    {},
+    buildRDSSubnetGroup(numZones),
+    buildRedshiftSubnetGroup(numZones),
+    buildElastiCacheSubnetGroup(numZones),
+    buildDAXSubnetGroup(numZones),
+  );
+}
+
 module.exports = {
+  buildDAXSubnetGroup,
+  buildElastiCacheSubnetGroup,
   buildRDSSubnetGroup,
   buildRedshiftSubnetGroup,
-  buildElastiCacheSubnetGroup,
-  buildDAXSubnetGroup,
+  buildSubnetGroups,
 };

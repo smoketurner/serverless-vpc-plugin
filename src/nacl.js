@@ -41,7 +41,7 @@ function buildNetworkAcl(name) {
  * Build a Network ACL entry
  *
  * @param {String} name
- * @param {String} cidrBlock
+ * @param {String} CidrBlock
  * @param {Object} params
  * @return {Object}
  */
@@ -95,7 +95,7 @@ function buildNetworkAclAssociation(name, position) {
 /**
  * Build the Public Network ACL
  *
- * @param {Number} numZones
+ * @param {Number} numZones Number of availability zones
  */
 function buildPublicNetworkAcl(numZones = 0) {
   if (numZones < 1) {
@@ -123,7 +123,7 @@ function buildPublicNetworkAcl(numZones = 0) {
 /**
  * Build the Application Network ACL
  *
- * @param {Number} numZones
+ * @param {Number} numZones Number of availability zones
  */
 function buildAppNetworkAcl(numZones = 0) {
   if (numZones < 1) {
@@ -151,7 +151,7 @@ function buildAppNetworkAcl(numZones = 0) {
 /**
  * Build the Database Network ACL
  *
- * @param {Array} appSubnets
+ * @param {Array} appSubnets Array of application subnets
  */
 function buildDBNetworkAcl(appSubnets = []) {
   if (!Array.isArray(appSubnets) || appSubnets.length < 1) {

@@ -35,7 +35,7 @@ describe('subnet_groups', () => {
           },
         },
       };
-      const actual = buildRDSSubnetGroup({ numZones: 2 });
+      const actual = buildRDSSubnetGroup(2);
       expect(actual).toEqual(expected);
       expect.assertions(1);
     });
@@ -62,9 +62,8 @@ describe('subnet_groups', () => {
           },
         },
       };
-      const actual = buildRDSSubnetGroup({
+      const actual = buildRDSSubnetGroup(2, {
         name: 'MyRDSSubnetGroup',
-        numZones: 2,
       });
       expect(actual).toEqual(expected);
       expect.assertions(1);
@@ -100,7 +99,7 @@ describe('subnet_groups', () => {
           },
         },
       };
-      const actual = buildElastiCacheSubnetGroup({ numZones: 2 });
+      const actual = buildElastiCacheSubnetGroup(2);
       expect(actual).toEqual(expected);
       expect.assertions(1);
     });
@@ -127,9 +126,8 @@ describe('subnet_groups', () => {
           },
         },
       };
-      const actual = buildElastiCacheSubnetGroup({
+      const actual = buildElastiCacheSubnetGroup(2, {
         name: 'MyElastiCacheSubnetGroup',
-        numZones: 2,
       });
       expect(actual).toEqual(expected);
       expect.assertions(1);
@@ -162,7 +160,7 @@ describe('subnet_groups', () => {
           },
         },
       };
-      const actual = buildRedshiftSubnetGroup({ numZones: 2 });
+      const actual = buildRedshiftSubnetGroup(2);
       expect(actual).toEqual(expected);
       expect.assertions(1);
     });
@@ -186,9 +184,8 @@ describe('subnet_groups', () => {
           },
         },
       };
-      const actual = buildRedshiftSubnetGroup({
+      const actual = buildRedshiftSubnetGroup(2, {
         name: 'MyRedshiftSubnetGroup',
-        numZones: 2,
       });
       expect(actual).toEqual(expected);
       expect.assertions(1);
@@ -224,7 +221,7 @@ describe('subnet_groups', () => {
           },
         },
       };
-      const actual = buildDAXSubnetGroup({ numZones: 2 });
+      const actual = buildDAXSubnetGroup(2);
       expect(actual).toEqual(expected);
       expect.assertions(1);
     });
@@ -251,9 +248,8 @@ describe('subnet_groups', () => {
           },
         },
       };
-      const actual = buildDAXSubnetGroup({
+      const actual = buildDAXSubnetGroup(2, {
         name: 'MyDAXSubnetGroup',
-        numZones: 2,
       });
       expect(actual).toEqual(expected);
       expect.assertions(1);
