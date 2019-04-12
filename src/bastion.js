@@ -217,7 +217,7 @@ function buildBastionAutoScalingGroup(numZones = 0, { name = 'BastionAutoScaling
       CreationPolicy: {
         ResourceSignal: {
           Count: 1,
-          Timeout: 'PT15M',
+          Timeout: 'PT10M',
         },
       },
       Properties: {
