@@ -400,7 +400,7 @@ async function buildBastion(keyPairName, numZones = 0) {
     buildBastionEIP(),
     buildBastionIamRole(),
     buildBastionInstanceProfile(),
-    buildBastionSecurityGroup(publicIp),
+    buildBastionSecurityGroup(`${publicIp}/32`),
     buildBastionLaunchConfiguration(keyPairName),
     buildBastionAutoScalingGroup(numZones),
     // buildBastionInstance(bastionHostKeyName, zones),
