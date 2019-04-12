@@ -3,34 +3,34 @@ const http = require('http');
 const { PUBLIC_SUBNET } = require('./constants');
 
 /**
- * Make an HTTP GET request and return the response
+ * Return the public IP
  *
- * @param {String} url
  * @return {Promise}
  */
-async function fetch(url) {
+function getPublicIp() {
   return new Promise((resolve, reject) => {
-    const request = http.get(url, response => {
-      if (response.statusCode < 200 || response.statusCode > 299) {
-        reject(new Error(`Failed to load page, status code: ${response.statusCode}`));
-      }
-      let body = '';
-      response.on('data', chunk => {
-        body += chunk;
-      });
-      response.on('end', () => resolve(body));
-    });
-    request.on('error', err => reject(err));
-  });
-}
+    const options = {
+      host: 'api.ipify.org',
+      port: 80,
+      path: '/',
+    };
+    http
+      .get(options, res => {
+        res.setEncoding('utf8');
 
-/**
- * Return the current user's external IP address
- *
- * @return {String}
- */
-async function getExternalIp() {
-  return fetch('https://api.ipify.org');
+        let body = '';
+        res.on('data', chunk => {
+          body += chunk;
+        });
+
+        res.on('end', () => {
+          resolve(body);
+        });
+      })
+      .on('error', err => {
+        reject(err);
+      });
+  });
 }
 
 /**
@@ -54,6 +54,7 @@ function buildBastionEIP({ name = 'BastionEIP' } = {}) {
  *
  * @param {Object} params
  * @return {Object}
+ * @see https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cfn-helper-scripts-reference.html
  */
 function buildBastionIamRole({ name = 'BastionIamRole' } = {}) {
   return {
@@ -81,7 +82,9 @@ function buildBastionIamRole({ name = 'BastionIamRole' } = {}) {
                   Action: [
                     'ec2:AssociateAddress',
                     'ec2:DescribeAddresses',
-                    'ec2:DisassociateAddress',
+                    // 'ec2:DisassociateAddress',
+                    // 'cloudformation:SignalResource',
+                    // 'cloudformation:DescribeStackResource',
                   ],
                   Resource: '*',
                   Effect: 'Allow',
@@ -163,46 +166,24 @@ function buildBastionLaunchConfiguration(
             'Fn::Join': [
               '',
               [
-                '#!/bin/bash\n',
-                'set -x\n',
-                'export PATH=$PATH:/usr/local/bin\n',
-                'which pip &> /dev/null\n',
-                'if [ $? -ne 0 ] ; then\n',
-                '    echo "PIP NOT INSTALLED"\n',
-                '    [ `which yum` ] && $(yum install -y epel-release; yum install -y python-pip) && echo "PIP INSTALLED"\n',
-                '    [ `which apt-get` ] && apt-get -y update && apt-get -y install python-pip && echo "PIP INSTALLED"\n',
-                '    [ `which zypper` ] && zypper refresh && zypper install -y python-pip && update-alternatives --set easy_install /usr/bin/easy_install-2.7 && echo "PIP INSTALLED"\n',
-                'fi\n',
-                'pip install --upgrade pip &> /dev/null\n',
-                'pip install awscli --ignore-installed six &> /dev/null\n',
-                'easy_install https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-latest.tar.gz\n',
-                'EIP_LIST="',
-                {
-                  Ref: 'BastionEIP',
-                },
-                '"\n',
-                'CLOUDWATCHGROUP=',
-                {
-                  Ref: 'BastionMainLogGroup',
-                },
+                '#!/bin/bash -xe\n',
+                'EIP_ALLOCATION_ID=',
+                { 'Fn::GetAtt': ['BastionEIP', 'AllocationId'] },
                 '\n',
-                'cfn-init -v --stack ',
-                {
-                  Ref: 'AWS::StackName',
-                },
+                'INSTANCE_ID=`/usr/bin/curl -sq http://169.254.169.254/latest/meta-data/instance-id`\n',
+                // eslint-disable-next-line no-template-curly-in-string
+                'aws ec2 associate-address --instance-id ${INSTANCE_ID} --allocation-id ${EIP_ALLOCATION_ID}\n',
+                'yum install -y aws-cfn-bootstrap\n',
+                '/opt/aws/bin/cfn-init -v --stack ',
+                { Ref: 'AWS::StackName' },
                 ' --resource BastionLaunchConfiguration --region ',
-                {
-                  Ref: 'AWS::Region',
-                },
+                { Ref: 'AWS::Region' },
                 '\n',
-                'cfn-signal -e $? --stack ',
-                {
-                  Ref: 'AWS::StackName',
-                },
-                ' --resource BastionAutoScalingGroup --region ',
-                {
-                  Ref: 'AWS::Region',
-                },
+                '/opt/aws/bin/cfn-signal --exit-code 0 --stack ',
+                { Ref: 'AWS::StackName' },
+                ' --resource BastionAutoScalingGroup ',
+                ' --region ',
+                { Ref: 'AWS::Region' },
                 '\n',
               ],
             ],
@@ -236,7 +217,7 @@ function buildBastionAutoScalingGroup(numZones = 0, { name = 'BastionAutoScaling
       CreationPolicy: {
         ResourceSignal: {
           Count: 1,
-          Timeout: 'PT30M',
+          Timeout: 'PT15M',
         },
       },
       Properties: {
@@ -410,14 +391,14 @@ async function buildBastion(keyPairName, numZones = 0) {
   if (numZones < 1) {
     return {};
   }
-  const externalIp = await getExternalIp();
+  const publicIp = await getPublicIp();
 
   return Object.assign(
     {},
     buildBastionEIP(),
     buildBastionIamRole(),
     buildBastionInstanceProfile(),
-    buildBastionSecurityGroup(externalIp),
+    buildBastionSecurityGroup(publicIp),
     buildBastionLaunchConfiguration(keyPairName),
     buildBastionAutoScalingGroup(numZones),
     // buildBastionInstance(bastionHostKeyName, zones),
@@ -425,7 +406,7 @@ async function buildBastion(keyPairName, numZones = 0) {
 }
 
 module.exports = {
-  getExternalIp,
+  getPublicIp,
   buildBastion,
   buildBastionAutoScalingGroup,
   buildBastionEIP,
