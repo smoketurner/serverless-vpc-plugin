@@ -1,6 +1,6 @@
 const http = require('http');
 
-const { APP_SUBNET } = require('./constants');
+const { PUBLIC_SUBNET } = require('./constants');
 
 /**
  * Return the public IP
@@ -200,7 +200,7 @@ function buildBastionAutoScalingGroup(numZones = 0, { name = 'BastionAutoScaling
 
   const zones = [];
   for (let i = 1; i <= numZones; i += 1) {
-    zones.push({ Ref: `${APP_SUBNET}Subnet${i}` });
+    zones.push({ Ref: `${PUBLIC_SUBNET}Subnet${i}` });
   }
 
   return {

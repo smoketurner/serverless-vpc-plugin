@@ -304,10 +304,10 @@ describe('bastion', () => {
             },
             VPCZoneIdentifier: [
               {
-                Ref: 'AppSubnet1',
+                Ref: 'PublicSubnet1',
               },
               {
-                Ref: 'AppSubnet2',
+                Ref: 'PublicSubnet2',
               },
             ],
             MinSize: 1,
@@ -400,10 +400,10 @@ describe('bastion', () => {
             },
             VPCZoneIdentifier: [
               {
-                Ref: 'AppSubnet1',
+                Ref: 'PublicSubnet1',
               },
               {
-                Ref: 'AppSubnet2',
+                Ref: 'PublicSubnet2',
               },
             ],
             MinSize: 1,
