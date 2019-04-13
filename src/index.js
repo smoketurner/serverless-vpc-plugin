@@ -1,32 +1,19 @@
-const CIDR = require('cidr-split');
-
-const { DEFAULT_VPC_EIP_LIMIT, APP_SUBNET, PUBLIC_SUBNET, DB_SUBNET } = require('./constants');
+const { DEFAULT_VPC_EIP_LIMIT, APP_SUBNET } = require('./constants');
+const { splitSubnets } = require('./subnets');
+const { buildAvailabilityZones } = require('./az');
 const {
   buildVpc,
   buildInternetGateway,
   buildInternetGatewayAttachment,
   buildLambdaSecurityGroup,
-  buildSubnet,
-  buildRoute,
-  buildRouteTable,
-  buildRouteTableAssociation,
 } = require('./vpc');
 const { buildAppNetworkAcl, buildPublicNetworkAcl, buildDBNetworkAcl } = require('./nacl');
-const {
-  buildRDSSubnetGroup,
-  buildElastiCacheSubnetGroup,
-  buildRedshiftSubnetGroup,
-  buildDAXSubnetGroup,
-} = require('./subnet_groups');
+const { buildSubnetGroups } = require('./subnet_groups');
 const { buildEndpointServices, buildLambdaVPCEndpointSecurityGroup } = require('./vpce');
-const { buildEIP, buildNatGateway } = require('./natgw');
 const { buildLogBucket, buildLogBucketPolicy, buildVpcFlowLogs } = require('./flow_logs');
-const {
-  buildBastionIamRole,
-  buildBastionIamInstanceProfile,
-  buildBastionInstance,
-  buildBastionSecurityGroup,
-} = require('./bastion');
+const { buildBastion } = require('./bastion');
+const { buildNatInstance, buildNatSecurityGroup } = require('./nat_instance');
+const { buildOutputs } = require('./outputs');
 
 class ServerlessVpcPlugin {
   constructor(serverless, options) {
@@ -48,7 +35,9 @@ class ServerlessVpcPlugin {
     let createNetworkAcl = false;
     let createDbSubnet = true;
     let createFlowLogs = false;
+    let createNatInstance = false;
     let createBastionHost = false;
+    let bastionHostKeyName = null;
 
     const { vpcConfig } = this.serverless.service.custom;
 
@@ -60,25 +49,34 @@ class ServerlessVpcPlugin {
       if ('createNatGateway' in vpcConfig) {
         ({ createNatGateway } = vpcConfig);
       } else if ('useNatGateway' in vpcConfig) {
+        this.serverless.cli.log(
+          'WARNING: useNatGateway has been deprecated, please use createNatGateway',
+        );
         createNatGateway = vpcConfig.useNatGateway;
       }
 
       if ('createNetworkAcl' in vpcConfig && typeof vpcConfig.createNetworkAcl === 'boolean') {
         ({ createNetworkAcl } = vpcConfig);
       } else if ('useNetworkAcl' in vpcConfig && typeof vpcConfig.useNetworkAcl === 'boolean') {
+        this.serverless.cli.log(
+          'WARNING: useNetworkAcl has been deprecated, please use createNetworkAcl',
+        );
         createNetworkAcl = vpcConfig.useNetworkAcl;
       }
 
       if (Array.isArray(vpcConfig.zones) && vpcConfig.zones.length > 0) {
         ({ zones } = vpcConfig);
       }
-      if (Array.isArray(vpcConfig.services) && vpcConfig.services.length > 0) {
+      if (Array.isArray(vpcConfig.services)) {
         services = vpcConfig.services.map(s => s.trim().toLowerCase());
       }
 
       if ('createDbSubnet' in vpcConfig && typeof vpcConfig.createDbSubnet === 'boolean') {
         ({ createDbSubnet } = vpcConfig);
       } else if ('skipDbCreation' in vpcConfig && typeof vpcConfig.skipDbCreation === 'boolean') {
+        this.serverless.cli.log(
+          'WARNING: skipDbCreation has been deprecated, please use createDbSubnet',
+        );
         createDbSubnet = !vpcConfig.skipDbCreation;
       }
 
@@ -88,6 +86,20 @@ class ServerlessVpcPlugin {
 
       if ('createBastionHost' in vpcConfig && typeof vpcConfig.createBastionHost === 'boolean') {
         ({ createBastionHost } = vpcConfig);
+      }
+
+      if ('bastionHostKeyName' in vpcConfig && typeof vpcConfig.bastionHostKeyName === 'string') {
+        ({ bastionHostKeyName } = vpcConfig);
+      }
+
+      if (createBastionHost && (!bastionHostKeyName || bastionHostKeyName.length < 1)) {
+        throw new this.serverless.classes.Error(
+          'bastionHostKeyName must be provided if createBastionHost is true',
+        );
+      }
+
+      if ('createNatInstance' in vpcConfig && typeof vpcConfig.createNatInstance === 'boolean') {
+        ({ createNatInstance } = vpcConfig);
       }
     }
 
@@ -127,8 +139,10 @@ class ServerlessVpcPlugin {
     const resources = providerObj.compiledCloudFormationTemplate.Resources;
 
     let vpcNatAmi = null;
-    if (createBastionHost) {
-      const images = await this.getVpcNatAmi();
+    if (createNatInstance) {
+      this.serverless.cli.log('Finding latest VPC NAT Instance AMI...');
+
+      const images = await this.getImagesByName('amzn-ami-vpc-nat-hvm*');
       if (Array.isArray(images) && images.length > 0) {
         [vpcNatAmi] = images;
       } else {
@@ -138,20 +152,55 @@ class ServerlessVpcPlugin {
       }
     }
 
+    const subnets = splitSubnets(cidrBlock, zones);
+
     Object.assign(
       resources,
-      buildVpc({ cidrBlock }),
+      buildVpc(cidrBlock),
       buildInternetGateway(),
       buildInternetGatewayAttachment(),
-      ServerlessVpcPlugin.buildAvailabilityZones(cidrBlock, {
-        zones,
+      buildAvailabilityZones(subnets, zones, {
         numNatGateway: createNatGateway,
         createDbSubnet,
-        createNetworkAcl,
-        vpcNatAmi,
+        createNatInstance: !!(createNatInstance && vpcNatAmi),
       }),
       buildLambdaSecurityGroup(),
     );
+
+    if (createNetworkAcl) {
+      this.serverless.cli.log('Provisioning Network ACLs');
+      Object.assign(
+        resources,
+        buildPublicNetworkAcl(zones.length),
+        buildAppNetworkAcl(zones.length),
+      );
+      if (createDbSubnet) {
+        Object.assign(resources, buildDBNetworkAcl(subnets.get(APP_SUBNET)));
+      }
+    }
+
+    if (createNatInstance && vpcNatAmi) {
+      this.serverless.cli.log(`Provisioning NAT Instance using AMI ${vpcNatAmi}`);
+      Object.assign(
+        resources,
+        buildNatSecurityGroup(subnets.get(APP_SUBNET)),
+        buildNatInstance(vpcNatAmi, zones),
+      );
+    }
+
+    if (createBastionHost) {
+      this.serverless.cli.log(`Provisioning bastion host using key pair "${bastionHostKeyName}"`);
+
+      // @see https://aws.amazon.com/blogs/compute/query-for-the-latest-amazon-linux-ami-ids-using-aws-systems-manager-parameter-store/
+      providerObj.compiledCloudFormationTemplate.Parameters = {
+        LatestAmiId: {
+          Type: 'AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>',
+          Default: '/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2',
+        },
+      };
+
+      Object.assign(resources, await buildBastion(bastionHostKeyName, zones.length));
+    }
 
     if (services.length > 0) {
       const invalid = await this.validateServices(region, services);
@@ -164,7 +213,7 @@ class ServerlessVpcPlugin {
 
       Object.assign(
         resources,
-        buildEndpointServices({ services, numZones }),
+        buildEndpointServices(services, numZones),
         buildLambdaVPCEndpointSecurityGroup(),
       );
     }
@@ -173,13 +222,7 @@ class ServerlessVpcPlugin {
       if (numZones < 2) {
         this.serverless.cli.log('WARNING: less than 2 AZs; skipping subnet group provisioning');
       } else {
-        Object.assign(
-          resources,
-          buildRDSSubnetGroup({ numZones }),
-          buildRedshiftSubnetGroup({ numZones }),
-          buildElastiCacheSubnetGroup({ numZones }),
-          buildDAXSubnetGroup({ numZones }),
-        );
+        Object.assign(resources, buildSubnetGroups(numZones));
       }
     }
 
@@ -189,7 +232,7 @@ class ServerlessVpcPlugin {
     }
 
     const outputs = providerObj.compiledCloudFormationTemplate.Outputs;
-    Object.assign(outputs, ServerlessVpcPlugin.buildOutputs(createBastionHost));
+    Object.assign(outputs, buildOutputs(createBastionHost));
 
     this.serverless.cli.log('Updating Lambda VPC configuration');
     const { vpc = {} } = providerObj;
@@ -247,20 +290,16 @@ class ServerlessVpcPlugin {
   /**
    * Return an array of AMI images which match the VPC NAT Instance image
    *
+   * @param {String} name AMI name to search for
    * @return {Array}
    */
-  async getVpcNatAmi() {
-    this.serverless.cli.log('Looking up available VPC NAT Instance AMIs');
+  async getImagesByName(name) {
     const params = {
       Owners: ['amazon'],
       Filters: [
         {
           Name: 'architecture',
           Values: ['x86_64'],
-        },
-        {
-          Name: 'ena-support',
-          Values: ['true'],
         },
         {
           Name: 'image-type',
@@ -272,7 +311,7 @@ class ServerlessVpcPlugin {
         },
         {
           Name: 'name',
-          Values: ['amzn-ami-vpc-nat-hvm*'],
+          Values: [name],
         },
         {
           Name: 'state',
@@ -297,7 +336,7 @@ class ServerlessVpcPlugin {
           return 1;
         }
         return 0;
-      }),
+      }).map(image => image.ImageId),
     );
   }
 
@@ -317,225 +356,6 @@ class ServerlessVpcPlugin {
     return services
       .map(service => `com.amazonaws.${region}.${service}`)
       .filter(service => !available.includes(service));
-  }
-
-  /**
-   * Split a /16 CIDR block into /20 CIDR blocks.
-   *
-   * @param {String} cidrBlock VPC CIDR block
-   * @return {Array}
-   */
-  static splitVpc(cidrBlock) {
-    return CIDR.fromString(cidrBlock)
-      .split()
-      .map(cidr => cidr.split())
-      .reduce((all, halves) => all.concat(...halves))
-      .map(cidr => cidr.split())
-      .reduce((all, halves) => all.concat(...halves))
-      .map(cidr => cidr.split())
-      .reduce((all, halves) => all.concat(...halves));
-  }
-
-  /**
-   * Splits the /16 VPC CIDR block into /20 subnets per AZ:
-   *
-   * Application subnet = /21
-   * Public subnet = /22
-   * Database subnet = /22
-   *
-   * @param {String} cidrBlock VPC CIDR block
-   * @param {Array} zones Array of availability zones
-   * @return {Map}
-   */
-  static splitSubnets(cidrBlock, zones = []) {
-    const mapping = new Map();
-
-    if (!cidrBlock || !Array.isArray(zones) || zones.length < 1) {
-      return mapping;
-    }
-
-    const azCidrBlocks = ServerlessVpcPlugin.splitVpc(cidrBlock); // VPC subnet is a /16
-
-    const publicSubnets = [];
-    const appSubnets = [];
-    const dbSubnets = [];
-
-    zones.forEach((zone, index) => {
-      const azCidrBlock = azCidrBlocks[index]; // AZ subnet is a /20
-      const subnets = [];
-
-      const azSubnets = CIDR.fromString(azCidrBlock)
-        .split()
-        .map(cidr => cidr.toString());
-      subnets.push(azSubnets[0]); // Application subnet is a /21
-
-      const smallerSubnets = CIDR.fromString(azSubnets[1])
-        .split()
-        .map(cidr => cidr.toString());
-      subnets.push(...smallerSubnets); // Public and DB subnets are both /22
-
-      const parts = [
-        [APP_SUBNET, subnets[0]],
-        [PUBLIC_SUBNET, subnets[1]],
-        [DB_SUBNET, subnets[2]],
-      ];
-
-      appSubnets.push(subnets[0]);
-      publicSubnets.push(subnets[1]);
-      dbSubnets.push(subnets[2]);
-
-      mapping.set(zone, new Map(parts));
-    });
-
-    mapping.set(PUBLIC_SUBNET, publicSubnets);
-    mapping.set(APP_SUBNET, appSubnets);
-    mapping.set(DB_SUBNET, dbSubnets);
-
-    return mapping;
-  }
-
-  /**
-   * Builds the Availability Zones for the region.
-   *
-   * 1.) Splits the VPC CIDR Block into /20 subnets, one per AZ.
-   * 2.) Split each AZ /20 CIDR Block into two /21 subnets
-   * 3.) Use the first /21 subnet for Applications
-   * 4.) Split the second /21 subnet into two /22 subnets: one Public subnet (for load balancers),
-   *     and one for databases (RDS, ElastiCache, and Redshift)
-   *
-   * @param {String} cidrBlock VPC CIDR Block
-   * @param {Array} zones Array of availability zones
-   * @param {Number} numNatGateway Number of NAT gateways (and EIPs) to provision
-   * @param {Boolean} createDbSubnet Whether to create the DBSubnet or not
-   * @param {Boolean} createNetworkAcl Whether to create Network ACLs or not
-   * @param {Object} vpcNatAmi AWS AMI ID of a VPC NAT Instance
-   * @return {Object}
-   */
-  static buildAvailabilityZones(
-    cidrBlock,
-    {
-      zones = [],
-      numNatGateway = 0,
-      createDbSubnet = true,
-      createNetworkAcl = false,
-      vpcNatAmi = null,
-    } = {},
-  ) {
-    if (!cidrBlock) {
-      return {};
-    }
-    if (!Array.isArray(zones) || zones.length < 1) {
-      return {};
-    }
-
-    const subnets = ServerlessVpcPlugin.splitSubnets(cidrBlock, zones);
-    const resources = {};
-
-    if (numNatGateway > 0) {
-      for (let index = 0; index < numNatGateway; index += 1) {
-        Object.assign(resources, buildEIP(index + 1), buildNatGateway(index + 1, zones[index]));
-      }
-    }
-
-    zones.forEach((zone, index) => {
-      const position = index + 1;
-
-      const params = {};
-      if (numNatGateway > 0) {
-        params.NatGatewayId = `NatGateway${(index % numNatGateway) + 1}`;
-      } else if (vpcNatAmi) {
-        params.InstanceId = 'BastionInstance';
-      } else {
-        params.GatewayId = 'InternetGateway';
-      }
-
-      Object.assign(
-        resources,
-
-        // App Subnet
-        buildSubnet(APP_SUBNET, position, zone, subnets.get(zone).get(APP_SUBNET)),
-        buildRouteTable(APP_SUBNET, position, zone),
-        buildRouteTableAssociation(APP_SUBNET, position),
-        buildRoute(APP_SUBNET, position, params),
-
-        // Public Subnet
-        buildSubnet(PUBLIC_SUBNET, position, zone, subnets.get(zone).get(PUBLIC_SUBNET)),
-        buildRouteTable(PUBLIC_SUBNET, position, zone),
-        buildRouteTableAssociation(PUBLIC_SUBNET, position),
-        buildRoute(PUBLIC_SUBNET, position, {
-          GatewayId: 'InternetGateway',
-        }),
-      );
-
-      if (createDbSubnet) {
-        // DB Subnet
-        Object.assign(
-          resources,
-          buildSubnet(DB_SUBNET, position, zone, subnets.get(zone).get(DB_SUBNET)),
-          buildRouteTable(DB_SUBNET, position, zone),
-          buildRouteTableAssociation(DB_SUBNET, position),
-        );
-      }
-    });
-
-    if (createNetworkAcl) {
-      // Add Network ACLs
-      Object.assign(
-        resources,
-        buildPublicNetworkAcl(zones.length),
-        buildAppNetworkAcl(zones.length),
-      );
-      if (createDbSubnet) {
-        Object.assign(resources, buildDBNetworkAcl(subnets.get(APP_SUBNET)));
-      }
-    }
-
-    if (vpcNatAmi) {
-      Object.assign(
-        resources,
-        buildBastionIamRole(),
-        buildBastionIamInstanceProfile(),
-        buildBastionSecurityGroup({ subnets: subnets.get(APP_SUBNET) }),
-        buildBastionInstance(vpcNatAmi, { zones }),
-      );
-    }
-
-    return resources;
-  }
-
-  /**
-   * Build CloudFormation Outputs on common resources
-   *
-   * @param {Boolean} createBastionHost
-   * @return {Object}
-   */
-  static buildOutputs(createBastionHost = false) {
-    const outputs = {
-      VPC: {
-        Description: 'VPC logical resource ID',
-        Value: {
-          Ref: 'VPC',
-        },
-      },
-      LambdaExecutionSecurityGroupId: {
-        Description:
-          'Security Group logical resource ID that the Lambda functions use when executing within the VPC',
-        Value: {
-          Ref: 'LambdaExecutionSecurityGroup',
-        },
-      },
-    };
-
-    if (createBastionHost) {
-      outputs.BastionPublicDnsName = {
-        Description: 'Public DNS of Bastion host',
-        Value: {
-          'Fn::GetAtt': ['BastionInstance', 'PublicDnsName'],
-        },
-      };
-    }
-
-    return outputs;
   }
 }
 
