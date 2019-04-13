@@ -17,9 +17,18 @@ describe('ServerlessVpcPlugin', () => {
       region: 'us-east-1',
     };
     serverless = new Serverless(options);
+    serverless.init();
     const provider = new AwsProvider(serverless, options);
     serverless.setProvider('aws', provider);
-    serverless.service.provider = { name: 'aws', stage: 'dev' };
+    serverless.service.provider = {
+      name: 'aws',
+      stage: 'dev',
+      compiledCloudFormationTemplate: {
+        Resources: {},
+        Outputs: {},
+        Parameters: {},
+      },
+    };
 
     plugin = new ServerlessVpcPlugin(serverless);
   });
@@ -56,6 +65,57 @@ describe('ServerlessVpcPlugin', () => {
       serverless.pluginManager.addPlugin(ServerlessVpcPlugin);
       expect(serverless.pluginManager.plugins[0]).toBeInstanceOf(ServerlessVpcPlugin);
       expect.assertions(1);
+    });
+  });
+
+  describe('#afterInitialize', () => {
+    it('should require a bastion key name', async () => {
+      serverless.service.custom.vpcConfig = {
+        createBastionHost: true,
+      };
+
+      await expect(plugin.afterInitialize()).rejects.toThrow(
+        'bastionHostKeyName must be provided if createBastionHost is true',
+      );
+      expect.assertions(1);
+    });
+
+    it('createNatGateway should be either boolean or a number', async () => {
+      serverless.service.custom.vpcConfig = {
+        createNatGateway: 'hello',
+        zones: ['us-east-1'],
+      };
+
+      await expect(plugin.afterInitialize()).rejects.toThrow(
+        'createNatGateway must be either a boolean or a number',
+      );
+      expect.assertions(1);
+    });
+
+    it('should discover available zones', async () => {
+      const mockCallback = jest.fn((params, callback) => {
+        expect(params.Filters[0].Values[0]).toEqual('us-east-1');
+        const response = {
+          AvailabilityZones: [
+            {
+              State: 'available',
+              ZoneName: 'us-east-1a',
+            },
+          ],
+        };
+        return callback(null, response);
+      });
+
+      AWS.mock('EC2', 'describeAvailabilityZones', mockCallback);
+
+      serverless.service.custom.vpcConfig = {
+        services: [], // remove default s3 and dynamodb
+      };
+
+      const actual = await plugin.afterInitialize();
+      expect(actual).toBeUndefined();
+      expect(mockCallback).toHaveBeenCalled();
+      expect.assertions(3);
     });
   });
 
@@ -121,6 +181,53 @@ describe('ServerlessVpcPlugin', () => {
 
       expect(mockCallback).toHaveBeenCalled();
       expect(actual).toEqual(expected);
+      expect.assertions(2);
+    });
+  });
+
+  describe('#getImagesByName', () => {
+    it('returns an AMI image by name', async () => {
+      const mockCallback = jest.fn((params, callback) => {
+        expect(params.Filters.find(f => f.Name === 'name').Values).toEqual(['test']);
+        const response = {
+          Images: [
+            {
+              ImageId: 'ami-test',
+              CreationDate: '2019-04-12T00:00:00Z',
+            },
+          ],
+        };
+        return callback(null, response);
+      });
+
+      AWS.mock('EC2', 'describeImages', mockCallback);
+
+      const actual = await plugin.getImagesByName('test');
+      expect(actual).toEqual(['ami-test']);
+      expect(mockCallback).toHaveBeenCalled();
+      expect.assertions(3);
+    });
+  });
+
+  describe('#validateServices', () => {
+    it('returns validated services', async () => {
+      const mockCallback = jest.fn((params, callback) => {
+        const response = {
+          ServiceNames: [
+            'com.amazonaws.us-east-1.dynamodb',
+            'com.amazonaws.us-east-1.s3',
+            'com.amazonaws.us-east-1.kms',
+            'com.amazonaws.us-east-1.kinesis-streams',
+          ],
+        };
+        return callback(null, response);
+      });
+
+      AWS.mock('EC2', 'describeVpcEndpointServices', mockCallback);
+
+      const actual = await plugin.validateServices('us-east-1', ['blah']);
+      expect(actual).toEqual(['com.amazonaws.us-east-1.blah']);
+      expect(mockCallback).toHaveBeenCalled();
       expect.assertions(2);
     });
   });

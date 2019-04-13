@@ -67,7 +67,7 @@ class ServerlessVpcPlugin {
       if (Array.isArray(vpcConfig.zones) && vpcConfig.zones.length > 0) {
         ({ zones } = vpcConfig);
       }
-      if (Array.isArray(vpcConfig.services) && vpcConfig.services.length > 0) {
+      if (Array.isArray(vpcConfig.services)) {
         services = vpcConfig.services.map(s => s.trim().toLowerCase());
       }
 

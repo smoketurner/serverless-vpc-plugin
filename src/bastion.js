@@ -1,6 +1,6 @@
 const http = require('http');
 
-const { PUBLIC_SUBNET } = require('./constants');
+const { APP_SUBNET } = require('./constants');
 
 /**
  * Return the public IP
@@ -54,7 +54,6 @@ function buildBastionEIP({ name = 'BastionEIP' } = {}) {
  *
  * @param {Object} params
  * @return {Object}
- * @see https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cfn-helper-scripts-reference.html
  */
 function buildBastionIamRole({ name = 'BastionIamRole' } = {}) {
   return {
@@ -68,7 +67,7 @@ function buildBastionIamRole({ name = 'BastionIamRole' } = {}) {
               Principal: {
                 Service: 'ec2.amazonaws.com',
               },
-              Action: ['sts:AssumeRole'],
+              Action: 'sts:AssumeRole',
             },
           ],
         },
@@ -79,13 +78,7 @@ function buildBastionIamRole({ name = 'BastionIamRole' } = {}) {
               Version: '2012-10-17',
               Statement: [
                 {
-                  Action: [
-                    'ec2:AssociateAddress',
-                    'ec2:DescribeAddresses',
-                    // 'ec2:DisassociateAddress',
-                    // 'cloudformation:SignalResource',
-                    // 'cloudformation:DescribeStackResource',
-                  ],
+                  Action: 'ec2:AssociateAddress',
                   Resource: '*',
                   Effect: 'Allow',
                 },
@@ -161,6 +154,7 @@ function buildBastionLaunchConfiguration(
           },
         ],
         SpotPrice: '0.0116', // On-Demand price of t2.micro in us-east-1
+        // https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cfn-helper-scripts-reference.html
         UserData: {
           'Fn::Base64': {
             'Fn::Join': [
@@ -206,7 +200,7 @@ function buildBastionAutoScalingGroup(numZones = 0, { name = 'BastionAutoScaling
 
   const zones = [];
   for (let i = 1; i <= numZones; i += 1) {
-    zones.push({ Ref: `${PUBLIC_SUBNET}Subnet${i}` });
+    zones.push({ Ref: `${APP_SUBNET}Subnet${i}` });
   }
 
   return {
@@ -303,84 +297,6 @@ function buildBastionSecurityGroup(sourceIp = '0.0.0.0/0', { name = 'BastionSecu
 }
 
 /**
- * Build the Bastion EC2 instance
- *
- * @param {String} keyPairName Existing KeyPair name
- * @param {Array} zones Array of availability zones
- * @param {Object} params
- * @return {Object}
- */
-function buildBastionInstance(keyPairName, zones = [], { name = 'BastionInstance' } = {}) {
-  if (!keyPairName) {
-    return {};
-  }
-  if (!Array.isArray(zones) || zones.length < 1) {
-    return {};
-  }
-
-  return {
-    [name]: {
-      Type: 'AWS::EC2::Instance',
-      DependsOn: 'InternetGatewayAttachment',
-      Properties: {
-        AvailabilityZone: {
-          'Fn::Select': ['0', zones],
-        },
-        BlockDeviceMappings: [
-          {
-            DeviceName: '/dev/xvda',
-            Ebs: {
-              VolumeSize: 30,
-              VolumeType: 'gp2',
-              DeleteOnTermination: true,
-            },
-          },
-        ],
-        KeyName: keyPairName,
-        ImageId: {
-          Ref: 'LatestAmiId',
-        },
-        InstanceType: 't2.micro',
-        Monitoring: false,
-        NetworkInterfaces: [
-          {
-            AssociatePublicIpAddress: true,
-            DeleteOnTermination: true,
-            Description: 'eth0',
-            DeviceIndex: '0',
-            GroupSet: [
-              {
-                Ref: 'BastionSecurityGroup',
-              },
-            ],
-            SubnetId: {
-              Ref: 'PublicSubnet1',
-            },
-          },
-        ],
-        SourceDestCheck: true,
-        Tags: [
-          {
-            Key: 'Name',
-            Value: {
-              'Fn::Join': [
-                '-',
-                [
-                  {
-                    Ref: 'AWS::StackName',
-                  },
-                  'bastion',
-                ],
-              ],
-            },
-          },
-        ],
-      },
-    },
-  };
-}
-
-/**
  * Build the bastion host
  *
  * @param {String} keyPairName Existing key pair name
@@ -391,7 +307,12 @@ async function buildBastion(keyPairName, numZones = 0) {
   if (numZones < 1) {
     return {};
   }
-  const publicIp = await getPublicIp();
+  let publicIp = '0.0.0.0/0';
+  try {
+    publicIp = await getPublicIp();
+  } catch (err) {
+    console.error('Unable to discover public IP address:', err);
+  }
 
   return Object.assign(
     {},
@@ -401,7 +322,6 @@ async function buildBastion(keyPairName, numZones = 0) {
     buildBastionSecurityGroup(`${publicIp}/32`),
     buildBastionLaunchConfiguration(keyPairName),
     buildBastionAutoScalingGroup(numZones),
-    // buildBastionInstance(bastionHostKeyName, zones),
   );
 }
 
@@ -412,7 +332,6 @@ module.exports = {
   buildBastionEIP,
   buildBastionIamRole,
   buildBastionInstanceProfile,
-  buildBastionInstance,
   buildBastionLaunchConfiguration,
   buildBastionSecurityGroup,
 };

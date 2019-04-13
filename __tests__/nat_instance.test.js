@@ -97,10 +97,9 @@ describe('nat_instance', () => {
               {
                 DeviceName: '/dev/xvda',
                 Ebs: {
-                  VolumeSize: 30,
+                  VolumeSize: 10,
                   VolumeType: 'gp2',
                   DeleteOnTermination: true,
-                  SnapshotId: 'snap-067424abc11f77a61',
                 },
               },
             ],
@@ -144,22 +143,9 @@ describe('nat_instance', () => {
         },
       };
 
-      const image = {
-        ImageId: 'ami-00a9d4a05375b2763',
-        BlockDeviceMappings: [
-          {
-            DeviceName: '/dev/xvda',
-            Ebs: {
-              VolumeSize: 8,
-              VolumeType: 'gp2',
-              DeleteOnTermination: true,
-              SnapshotId: 'snap-067424abc11f77a61',
-            },
-          },
-        ],
-      };
+      const imageId = 'ami-00a9d4a05375b2763';
 
-      const actual = buildNatInstance(image, ['us-east-1a', 'us-east-1b']);
+      const actual = buildNatInstance(imageId, ['us-east-1a', 'us-east-1b']);
       expect(actual).toEqual(expected);
       expect.assertions(1);
     });
