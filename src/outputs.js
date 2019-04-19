@@ -22,7 +22,7 @@ function buildOutputs(createBastionHost = false) {
   };
 
   if (createBastionHost) {
-    outputs.BastionUser = {
+    outputs.BastionSSHUser = {
       Description: 'SSH username for the Bastion host',
       Value: 'ec2-user',
     };
