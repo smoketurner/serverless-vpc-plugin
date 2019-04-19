@@ -65,7 +65,7 @@ class ServerlessVpcPlugin {
       }
 
       if (Array.isArray(vpcConfig.zones) && vpcConfig.zones.length > 0) {
-        ({ zones } = vpcConfig);
+        zones = vpcConfig.zones.map(z => z.trim().toLowerCase());
       }
       if (Array.isArray(vpcConfig.services)) {
         services = vpcConfig.services.map(s => s.trim().toLowerCase());
@@ -124,7 +124,7 @@ class ServerlessVpcPlugin {
       }
       if (createNatGateway > DEFAULT_VPC_EIP_LIMIT) {
         this.serverless.cli.log(
-          `WARNING: Number of NAT gateways (${createNatGateway} is greater than default ` +
+          `WARNING: Number of NAT gateways (${createNatGateway}) is greater than default ` +
             `EIP limit (${DEFAULT_VPC_EIP_LIMIT}). Please ensure you requested ` +
             `an AWS EIP limit increase.`,
         );

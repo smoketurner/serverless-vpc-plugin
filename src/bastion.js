@@ -301,7 +301,7 @@ function buildBastionSecurityGroup(sourceIp = '0.0.0.0/0', { name = 'BastionSecu
  *
  * @param {String} keyPairName Existing key pair name
  * @param {Number} numZones Number of availability zones
- * @return {Object}
+ * @return {Promise}
  */
 async function buildBastion(keyPairName, numZones = 0) {
   if (numZones < 1) {
@@ -310,6 +310,7 @@ async function buildBastion(keyPairName, numZones = 0) {
   let publicIp = '0.0.0.0/0';
   try {
     publicIp = await getPublicIp();
+    publicIp = `${publicIp}/32`;
   } catch (err) {
     console.error('Unable to discover public IP address:', err);
   }
@@ -319,7 +320,7 @@ async function buildBastion(keyPairName, numZones = 0) {
     buildBastionEIP(),
     buildBastionIamRole(),
     buildBastionInstanceProfile(),
-    buildBastionSecurityGroup(`${publicIp}/32`),
+    buildBastionSecurityGroup(publicIp),
     buildBastionLaunchConfiguration(keyPairName),
     buildBastionAutoScalingGroup(numZones),
   );
