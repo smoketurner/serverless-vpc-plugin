@@ -120,4 +120,5 @@ After executing `serverless deploy`, the following CloudFormation Stack Outputs 
 
 - `VPC`: VPC logical resource ID
 - `LambdaExecutionSecurityGroup`: Security Group logical resource ID that the Lambda functions use when executing within the VPC
+- `BastionUser`: SSH username to access the bastion host, if provisioned
 - `BastionEIP`: Elastic IP address associated to the bastion host, if provisioned
