@@ -37,7 +37,7 @@ Lambda functions will execute within the "Application" subnet and only be able t
 - Neptune clusters (provisioned with the "DB" subnet)
 - Internet Access (if using a `NatGateway` or a `NatInstance`)
 
-If your Lambda functions need to access the internet, then you _MUST_ provision `NatGateway` resources or a NAT instance.
+If your Lambda functions need to [access the internet](https://docs.aws.amazon.com/lambda/latest/dg/vpc.html#vpc-internet), then you _MUST_ provision `NatGateway` resources or a NAT instance.
 
 By default, `AWS::EC2::VPCEndpoint` "Gateway" endpoints for S3 and DynamoDB will be provisioned within each availability zone to provide internal access to these services (there is no additional charge for using Gateway Type VPC endpoints). You can selectively control which `AWS::EC2::VPCEndpoint` "Interface" endpoints are available within your VPC using the `services` configuration option below. Not all AWS services are available in every region, so the plugin will query AWS to validate the services you have selected and notify you if any changes are required (there is an additional charge for using Interface Type VPC endpoints).
 
