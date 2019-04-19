@@ -10,15 +10,15 @@ Automatically creates an AWS Virtual Private Cloud (VPC) using all available Ava
 This plugin provisions the following resources:
 
 - `AWS::EC2::VPC`
-- `AWS::EC2::InternetGateway` (for outbound internet access)
+- `AWS::EC2::InternetGateway` (for outbound internet access from "Public" subnet)
 - `AWS::EC2::VPCGatewayAttachment` (to attach the `InternetGateway` to the VPC)
 - `AWS::EC2::SecurityGroup` (to execute Lambda functions [`LambdaExecutionSecurityGroup`])
 
 If the VPC is allocated a /16 subnet, each availability zone within the region will be allocated a /20 subnet. Within each availability zone, this plugin will further divide the subnets:
 
-- `AWS::EC2::Subnet` "Application" (/21) - default route is either `InternetGateway`, `NatGateway` or `NatInstance`
-- `AWS::EC2::Subnet` "Public" (/22) - default route set `InternetGateway`
-- `AWS::EC2::Subnet` "Database" (/22) - no default route set in routing table
+- `AWS::EC2::Subnet` "Public" (/22) - default route set to the `InternetGateway`
+- `AWS::EC2::Subnet` "Application" (/21) - no default route set (can be set to either a `NatGateway` or `NatInstance`)
+- `AWS::EC2::Subnet` "Database" (/22) - no default route set
 
 The subnetting layout was heavily inspired by the now shutdown [Skyliner](https://skyliner.io) platform. 😞
 
@@ -26,7 +26,7 @@ Optionally, this plugin can also create `AWS::EC2::NatGateway` instances in each
 
 Instead of using the managed `AWS::EC2::NatGateway` instances, this plugin can also provision a single `t2.micro` NAT instance in `PublicSubnet1` which will allow HTTP/HTTPS traffic from the "Application" subnets to reach the Internet.
 
-Any Lambda functions executing with the "Application" subnet will only be able to access:
+Lambda functions will execute within the "Application" subnet and only be able to access:
 
 - S3 (via an S3 VPC endpoint)
 - DynamoDB (via an DynamoDB VPC endpoint)
@@ -35,8 +35,9 @@ Any Lambda functions executing with the "Application" subnet will only be able t
 - RedShift (provisioned within the "DB" subnet),
 - DAX clusters (provisioned within the "DB" subnet)
 - Neptune clusters (provisioned with the "DB" subnet)
+- Internet Access (if using a `NatGateway` or a `NatInstance`)
 
-If your Lambda functions need to access the internet, then you _MUST_ provision `NatGateway` resources or a NAT instance.
+If your Lambda functions need to [access the internet](https://docs.aws.amazon.com/lambda/latest/dg/vpc.html#vpc-internet), then you _MUST_ provision `NatGateway` resources or a NAT instance.
 
 By default, `AWS::EC2::VPCEndpoint` "Gateway" endpoints for S3 and DynamoDB will be provisioned within each availability zone to provide internal access to these services (there is no additional charge for using Gateway Type VPC endpoints). You can selectively control which `AWS::EC2::VPCEndpoint` "Interface" endpoints are available within your VPC using the `services` configuration option below. Not all AWS services are available in every region, so the plugin will query AWS to validate the services you have selected and notify you if any changes are required (there is an additional charge for using Interface Type VPC endpoints).
 
@@ -94,7 +95,7 @@ custom:
     # Whether to create a bastion host
     createBastionHost: false
     bastionHostKeyName: MyKey # required if creating a bastion host
-    
+
     # Whether to create a NAT instance
     createNatInstance: false
 
