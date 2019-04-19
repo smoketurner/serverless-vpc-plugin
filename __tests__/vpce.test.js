@@ -286,6 +286,7 @@ describe('vpce', () => {
                 SourceSecurityGroupId: {
                   Ref: 'LambdaExecutionSecurityGroup',
                 },
+                Description: 'Allow inbound HTTPS traffic from LambdaExecutionSecurityGroup',
                 IpProtocol: 'tcp',
                 FromPort: 443,
                 ToPort: 443,
@@ -329,6 +330,7 @@ describe('vpce', () => {
                 SourceSecurityGroupId: {
                   Ref: 'LambdaExecutionSecurityGroup',
                 },
+                Description: 'Allow inbound HTTPS traffic from LambdaExecutionSecurityGroup',
                 IpProtocol: 'tcp',
                 FromPort: 443,
                 ToPort: 443,
