@@ -41,15 +41,6 @@ function buildAvailabilityZones(
   zones.forEach((zone, index) => {
     const position = index + 1;
 
-    const params = {};
-    if (numNatGateway > 0) {
-      params.NatGatewayId = `NatGateway${(index % numNatGateway) + 1}`;
-    } else if (createNatInstance) {
-      params.InstanceId = 'NatInstance';
-    } else {
-      params.GatewayId = 'InternetGateway';
-    }
-
     Object.assign(
       resources,
 
@@ -57,7 +48,7 @@ function buildAvailabilityZones(
       buildSubnet(APP_SUBNET, position, zone, subnets.get(zone).get(APP_SUBNET)),
       buildRouteTable(APP_SUBNET, position, zone),
       buildRouteTableAssociation(APP_SUBNET, position),
-      buildRoute(APP_SUBNET, position, params),
+      // no default route on Application subnet
 
       // Public Subnet
       buildSubnet(PUBLIC_SUBNET, position, zone, subnets.get(zone).get(PUBLIC_SUBNET)),
@@ -68,6 +59,18 @@ function buildAvailabilityZones(
       }),
     );
 
+    const params = {};
+    if (numNatGateway > 0) {
+      params.NatGatewayId = `NatGateway${(index % numNatGateway) + 1}`;
+    } else if (createNatInstance) {
+      params.InstanceId = 'NatInstance';
+    }
+
+    // only set default route on Application subnet to a NAT Gateway or NAT Instance
+    if (Object.keys(params).length > 0) {
+      Object.assign(resources, buildRoute(APP_SUBNET, position, params));
+    }
+
     if (createDbSubnet) {
       // DB Subnet
       Object.assign(
@@ -75,6 +78,7 @@ function buildAvailabilityZones(
         buildSubnet(DB_SUBNET, position, zone, subnets.get(zone).get(DB_SUBNET)),
         buildRouteTable(DB_SUBNET, position, zone),
         buildRouteTableAssociation(DB_SUBNET, position),
+        // no default route on DB subnet
       );
     }
   });
