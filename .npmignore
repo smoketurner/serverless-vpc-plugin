@@ -4,9 +4,11 @@
 .gitattributes
 .gitignore
 .prettierrc
+.prettierignore
 .serverless/
 .travis.yml
 .vscode/
+*.tgz
 CODE_OF_CONDUCT.md
 jest-config.json
 __tests__/
