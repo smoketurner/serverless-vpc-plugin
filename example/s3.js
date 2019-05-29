@@ -12,28 +12,19 @@ const { BUCKET_NAME } = process.env;
  * @return {Promise}
  */
 function getPublicIp() {
+  const options = {
+    host: 'api.ipify.org',
+    port: 80,
+    path: '/',
+  };
   return new Promise((resolve, reject) => {
-    const options = {
-      host: 'api.ipify.org',
-      port: 80,
-      path: '/',
-    };
-    http
-      .get(options, res => {
-        res.setEncoding('utf8');
-
-        let body = '';
-        res.on('data', chunk => {
-          body += chunk;
-        });
-
-        res.on('end', () => {
-          resolve(body);
-        });
-      })
-      .on('error', err => {
-        reject(err);
-      });
+    const req = http.get(options, res => {
+      const buffers = [];
+      res.on('data', data => buffers.push(data));
+      res.once('end', () => resolve(Buffer.concat(buffers).toString()));
+      res.once('error', reject);
+    });
+    req.once('error', reject);
   });
 }
 
