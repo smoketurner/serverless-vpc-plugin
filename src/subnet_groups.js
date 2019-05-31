@@ -139,6 +139,18 @@ function buildSubnetGroups(numZones = 0) {
   if (numZones < 2) {
     return {};
   }
+  const subnetGroups = {
+    rds: buildRDSSubnetGroup,
+    redshift: buildRedshiftSubnetGroup,
+    elasticache: buildElastiCacheSubnetGroup,
+    dax: buildDAXSubnetGroup,
+  }
+  if (subnetGroup.length > 0) {
+    return subnetGroup.reduce(function(acc, service) {
+      let builtSubnetGroup = subnetGroups[service.toLowerCase()](numZones);
+      return Object.assign(acc, builtSubnetGroup);
+    }, {});
+  }
   return Object.assign(
     {},
     buildRDSSubnetGroup(numZones),
