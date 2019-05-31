@@ -135,7 +135,7 @@ function buildDAXSubnetGroup(numZones = 0, { name = 'DAXSubnetGroup' } = {}) {
  * @param {Number} numZones Number of availability zones
  * @return {Object}
  */
-function buildSubnetGroups(numZones = 0) {
+function buildSubnetGroups(numZones = 0, subnetGroup = []) {
   if (numZones < 2) {
     return {};
   }
