@@ -135,19 +135,19 @@ function buildDAXSubnetGroup(numZones = 0, { name = 'DAXSubnetGroup' } = {}) {
  * @param {Number} numZones Number of availability zones
  * @return {Object}
  */
-function buildSubnetGroups(numZones = 0, subnetGroup = []) {
+function buildSubnetGroups(numZones = 0, subnetGroups = []) {
   if (numZones < 2) {
     return {};
   }
-  const subnetGroups = {
+  const subnetGroupList = {
     rds: buildRDSSubnetGroup,
     redshift: buildRedshiftSubnetGroup,
     elasticache: buildElastiCacheSubnetGroup,
     dax: buildDAXSubnetGroup,
   }
-  if (subnetGroup.length > 0) {
-    return subnetGroup.reduce(function(acc, service) {
-      let builtSubnetGroup = subnetGroups[service.toLowerCase()](numZones);
+  if (subnetGroups.length > 0) {
+    return subnetGroups.reduce(function(acc, service) {
+      let builtSubnetGroup = subnetGroupList[service.toLowerCase()](numZones);
       return Object.assign(acc, builtSubnetGroup);
     }, {});
   }
