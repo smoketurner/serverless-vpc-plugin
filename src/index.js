@@ -38,7 +38,7 @@ class ServerlessVpcPlugin {
     let createNatInstance = false;
     let createBastionHost = false;
     let bastionHostKeyName = null;
-    let subnetGroup = [];
+    let subnetGroups = [];
 
     const { vpcConfig } = this.serverless.service.custom;
 
@@ -71,8 +71,8 @@ class ServerlessVpcPlugin {
       if (Array.isArray(vpcConfig.services)) {
         services = vpcConfig.services.map(s => s.trim().toLowerCase());
       }
-      if (Array.isArray(vpcConfig.subnetGroup) && vpcConfig.subnetGroup.length > 0) {
-        ({ subnetGroup } = vpcConfig);
+      if (Array.isArray(vpcConfig.subnetGroups) && vpcConfig.subnetGroups.length > 0) {
+        ({ subnetGroups } = vpcConfig);
       }
 
       if ('createDbSubnet' in vpcConfig && typeof vpcConfig.createDbSubnet === 'boolean') {
@@ -225,10 +225,8 @@ class ServerlessVpcPlugin {
     if (createDbSubnet) {
       if (numZones < 2) {
         this.serverless.cli.log('WARNING: less than 2 AZs; skipping subnet group provisioning');
-      } else if (subnetGroup.length > 0) {
-        Object.assign(resources, buildSubnetGroups(numZones, subnetGroup));
       } else {
-        Object.assign(resources, buildSubnetGroups(numZones));
+        Object.assign(resources, buildSubnetGroups(numZones, subnetGroups));
       }
     }
 
