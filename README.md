@@ -112,6 +112,13 @@ custom:
     services:
       - kms
       - secretsmanager
+
+    # optional
+    # can pick one of subnet groups in (rds / redshift / elasticache / dax)
+    # By default, if not specified, all of the subnet groups will be created.
+    # ex) DAX is not available in ap-northeast-2 so I don't want to make DAX subnet group
+    subnetGroups:
+      - rds
 ```
 
 ## CloudFormation Outputs
