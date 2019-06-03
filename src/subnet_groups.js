@@ -1,5 +1,7 @@
 const { DB_SUBNET } = require('./constants');
 
+const validSubnetGroups = ['rds', 'redshift', 'elasticache', 'dax'];
+
 /**
  * Build an RDSubnetGroup for a given number of zones
  *
@@ -133,6 +135,7 @@ function buildDAXSubnetGroup(numZones = 0, { name = 'DAXSubnetGroup' } = {}) {
  * Build the database subnet groups
  *
  * @param {Number} numZones Number of availability zones
+ * @param {Array} subnetGroups options of subnet groups
  * @return {Object}
  */
 function buildSubnetGroups(numZones = 0, subnetGroups = []) {
@@ -144,12 +147,14 @@ function buildSubnetGroups(numZones = 0, subnetGroups = []) {
     redshift: buildRedshiftSubnetGroup,
     elasticache: buildElastiCacheSubnetGroup,
     dax: buildDAXSubnetGroup,
+  };
+  function assembleSubnetGrp(acc, service) {
+    const builtSubnetGroup = subnetGroupList[service.toLowerCase()](numZones);
+    return Object.assign(acc, builtSubnetGroup);
   }
+
   if (subnetGroups.length > 0) {
-    return subnetGroups.reduce(function(acc, service) {
-      let builtSubnetGroup = subnetGroupList[service.toLowerCase()](numZones);
-      return Object.assign(acc, builtSubnetGroup);
-    }, {});
+    return subnetGroups.reduce(assembleSubnetGrp, {});
   }
   return Object.assign(
     {},
@@ -166,4 +171,5 @@ module.exports = {
   buildRDSSubnetGroup,
   buildRedshiftSubnetGroup,
   buildSubnetGroups,
+  validSubnetGroups,
 };

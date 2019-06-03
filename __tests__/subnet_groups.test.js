@@ -7,7 +7,8 @@ const {
 } = require('../src/subnet_groups');
 
 describe('subnet_groups', () => {
-  let subnetGroupList = {}
+  let subnetGroupList = {};
+
   describe('#buildRDSSubnetGroup', () => {
     it('skips building an RDS subnet group with no zones', () => {
       const actual = buildRDSSubnetGroup();
@@ -37,7 +38,7 @@ describe('subnet_groups', () => {
           },
         },
       };
-      subnetGroupList['rds'] = expected
+      subnetGroupList.rds = expected;
       const actual = buildRDSSubnetGroup(2);
       expect(actual).toEqual(expected);
       expect.assertions(1);
@@ -102,7 +103,7 @@ describe('subnet_groups', () => {
           },
         },
       };
-      subnetGroupList['elasticache'] = expected
+      subnetGroupList.elasticache = expected;
       const actual = buildElastiCacheSubnetGroup(2);
       expect(actual).toEqual(expected);
       expect.assertions(1);
@@ -164,7 +165,7 @@ describe('subnet_groups', () => {
           },
         },
       };
-      subnetGroupList['redshift'] = expected
+      subnetGroupList.redshift = expected;
       const actual = buildRedshiftSubnetGroup(2);
       expect(actual).toEqual(expected);
       expect.assertions(1);
@@ -226,7 +227,7 @@ describe('subnet_groups', () => {
           },
         },
       };
-      subnetGroupList['dax'] = expected
+      subnetGroupList.dax = expected;
       const actual = buildDAXSubnetGroup(2);
       expect(actual).toEqual(expected);
       expect.assertions(1);
@@ -264,17 +265,23 @@ describe('subnet_groups', () => {
 
   describe('#buildSubnetGroups', () => {
     it('no subnetGroups option', () => {
-      const expected = Object.keys(subnetGroupList).reduce((acc, key) => Object.assign(acc, subnetGroupList[key]), {})
-      const actual = buildSubnetGroups(2, [])
+      const expected = Object.keys(subnetGroupList).reduce(
+        (acc, key) => Object.assign(acc, subnetGroupList[key]),
+        {},
+      );
+      const actual = buildSubnetGroups(2, []);
       expect(actual).toEqual(expected);
       expect.assertions(1);
     });
     it('get specific subnetGroups option', () => {
-      const getSubnetGroupsOptions = ['rds', 'redshift']
-      const expected = getSubnetGroupsOptions.reduce((acc, key) => Object.assign(acc, subnetGroupList[key]), {})
-      const actual = buildSubnetGroups(2, getSubnetGroupsOptions)
+      const getSubnetGroupsOptions = ['rds', 'redshift'];
+      const expected = getSubnetGroupsOptions.reduce(
+        (acc, key) => Object.assign(acc, subnetGroupList[key]),
+        {},
+      );
+      const actual = buildSubnetGroups(2, getSubnetGroupsOptions);
       expect(actual).toEqual(expected);
       expect.assertions(1);
-    })
+    });
   });
 });
