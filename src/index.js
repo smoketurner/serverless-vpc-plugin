@@ -1,4 +1,4 @@
-const { DEFAULT_VPC_EIP_LIMIT, APP_SUBNET } = require('./constants');
+const { DEFAULT_VPC_EIP_LIMIT, APP_SUBNET, VALID_SUBNET_GROUPS } = require('./constants');
 const { splitSubnets } = require('./subnets');
 const { buildAvailabilityZones } = require('./az');
 const {
@@ -8,7 +8,7 @@ const {
   buildLambdaSecurityGroup,
 } = require('./vpc');
 const { buildAppNetworkAcl, buildPublicNetworkAcl, buildDBNetworkAcl } = require('./nacl');
-const { buildSubnetGroups, validSubnetGroups } = require('./subnet_groups');
+const { buildSubnetGroups } = require('./subnet_groups');
 const { buildEndpointServices, buildLambdaVPCEndpointSecurityGroup } = require('./vpce');
 const { buildLogBucket, buildLogBucketPolicy, buildVpcFlowLogs } = require('./flow_logs');
 const { buildBastion } = require('./bastion');
@@ -38,7 +38,7 @@ class ServerlessVpcPlugin {
     let createNatInstance = false;
     let createBastionHost = false;
     let bastionHostKeyName = null;
-    let subnetGroups = [];
+    let subnetGroups = VALID_SUBNET_GROUPS;
 
     const { vpcConfig } = this.serverless.service.custom;
 
@@ -71,8 +71,8 @@ class ServerlessVpcPlugin {
       if (Array.isArray(vpcConfig.services)) {
         services = vpcConfig.services.map(s => s.trim().toLowerCase());
       }
-      if (Array.isArray(vpcConfig.subnetGroups) && vpcConfig.subnetGroups.length > 0) {
-        ({ subnetGroups } = vpcConfig);
+      if (Array.isArray(vpcConfig.subnetGroups)) {
+        subnetGroups = vpcConfig.subnetGroups.map(s => s.trim().toLowerCase());
       }
 
       if ('createDbSubnet' in vpcConfig && typeof vpcConfig.createDbSubnet === 'boolean') {
@@ -226,14 +226,11 @@ class ServerlessVpcPlugin {
       if (numZones < 2) {
         this.serverless.cli.log('WARNING: less than 2 AZs; skipping subnet group provisioning');
       } else {
-        for (let i = 0; i < subnetGroups.length; i += 1) {
-          const subnetGrp = subnetGroups[i];
-          if (validSubnetGroups.indexOf(subnetGrp) === -1) {
-            throw new this.serverless.classes.Error(
-              `WARNING: '${subnetGrp}' is invalid subnetGroups option.
-    you should input among these options: ['rds', 'redshift', 'elasticache', 'dax']`,
-            );
-          }
+        const invalidGroup = subnetGroups.some(group => !VALID_SUBNET_GROUPS.includes(group));
+        if (invalidGroup) {
+          throw new this.serverless.classes.Error(
+            'WARNING: Invalid subnetGroups option. Valid options: rds, redshift, elasticache, dax',
+          );
         }
         Object.assign(resources, buildSubnetGroups(numZones, subnetGroups));
       }

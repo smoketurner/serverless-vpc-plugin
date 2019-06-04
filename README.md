@@ -41,7 +41,7 @@ If your Lambda functions need to [access the internet](https://docs.aws.amazon.c
 
 By default, `AWS::EC2::VPCEndpoint` "Gateway" endpoints for S3 and DynamoDB will be provisioned within each availability zone to provide internal access to these services (there is no additional charge for using Gateway Type VPC endpoints). You can selectively control which `AWS::EC2::VPCEndpoint` "Interface" endpoints are available within your VPC using the `services` configuration option below. Not all AWS services are available in every region, so the plugin will query AWS to validate the services you have selected and notify you if any changes are required (there is an additional charge for using Interface Type VPC endpoints).
 
-If you specify more then one availability zone, this plugin will also provision the following database-related resources:
+If you specify more then one availability zone, this plugin will also provision the following database-related resources (controlled using the `subnetGroups` plugin option):
 
 - `AWS::RDS::DBSubnetGroup`
 - `AWS::ElastiCache::SubnetGroup`
@@ -99,13 +99,13 @@ custom:
     # Whether to create a NAT instance
     createNatInstance: false
 
-    # optionally specify AZs (defaults to auto-discover all availabile AZs)
+    # Optionally specify AZs (defaults to auto-discover all availabile AZs)
     zones:
       - us-east-1a
       - us-east-1b
       - us-east-1c
 
-    # by default, s3 and dynamodb endpoints will be available within the VPC
+    # By default, S3 and DynamoDB endpoints will be available within the VPC
     # see https://docs.aws.amazon.com/vpc/latest/userguide/vpc-endpoints.html
     # for a list of available service endpoints to provision within the VPC
     # (varies per region)
@@ -113,10 +113,8 @@ custom:
       - kms
       - secretsmanager
 
-    # optional
-    # can pick one of subnet groups in (rds / redshift / elasticache / dax)
-    # By default, if not specified, all of the subnet groups will be created.
-    # ex) DAX is not available in ap-northeast-2 so I don't want to make DAX subnet group
+    # Optionally specify subnet groups to create. If not provided, subnet groups
+    # for RDS, Redshift, ElasticCache and DAX will be provisioned.
     subnetGroups:
       - rds
 ```

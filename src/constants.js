@@ -19,9 +19,15 @@ const PUBLIC_SUBNET = 'Public';
  */
 const DB_SUBNET = 'DB';
 
+/**
+ * @type {Array} Valid subnet groups
+ */
+const VALID_SUBNET_GROUPS = ['rds', 'redshift', 'elasticache', 'dax'];
+
 module.exports = {
   DEFAULT_VPC_EIP_LIMIT,
   APP_SUBNET,
   PUBLIC_SUBNET,
   DB_SUBNET,
+  VALID_SUBNET_GROUPS,
 };

@@ -7,8 +7,6 @@ const {
 } = require('../src/subnet_groups');
 
 describe('subnet_groups', () => {
-  let subnetGroupList = {};
-
   describe('#buildRDSSubnetGroup', () => {
     it('skips building an RDS subnet group with no zones', () => {
       const actual = buildRDSSubnetGroup();
@@ -38,7 +36,6 @@ describe('subnet_groups', () => {
           },
         },
       };
-      subnetGroupList.rds = expected;
       const actual = buildRDSSubnetGroup(2);
       expect(actual).toEqual(expected);
       expect.assertions(1);
@@ -103,7 +100,6 @@ describe('subnet_groups', () => {
           },
         },
       };
-      subnetGroupList.elasticache = expected;
       const actual = buildElastiCacheSubnetGroup(2);
       expect(actual).toEqual(expected);
       expect.assertions(1);
@@ -165,7 +161,6 @@ describe('subnet_groups', () => {
           },
         },
       };
-      subnetGroupList.redshift = expected;
       const actual = buildRedshiftSubnetGroup(2);
       expect(actual).toEqual(expected);
       expect.assertions(1);
@@ -227,7 +222,6 @@ describe('subnet_groups', () => {
           },
         },
       };
-      subnetGroupList.dax = expected;
       const actual = buildDAXSubnetGroup(2);
       expect(actual).toEqual(expected);
       expect.assertions(1);
@@ -264,22 +258,52 @@ describe('subnet_groups', () => {
   });
 
   describe('#buildSubnetGroups', () => {
-    it('no subnetGroups option', () => {
-      const expected = Object.keys(subnetGroupList).reduce(
-        (acc, key) => Object.assign(acc, subnetGroupList[key]),
-        {},
-      );
+    it('skips building if no groups specified', () => {
+      const expected = {};
       const actual = buildSubnetGroups(2, []);
       expect(actual).toEqual(expected);
       expect.assertions(1);
     });
-    it('get specific subnetGroups option', () => {
-      const getSubnetGroupsOptions = ['rds', 'redshift'];
-      const expected = getSubnetGroupsOptions.reduce(
-        (acc, key) => Object.assign(acc, subnetGroupList[key]),
-        {},
-      );
-      const actual = buildSubnetGroups(2, getSubnetGroupsOptions);
+
+    it('builds an RDS and Redshift subnet groups', () => {
+      const expected = {
+        RDSSubnetGroup: {
+          Properties: {
+            DBSubnetGroupDescription: {
+              Ref: 'AWS::StackName',
+            },
+            DBSubnetGroupName: {
+              Ref: 'AWS::StackName',
+            },
+            SubnetIds: [
+              {
+                Ref: 'DBSubnet1',
+              },
+              {
+                Ref: 'DBSubnet2',
+              },
+            ],
+          },
+          Type: 'AWS::RDS::DBSubnetGroup',
+        },
+        RedshiftSubnetGroup: {
+          Properties: {
+            Description: {
+              Ref: 'AWS::StackName',
+            },
+            SubnetIds: [
+              {
+                Ref: 'DBSubnet1',
+              },
+              {
+                Ref: 'DBSubnet2',
+              },
+            ],
+          },
+          Type: 'AWS::Redshift::ClusterSubnetGroup',
+        },
+      };
+      const actual = buildSubnetGroups(2, ['rds', 'redshift']);
       expect(actual).toEqual(expected);
       expect.assertions(1);
     });
