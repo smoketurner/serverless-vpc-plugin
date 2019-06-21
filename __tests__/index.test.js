@@ -1,7 +1,4 @@
 const AWS = require('aws-sdk-mock');
-const AWS_SDK = require('aws-sdk');
-
-AWS.setSDKInstance(AWS_SDK);
 
 const Serverless = require('serverless');
 const AwsProvider = require('serverless/lib/plugins/aws/provider/awsProvider');
@@ -18,8 +15,11 @@ describe('ServerlessVpcPlugin', () => {
     };
     serverless = new Serverless(options);
     serverless.init();
+
     const provider = new AwsProvider(serverless, options);
+    AWS.setSDKInstance(provider.sdk);
     serverless.setProvider('aws', provider);
+
     serverless.service.provider = {
       name: 'aws',
       stage: 'dev',

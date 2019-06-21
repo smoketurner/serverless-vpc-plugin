@@ -16,8 +16,8 @@
     "test": "npx sls invoke -f s3"
   },
   "devDependencies": {
-    "aws-sdk": "2.467.0",
-    "serverless": "1.44.1",
+    "aws-sdk": "2.479.0",
+    "serverless": "1.45.1",
     "serverless-vpc-plugin": "smoketurner/serverless-vpc-plugin#master"
   }
 }
