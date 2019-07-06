@@ -56,9 +56,13 @@ functions:
   rds:
     handler: index.handler
     description: RDS Test Handler
+    role: ExampleLambdaRole
     environment:
       SECRET_NAME: ${self:custom.secretName}
+      DB_NAME:
+        Ref: DBInstance
 
 resources:
+  - ${file(resources/iam_cf.yml)}
   - ${file(resources/rds_cf.yml)}
   - ${file(resources/secretsmanager_cf.yml)}

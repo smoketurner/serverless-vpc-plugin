@@ -5,19 +5,36 @@ const pg = require('pg');
 
 AWS.config.logger = console;
 
-const { SECRET_NAME } = process.env;
+const { DB_NAME, SECRET_NAME } = process.env;
 
-async function getSecret(name = SECRET_NAME) {
+/**
+ * Get a secret from Secrets Manager
+ *
+ * @param {String} SecretId
+ * @return {Promise<Object>}
+ */
+async function getSecret(SecretId) {
   const secretsmanager = new AWS.SecretsManager();
 
-  let config;
+  const params = {
+    SecretId,
+    VersionStage: 'AWSCURRENT',
+  };
+
+  let data;
   try {
-    config = await secretsmanager.getSecretValue(name);
+    data = await secretsmanager.getSecretValue(params).promise();
+    if (data.SecretString) {
+      data = JSON.parse(data.SecretString);
+    }
   } catch (err) {
-    console.error(`Unable to get secret ${name}:`, err);
+    console.error(`Unable to get secret ${SecretId}:`, err);
     throw err;
   }
+  return data;
 }
+
+let SECRET_DATA;
 
 /**
  * Postgres Handler
@@ -28,15 +45,23 @@ async function getSecret(name = SECRET_NAME) {
  */
 // eslint-disable-next-line no-unused-vars
 exports.handler = async (event, context) => {
+  if (!SECRET_DATA) {
+    SECRET_DATA = await getSecret(SECRET_NAME);
+  }
+
   const config = {
-    database: 'database-name',
-    host: 'host-or-ip',
+    user: SECRET_DATA.username,
+    password: SECRET_DATA.password,
+    database: DB_NAME,
+    host: SECRET_DATA.host,
+    port: SECRET_DATA.port,
     // this object will be passed to the TLSSocket constructor
     ssl: {
-      rejectUnauthorized: false,
+      rejectUnauthorized: true,
       ca: fs.readFileSync('/var/task/rds-combined-ca-bundle.pem').toString(),
-      key: fs.readFileSync('/var/task/rds-combined-ca-bundle.pem').toString(),
+      // key: fs.readFileSync('/var/task/rds-combined-ca-bundle.pem').toString(),
       cert: fs.readFileSync('/var/task/rds-combined-ca-bundle.pem').toString(),
     },
+    statement_timeout: 5000, // milliseconds
   };
 };

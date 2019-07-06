@@ -21,8 +21,6 @@ Resources:
           FromPort: 5432
           ToPort: 5432
       Tags:
-        #- Key: STAGE
-        #  Value: ${self:provider.stage}
         - Key: Name
           Value:
             'Fn::Join':
