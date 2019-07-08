@@ -10,35 +10,22 @@ provider:
   deploymentBucket:
     serverSideEncryption: AES256
   endpointType: regional
-  iamRoleStatements:
-    - Effect: Allow
-      Action:
-        - 's3:PutObject'
-      Resource:
-        'Fn::Join':
-          - ''
-          - - 'arn:aws:s3:::'
-            - Ref: TestBucket
-            - '/*'
 
 plugins:
   - serverless-vpc-plugin
+  - serverless-webpack
 
 package:
   individually: true
   excludeDevDependencies: true
-  exclude:
-    - .npmrc
-    - package*.json
-    - resources/**
-    - node_modules/**
 
 custom:
+  secretName: '${self:service}/${self:provider.stage}/rds'
   vpcConfig:
     cidrBlock: '10.0.0.0/16'
     createNatGateway: false
     createDbSubnet: true
-    createNetworkAcl: true
+    createNetworkAcl: false
     createFlowLogs: true
     createNatInstance: true
     createBastionHost: true
@@ -48,15 +35,22 @@ custom:
       - us-east-1b
       - us-east-1c
     services:
-      - s3
+      #- s3
+  webpack:
+    includeModules:
+      forceExclude:
+        - aws-sdk
+    packager: npm
 
 functions:
-  s3:
-    handler: s3.handler
-    description: S3 Test Handler
+  rds:
+    handler: index.handler
+    description: RDS Test Handler
+    role: ExampleLambdaRole
     environment:
-      BUCKET_NAME:
-        Ref: TestBucket
+      SECRET_NAME: ${self:custom.secretName}
 
 resources:
-  - ${file(resources/s3_cf.yml)}
+  - ${file(resources/iam_cf.yml)}
+  - ${file(resources/rds_cf.yml)}
+  - ${file(resources/secretsmanager_cf.yml)}

@@ -1,0 +1,97 @@
+---
+Resources:
+
+  DBSecurityGroup:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      GroupDescription: Access to Postgres
+      VpcId:
+        Ref: VPC
+      SecurityGroupIngress:
+        - SourceSecurityGroupId:
+            Ref: BastionSecurityGroup
+          Description: Bastion access to Postgres
+          IpProtocol: tcp
+          FromPort: 5432
+          ToPort: 5432
+        - SourceSecurityGroupId:
+            Ref: LambdaExecutionSecurityGroup
+          Description: Lambda access to Postgres
+          IpProtocol: tcp
+          FromPort: 5432
+          ToPort: 5432
+      Tags:
+        - Key: Name
+          Value:
+            'Fn::Join':
+              - '-'
+              - - Ref: 'AWS::StackName'
+                - rds
+
+  PostgresParameterGroup:
+    Type: 'AWS::RDS::DBParameterGroup'
+    Properties:
+      Description: Require SSL Connections
+      Family: postgres11
+      Parameters:
+        "rds.force_ssl": 1
+
+  DBInstance:
+    Type: 'AWS::RDS::DBInstance'
+    Properties:
+      AllocatedStorage: 20
+      AllowMajorVersionUpgrade: true
+      AutoMinorVersionUpgrade: true
+      AvailabilityZone:
+        'Fn::Select':
+          - 0
+          - 'Fn::GetAZs': ''
+      BackupRetentionPeriod: 1
+      CopyTagsToSnapshot: true
+      DBInstanceClass: 'db.t2.micro'
+      DBParameterGroupName:
+        Ref: PostgresParameterGroup
+      DBSubnetGroupName:
+        Ref: RDSSubnetGroup
+      EnableIAMDatabaseAuthentication: true
+      Engine: postgres
+      EngineVersion: '11.4'
+      MasterUsername:
+        'Fn::Join':
+          - ''
+          - - '{{resolve:secretsmanager:'
+            - Ref: DBSecret
+            - ':SecretString:username}}'
+      MasterUserPassword:
+        'Fn::Join':
+          - ''
+          - - '{{resolve:secretsmanager:'
+            - Ref: DBSecret
+            - ':SecretString:password}}'
+      MultiAZ: false
+      PubliclyAccessible: false
+      StorageType: gp2
+      Tags:
+        - Key: Name
+          Value:
+            'Fn::Join':
+              - '-'
+              - - Ref: 'AWS::StackName'
+                - rds
+      VPCSecurityGroups:
+        - Ref: DBSecurityGroup
+
+Outputs:
+  DBInstanceAddress:
+    Description: RDS Instance Address
+    Value:
+      'Fn::GetAtt':
+        - DBInstance
+        - 'Endpoint.Address'
+
+  DBInstancePort:
+    Description: RDS Instance Port
+    Value:
+      'Fn::GetAtt':
+        - DBInstance
+        - 'Endpoint.Port'

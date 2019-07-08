@@ -1,0 +1,30 @@
+---
+Resources:
+
+  ExampleLambdaRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      Path: '/${self:service}/${self:provider.stage}/'
+      RoleName: '${self:service}-${self:provider.stage}-${self:provider.region}-ExampleLambdaRole'
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: 'lambda.amazonaws.com'
+            Action: 'sts:AssumeRole'
+      Policies:
+        - PolicyName: ExampleLambdaPolicy
+          PolicyDocument:
+           Statement:
+            - Effect: Allow
+              Action:
+                - 'secretsmanager:GetSecretValue'
+              Resource:
+                'Fn::Join':
+                  - ':'
+                  - - 'arn:aws:secretsmanager'
+                    - Ref: 'AWS::Region'
+                    - Ref: 'AWS::AccountId'
+                    - 'secret:${self:custom.secretName}-*'
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole'

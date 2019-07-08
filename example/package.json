@@ -8,16 +8,23 @@
     "type": "git",
     "url": "https://github.com/smoketurner/serverless-vpc-plugin"
   },
-  "main": "s3.js",
+  "main": "index.js",
   "scripts": {
-    "package": "SLS_DEBUG=* npx sls package",
-    "deploy": "npx sls deploy -v --force",
-    "remove": "npx sls remove -v",
-    "test": "npx sls invoke -f s3"
+    "package": "SLS_DEBUG=* sls package",
+    "deploy": "sls deploy -v --force",
+    "remove": "sls remove -v",
+    "test": "sls invoke -f rds"
+  },
+  "dependencies": {
+    "pg": "7.11.0"
   },
   "devDependencies": {
-    "aws-sdk": "2.479.0",
-    "serverless": "1.45.1",
-    "serverless-vpc-plugin": "smoketurner/serverless-vpc-plugin#master"
+    "aws-sdk": "2.488.0",
+    "raw-loader": "3.0.0",
+    "serverless": "1.46.1",
+    "serverless-vpc-plugin": "smoketurner/serverless-vpc-plugin#master",
+    "serverless-webpack": "5.3.1",
+    "webpack": "4.35.2",
+    "webpack-node-externals": "1.7.2"
   }
 }
