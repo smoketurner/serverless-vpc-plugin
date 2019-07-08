@@ -1,11 +1,37 @@
-const fs = require('fs');
+const https = require('https');
 
 const AWS = require('aws-sdk');
-const pg = require('pg');
+const { Client } = require('pg');
+
+const { default: CERT_DATA } = require('./rds-combined-ca-bundle.pem');
+
+const { SECRET_NAME } = process.env;
+
+/**
+ * Return a new HTTPS Agent with keep-alives enabled
+ *
+ * @return {Agent}
+ * @see https://github.com/aws/aws-sdk-js/blob/v2.437.0/lib/http/node.js#L141
+ * @see https://docs.aws.amazon.com/sdk-for-javascript/v2/developer-guide/node-configuring-maxsockets.html
+ */
+function getKeepAliveAgent() {
+  const options = {
+    keepAlive: true,
+    rejectUnauthorized: true, // from aws-sdk
+    maxSockets: 50, // from aws-sdk
+  };
+  const agent = new https.Agent(options);
+  agent.setMaxListeners(0); // from aws-sdk
+  return agent;
+}
 
 AWS.config.logger = console;
 
-const { DB_NAME, SECRET_NAME } = process.env;
+AWS.config.update({
+  httpOptions: {
+    agent: getKeepAliveAgent(),
+  },
+});
 
 /**
  * Get a secret from Secrets Manager
@@ -52,16 +78,26 @@ exports.handler = async (event, context) => {
   const config = {
     user: SECRET_DATA.username,
     password: SECRET_DATA.password,
-    database: DB_NAME,
+    database: 'postgres',
     host: SECRET_DATA.host,
     port: SECRET_DATA.port,
     // this object will be passed to the TLSSocket constructor
     ssl: {
       rejectUnauthorized: true,
-      ca: fs.readFileSync('/var/task/rds-combined-ca-bundle.pem').toString(),
-      // key: fs.readFileSync('/var/task/rds-combined-ca-bundle.pem').toString(),
-      cert: fs.readFileSync('/var/task/rds-combined-ca-bundle.pem').toString(),
+      ca: CERT_DATA,
+      cert: CERT_DATA,
     },
     statement_timeout: 5000, // milliseconds
   };
+
+  const client = new Client(config);
+  await client.connect();
+
+  const res = await client.query('SELECT NOW()');
+
+  const [now] = res.rows || [];
+
+  await client.end();
+
+  return now;
 };

@@ -10,16 +10,6 @@ provider:
   deploymentBucket:
     serverSideEncryption: AES256
   endpointType: regional
-  #iamRoleStatements:
-    #- Effect: Allow
-    #  Action:
-    #    - 's3:PutObject'
-    #  Resource:
-    #    'Fn::Join':
-    #      - ''
-    #      - - 'arn:aws:s3:::'
-    #        - Ref: TestBucket
-    #        - '/*'
 
 plugins:
   - serverless-vpc-plugin
@@ -59,8 +49,6 @@ functions:
     role: ExampleLambdaRole
     environment:
       SECRET_NAME: ${self:custom.secretName}
-      DB_NAME:
-        Ref: DBInstance
 
 resources:
   - ${file(resources/iam_cf.yml)}
