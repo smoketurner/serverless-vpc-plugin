@@ -4,7 +4,7 @@
  * @param {Boolean} createBastionHost
  * @return {Object}
  */
-function buildOutputs(createBastionHost = false) {
+function buildOutputs(createBastionHost = false, exportOutputs = false) {
   const outputs = {
     VPC: {
       Description: 'VPC logical resource ID',
@@ -20,6 +20,13 @@ function buildOutputs(createBastionHost = false) {
       },
     },
   };
+
+  if (exportOutputs) {
+    Object.entries(outputs).forEach(([name, value]) => {
+      // eslint-disable-next-line no-param-reassign
+      value.Export = { Name: { '!Join': ['-', ["!Ref 'AWS::StackName'", name]] } };
+    });
+  }
 
   if (createBastionHost) {
     outputs.BastionSSHUser = {

@@ -117,6 +117,9 @@ custom:
     # for RDS, Redshift, ElasticCache and DAX will be provisioned.
     subnetGroups:
       - rds
+        
+    # Whether to export stack outputs so it may be consumed by other stacks 
+    exportOutputs: false
 ```
 
 ## CloudFormation Outputs

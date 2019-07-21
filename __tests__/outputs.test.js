@@ -55,5 +55,37 @@ describe('outputs', () => {
       expect(actual).toEqual(expected);
       expect.assertions(1);
     });
+
+    it('exports the stack output', () => {
+      const expected = {
+        VPC: {
+          Description: 'VPC logical resource ID',
+          Value: {
+            Ref: 'VPC',
+          },
+          Export: {
+            Name: {
+              '!Join': ['-', ["!Ref 'AWS::StackName'", 'VPC']],
+            },
+          },
+        },
+        LambdaExecutionSecurityGroupId: {
+          Description:
+            'Security Group logical resource ID that the Lambda functions use when executing within the VPC',
+          Value: {
+            Ref: 'LambdaExecutionSecurityGroup',
+          },
+          Export: {
+            Name: {
+              '!Join': ['-', ["!Ref 'AWS::StackName'", 'LambdaExecutionSecurityGroupId']],
+            },
+          },
+        },
+      };
+
+      const actual = buildOutputs(false, true);
+      expect(actual).toEqual(expected);
+      expect.assertions(1);
+    });
   });
 });
