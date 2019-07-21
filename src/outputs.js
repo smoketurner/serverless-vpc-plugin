@@ -1,10 +1,15 @@
+const { VALID_SUBNET_GROUPS } = require('./constants');
+
 /**
  * Build CloudFormation Outputs on common resources
  *
  * @param {Boolean} createBastionHost
+ * @param {String[]} subnetGroups
+ * @param {Boolean} exportOutputs
  * @return {Object}
  */
-function buildOutputs(createBastionHost = false, exportOutputs = false) {
+
+function buildOutputs(createBastionHost = false, subnetGroups = VALID_SUBNET_GROUPS, exportOutputs = false) {
   const outputs = {
     VPC: {
       Description: 'VPC logical resource ID',
@@ -39,6 +44,24 @@ function buildOutputs(createBastionHost = false, exportOutputs = false) {
         Ref: 'BastionEIP',
       },
     };
+  }
+
+  if (subnetGroups) {
+    const typesToNames = {
+      rds: 'RDSSubnetGroup',
+      redshift: 'ElastiCacheSubnetGroup',
+      elasticache: 'RedshiftSubnetGroup',
+      dax: 'DAXSubnetGroup',
+    };
+
+    const subnetOutputs = subnetGroups.map(subnetGroup => ({
+      [typesToNames[subnetGroup]]: {
+        Description: `Subnet Group for ${subnetGroup}`,
+        Value: [typesToNames[subnetGroup]],
+      },
+    }));
+
+    Object.assign(outputs, ...subnetOutputs);
   }
 
   return outputs;
