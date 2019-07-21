@@ -9,7 +9,11 @@ const { VALID_SUBNET_GROUPS } = require('./constants');
  * @return {Object}
  */
 
-function buildOutputs(createBastionHost = false, subnetGroups = VALID_SUBNET_GROUPS, exportOutputs = false) {
+function buildOutputs(
+  createBastionHost = false,
+  subnetGroups = VALID_SUBNET_GROUPS,
+  exportOutputs = false,
+) {
   const outputs = {
     VPC: {
       Description: 'VPC logical resource ID',
