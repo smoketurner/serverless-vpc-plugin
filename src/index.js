@@ -107,7 +107,7 @@ class ServerlessVpcPlugin {
         ({ createNatInstance } = vpcConfig);
       }
 
-      if ('exportOutputs' in vpcConfig && typeof vpcConfig.createNatInstance === 'boolean') {
+      if ('exportOutputs' in vpcConfig && typeof vpcConfig.exportOutputs === 'boolean') {
         ({ exportOutputs } = vpcConfig);
       }
     }
