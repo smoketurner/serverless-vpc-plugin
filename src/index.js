@@ -38,6 +38,7 @@ class ServerlessVpcPlugin {
     let createNatInstance = false;
     let createBastionHost = false;
     let bastionHostKeyName = null;
+    let exportOutputs = false;
     let subnetGroups = VALID_SUBNET_GROUPS;
 
     const { vpcConfig } = this.serverless.service.custom;
@@ -104,6 +105,10 @@ class ServerlessVpcPlugin {
 
       if ('createNatInstance' in vpcConfig && typeof vpcConfig.createNatInstance === 'boolean') {
         ({ createNatInstance } = vpcConfig);
+      }
+
+      if ('exportOutputs' in vpcConfig && typeof vpcConfig.createNatInstance === 'boolean') {
+        ({ exportOutputs } = vpcConfig);
       }
     }
 
@@ -242,7 +247,7 @@ class ServerlessVpcPlugin {
     }
 
     const outputs = providerObj.compiledCloudFormationTemplate.Outputs;
-    Object.assign(outputs, buildOutputs(createBastionHost, subnetGroups));
+    Object.assign(outputs, buildOutputs(createBastionHost, subnetGroups, exportOutputs));
 
     this.serverless.cli.log('Updating Lambda VPC configuration');
     const { vpc = {} } = providerObj;
