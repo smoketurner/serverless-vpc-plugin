@@ -130,3 +130,8 @@ After executing `serverless deploy`, the following CloudFormation Stack Outputs 
 - `LambdaExecutionSecurityGroup`: Security Group logical resource ID that the Lambda functions use when executing within the VPC
 - `BastionSSHUser`: SSH username to access the bastion host, if provisioned
 - `BastionEIP`: Elastic IP address associated to the bastion host, if provisioned
+
+### Exporting CloudFormation Outputs
+Setting `exportOutputs: true` will export stack outputs.  
+The name of the exported value will be prefixed by the cloud formation stack name (`AWS::StackName`).
+For example, the value of the `VPC` output of a stack named `foo-prod` will be exported as `foo-prod-VPC`. 
