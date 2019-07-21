@@ -1,3 +1,4 @@
+const { VALID_SUBNET_GROUPS } = require('../src/constants');
 const { buildOutputs } = require('../src/outputs');
 
 describe('outputs', () => {
@@ -90,32 +91,68 @@ describe('outputs', () => {
 
     it('exports the stack output', () => {
       const expected = {
-        VPC: {
-          Description: 'VPC logical resource ID',
-          Value: {
-            Ref: 'VPC',
-          },
+        DAXSubnetGroup: {
+          Description: 'Subnet Group for dax',
           Export: {
             Name: {
-              '!Join': ['-', ["!Ref 'AWS::StackName'", 'VPC']],
+              '!Join': ['-', ["!Ref 'AWS::StackName'", 'DAXSubnetGroup']],
             },
           },
+          Value: ['DAXSubnetGroup'],
+        },
+        ElastiCacheSubnetGroup: {
+          Description: 'Subnet Group for redshift',
+          Export: {
+            Name: {
+              '!Join': ['-', ["!Ref 'AWS::StackName'", 'ElastiCacheSubnetGroup']],
+            },
+          },
+          Value: ['ElastiCacheSubnetGroup'],
         },
         LambdaExecutionSecurityGroupId: {
           Description:
             'Security Group logical resource ID that the Lambda functions use when executing within the VPC',
-          Value: {
-            Ref: 'LambdaExecutionSecurityGroup',
-          },
           Export: {
             Name: {
               '!Join': ['-', ["!Ref 'AWS::StackName'", 'LambdaExecutionSecurityGroupId']],
             },
           },
+          Value: {
+            Ref: 'LambdaExecutionSecurityGroup',
+          },
+        },
+        RDSSubnetGroup: {
+          Description: 'Subnet Group for rds',
+          Export: {
+            Name: {
+              '!Join': ['-', ["!Ref 'AWS::StackName'", 'RDSSubnetGroup']],
+            },
+          },
+          Value: ['RDSSubnetGroup'],
+        },
+        RedshiftSubnetGroup: {
+          Description: 'Subnet Group for elasticache',
+          Export: {
+            Name: {
+              '!Join': ['-', ["!Ref 'AWS::StackName'", 'RedshiftSubnetGroup']],
+            },
+          },
+          Value: ['RedshiftSubnetGroup'],
+        },
+        VPC: {
+          Description: 'VPC logical resource ID',
+          Export: {
+            Name: {
+              '!Join': ['-', ["!Ref 'AWS::StackName'", 'VPC']],
+            },
+          },
+          Value: {
+            Ref: 'VPC',
+          },
         },
       };
 
-      const actual = buildOutputs(false, true);
+      const actual = buildOutputs(false, VALID_SUBNET_GROUPS, true);
       expect(actual).toEqual(expected);
       expect.assertions(1);
     });
