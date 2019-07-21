@@ -242,7 +242,7 @@ class ServerlessVpcPlugin {
     }
 
     const outputs = providerObj.compiledCloudFormationTemplate.Outputs;
-    Object.assign(outputs, buildOutputs(createBastionHost));
+    Object.assign(outputs, buildOutputs(createBastionHost, subnetGroups));
 
     this.serverless.cli.log('Updating Lambda VPC configuration');
     const { vpc = {} } = providerObj;

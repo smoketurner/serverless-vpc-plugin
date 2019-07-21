@@ -127,3 +127,7 @@ After executing `serverless deploy`, the following CloudFormation Stack Outputs 
 - `LambdaExecutionSecurityGroup`: Security Group logical resource ID that the Lambda functions use when executing within the VPC
 - `BastionSSHUser`: SSH username to access the bastion host, if provisioned
 - `BastionEIP`: Elastic IP address associated to the bastion host, if provisioned
+- `RDSSubnetGroup`: SubnetGroup associated to RDS, if provisioned 
+- `ElastiCacheSubnetGroup`: SubnetGroup associated to ElastiCache, if provisioned
+- `RedshiftSubnetGroup`: SubnetGroup associated to Redshift, if provisioned
+- `DAXSubnetGroup`: SubnetGroup associated to DAX, if provisioned
