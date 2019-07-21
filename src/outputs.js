@@ -4,10 +4,16 @@ const { VALID_SUBNET_GROUPS } = require('./constants');
  * Build CloudFormation Outputs on common resources
  *
  * @param {Boolean} createBastionHost
+ * @param {String[]} subnetGroups
+ * @param {Boolean} exportOutputs
  * @return {Object}
  */
 
-function buildOutputs(createBastionHost = false, subnetGroups = VALID_SUBNET_GROUPS) {
+function buildOutputs(
+  createBastionHost = false,
+  subnetGroups = VALID_SUBNET_GROUPS,
+  exportOutputs = false,
+) {
   const outputs = {
     VPC: {
       Description: 'VPC logical resource ID',
@@ -23,6 +29,13 @@ function buildOutputs(createBastionHost = false, subnetGroups = VALID_SUBNET_GRO
       },
     },
   };
+
+  if (exportOutputs) {
+    Object.entries(outputs).forEach(([name, value]) => {
+      // eslint-disable-next-line no-param-reassign
+      value.Export = { Name: { '!Join': ['-', ["!Ref 'AWS::StackName'", name]] } };
+    });
+  }
 
   if (createBastionHost) {
     outputs.BastionSSHUser = {
