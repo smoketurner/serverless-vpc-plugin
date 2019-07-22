@@ -20,12 +20,19 @@ describe('ServerlessVpcPlugin', () => {
     AWS.setSDKInstance(provider.sdk);
     serverless.setProvider('aws', provider);
 
+    provider.cachedCredentials = {
+      credentials: {
+        accessKeyId: 'test',
+        secretAccessKey: 'test',
+      },
+    };
+
     serverless.service.provider = {
       name: 'aws',
       stage: 'dev',
       credentials: {
-        accessKeyId: 'id',
-        secretAccessKey: 'secret',
+        accessKeyId: 'test',
+        secretAccessKey: 'test',
       },
       compiledCloudFormationTemplate: {
         Resources: {},
@@ -49,9 +56,9 @@ describe('ServerlessVpcPlugin', () => {
     });
 
     it('should initialize with empty options', () => {
-      plugin = new ServerlessVpcPlugin(serverless, {});
-      expect(plugin.serverless).toBeInstanceOf(Serverless);
-      expect(plugin.options).toEqual({});
+      const newPlugin = new ServerlessVpcPlugin(serverless, {});
+      expect(newPlugin.serverless).toBeInstanceOf(Serverless);
+      expect(newPlugin.options).toEqual({});
       expect.assertions(2);
     });
 
@@ -60,9 +67,9 @@ describe('ServerlessVpcPlugin', () => {
         zones: ['us-west-2a'],
         services: [],
       };
-      plugin = new ServerlessVpcPlugin(serverless, options);
-      expect(plugin.serverless).toBeInstanceOf(Serverless);
-      expect(plugin.options).toEqual(options);
+      const newPlugin = new ServerlessVpcPlugin(serverless, options);
+      expect(newPlugin.serverless).toBeInstanceOf(Serverless);
+      expect(newPlugin.options).toEqual(options);
       expect.assertions(2);
     });
 
