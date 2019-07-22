@@ -23,6 +23,10 @@ describe('ServerlessVpcPlugin', () => {
     serverless.service.provider = {
       name: 'aws',
       stage: 'dev',
+      credentials: {
+        accessKeyId: 'id',
+        secretAccessKey: 'secret',
+      },
       compiledCloudFormationTemplate: {
         Resources: {},
         Outputs: {},
