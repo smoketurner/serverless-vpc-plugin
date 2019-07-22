@@ -111,7 +111,15 @@ describe('outputs', () => {
           Description: 'Subnet Group for dax',
           Export: {
             Name: {
-              'Fn::Join': ['-', ["Fn::Ref 'AWS::StackName'", 'DAXSubnetGroup']],
+              'Fn::Join': [
+                '-',
+                [
+                  {
+                    Ref: 'AWS::StackName',
+                  },
+                  'DAXSubnetGroup',
+                ],
+              ],
             },
           },
           Value: {
@@ -122,7 +130,15 @@ describe('outputs', () => {
           Description: 'Subnet Group for redshift',
           Export: {
             Name: {
-              'Fn::Join': ['-', ["Fn::Ref 'AWS::StackName'", 'ElastiCacheSubnetGroup']],
+              'Fn::Join': [
+                '-',
+                [
+                  {
+                    Ref: 'AWS::StackName',
+                  },
+                  'ElastiCacheSubnetGroup',
+                ],
+              ],
             },
           },
           Value: {
@@ -134,7 +150,15 @@ describe('outputs', () => {
             'Security Group logical resource ID that the Lambda functions use when executing within the VPC',
           Export: {
             Name: {
-              'Fn::Join': ['-', ["Fn::Ref 'AWS::StackName'", 'LambdaExecutionSecurityGroupId']],
+              'Fn::Join': [
+                '-',
+                [
+                  {
+                    Ref: 'AWS::StackName',
+                  },
+                  'LambdaExecutionSecurityGroupId',
+                ],
+              ],
             },
           },
           Value: {
@@ -145,7 +169,15 @@ describe('outputs', () => {
           Description: 'Subnet Group for rds',
           Export: {
             Name: {
-              'Fn::Join': ['-', ["Fn::Ref 'AWS::StackName'", 'RDSSubnetGroup']],
+              'Fn::Join': [
+                '-',
+                [
+                  {
+                    Ref: 'AWS::StackName',
+                  },
+                  'RDSSubnetGroup',
+                ],
+              ],
             },
           },
           Value: {
@@ -156,7 +188,15 @@ describe('outputs', () => {
           Description: 'Subnet Group for elasticache',
           Export: {
             Name: {
-              'Fn::Join': ['-', ["Fn::Ref 'AWS::StackName'", 'RedshiftSubnetGroup']],
+              'Fn::Join': [
+                '-',
+                [
+                  {
+                    Ref: 'AWS::StackName',
+                  },
+                  'RedshiftSubnetGroup',
+                ],
+              ],
             },
           },
           Value: {
@@ -167,7 +207,15 @@ describe('outputs', () => {
           Description: 'VPC logical resource ID',
           Export: {
             Name: {
-              'Fn::Join': ['-', ["Fn::Ref 'AWS::StackName'", 'VPC']],
+              'Fn::Join': [
+                '-',
+                [
+                  {
+                    Ref: 'AWS::StackName',
+                  },
+                  'VPC',
+                ],
+              ],
             },
           },
           Value: {

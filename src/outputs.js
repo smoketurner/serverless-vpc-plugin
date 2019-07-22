@@ -61,7 +61,7 @@ function appendExports(exportOutputs, outputs) {
       // eslint-disable-next-line no-param-reassign
       value.Export = {
         Name: {
-          'Fn::Join': ['-', ["Fn::Ref 'AWS::StackName'", name]],
+          'Fn::Join': ['-', [{ Ref: 'AWS::StackName' }, name]],
         },
       };
     });
