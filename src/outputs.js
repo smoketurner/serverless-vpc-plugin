@@ -1,5 +1,11 @@
 const { VALID_SUBNET_GROUPS } = require('./constants');
 
+/**
+ * Append subnet groups to output
+ *
+ * @param {Array<String>} subnetGroups
+ * @param {Object} outputs
+ */
 function appendSubnets(subnetGroups, outputs) {
   if (subnetGroups) {
     const typesToNames = {
@@ -20,12 +26,20 @@ function appendSubnets(subnetGroups, outputs) {
   }
 }
 
+/**
+ * Append bastion host to output
+ *
+ * @param {Boolean} createBastionHost
+ * @param {Object} outputs
+ */
 function appendBastionHost(createBastionHost, outputs) {
   if (createBastionHost) {
+    // eslint-disable-next-line no-param-reassign
     outputs.BastionSSHUser = {
       Description: 'SSH username for the Bastion host',
       Value: 'ec2-user',
     };
+    // eslint-disable-next-line no-param-reassign
     outputs.BastionEIP = {
       Description: 'Public IP of Bastion host',
       Value: {
@@ -35,11 +49,21 @@ function appendBastionHost(createBastionHost, outputs) {
   }
 }
 
+/**
+ * Append export outputs
+ *
+ * @param {Boolean} exportOutputs
+ * @param {Object} outputs
+ */
 function appendExports(exportOutputs, outputs) {
   if (exportOutputs) {
     Object.entries(outputs).forEach(([name, value]) => {
       // eslint-disable-next-line no-param-reassign
-      value.Export = { Name: { 'Fn::Join': ['-', ["Fn::Ref 'AWS::StackName'", name]] } };
+      value.Export = {
+        Name: {
+          'Fn::Join': ['-', ["Fn::Ref 'AWS::StackName'", name]],
+        },
+      };
     });
   }
 }
@@ -48,7 +72,7 @@ function appendExports(exportOutputs, outputs) {
  * Build CloudFormation Outputs on common resources
  *
  * @param {Boolean} createBastionHost
- * @param {String[]} subnetGroups
+ * @param {Array<String>} subnetGroups
  * @param {Boolean} exportOutputs
  * @return {Object}
  */
