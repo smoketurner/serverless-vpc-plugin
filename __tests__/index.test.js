@@ -4,7 +4,6 @@ const Serverless = require('serverless');
 const AwsProvider = require('serverless/lib/plugins/aws/provider/awsProvider');
 const ServerlessVpcPlugin = require('../src/index');
 
-
 describe('ServerlessVpcPlugin', () => {
   let serverless;
   let plugin;
