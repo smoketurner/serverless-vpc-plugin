@@ -95,7 +95,7 @@ describe('outputs', () => {
           Description: 'Subnet Group for dax',
           Export: {
             Name: {
-              '!Join': ['-', ["!Ref 'AWS::StackName'", 'DAXSubnetGroup']],
+              'Fn::Join': ['-', ["Fn::Ref 'AWS::StackName'", 'DAXSubnetGroup']],
             },
           },
           Value: ['DAXSubnetGroup'],
@@ -104,7 +104,7 @@ describe('outputs', () => {
           Description: 'Subnet Group for redshift',
           Export: {
             Name: {
-              '!Join': ['-', ["!Ref 'AWS::StackName'", 'ElastiCacheSubnetGroup']],
+              'Fn::Join': ['-', ["Fn::Ref 'AWS::StackName'", 'ElastiCacheSubnetGroup']],
             },
           },
           Value: ['ElastiCacheSubnetGroup'],
@@ -114,7 +114,7 @@ describe('outputs', () => {
             'Security Group logical resource ID that the Lambda functions use when executing within the VPC',
           Export: {
             Name: {
-              '!Join': ['-', ["!Ref 'AWS::StackName'", 'LambdaExecutionSecurityGroupId']],
+              'Fn::Join': ['-', ["Fn::Ref 'AWS::StackName'", 'LambdaExecutionSecurityGroupId']],
             },
           },
           Value: {
@@ -125,7 +125,7 @@ describe('outputs', () => {
           Description: 'Subnet Group for rds',
           Export: {
             Name: {
-              '!Join': ['-', ["!Ref 'AWS::StackName'", 'RDSSubnetGroup']],
+              'Fn::Join': ['-', ["Fn::Ref 'AWS::StackName'", 'RDSSubnetGroup']],
             },
           },
           Value: ['RDSSubnetGroup'],
@@ -134,7 +134,7 @@ describe('outputs', () => {
           Description: 'Subnet Group for elasticache',
           Export: {
             Name: {
-              '!Join': ['-', ["!Ref 'AWS::StackName'", 'RedshiftSubnetGroup']],
+              'Fn::Join': ['-', ["Fn::Ref 'AWS::StackName'", 'RedshiftSubnetGroup']],
             },
           },
           Value: ['RedshiftSubnetGroup'],
@@ -143,7 +143,7 @@ describe('outputs', () => {
           Description: 'VPC logical resource ID',
           Export: {
             Name: {
-              '!Join': ['-', ["!Ref 'AWS::StackName'", 'VPC']],
+              'Fn::Join': ['-', ["Fn::Ref 'AWS::StackName'", 'VPC']],
             },
           },
           Value: {

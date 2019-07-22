@@ -39,7 +39,7 @@ function appendExports(exportOutputs, outputs) {
   if (exportOutputs) {
     Object.entries(outputs).forEach(([name, value]) => {
       // eslint-disable-next-line no-param-reassign
-      value.Export = { Name: { '!Join': ['-', ["!Ref 'AWS::StackName'", name]] } };
+      value.Export = { Name: { 'Fn::Join': ['-', ["Fn::Ref 'AWS::StackName'", name]] } };
     });
   }
 }
