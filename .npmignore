@@ -3,6 +3,7 @@
 .editorconfig
 .gitattributes
 .gitignore
+.github/
 .prettierrc
 .prettierignore
 .serverless/
@@ -10,6 +11,7 @@
 .vscode/
 *.tgz
 CODE_OF_CONDUCT.md
+SECURITY.md
 jest-config.json
 __tests__/
 example/
