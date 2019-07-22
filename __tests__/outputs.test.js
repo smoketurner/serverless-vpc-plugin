@@ -7,11 +7,15 @@ describe('outputs', () => {
       const expected = {
         DAXSubnetGroup: {
           Description: 'Subnet Group for dax',
-          Value: ['DAXSubnetGroup'],
+          Value: {
+            Ref: 'DAXSubnetGroup',
+          },
         },
         ElastiCacheSubnetGroup: {
           Description: 'Subnet Group for redshift',
-          Value: ['ElastiCacheSubnetGroup'],
+          Value: {
+            Ref: 'ElastiCacheSubnetGroup',
+          },
         },
         LambdaExecutionSecurityGroupId: {
           Description:
@@ -22,11 +26,15 @@ describe('outputs', () => {
         },
         RDSSubnetGroup: {
           Description: 'Subnet Group for rds',
-          Value: ['RDSSubnetGroup'],
+          Value: {
+            Ref: 'RDSSubnetGroup',
+          },
         },
         RedshiftSubnetGroup: {
           Description: 'Subnet Group for elasticache',
-          Value: ['RedshiftSubnetGroup'],
+          Value: {
+            Ref: 'RedshiftSubnetGroup',
+          },
         },
         VPC: {
           Description: 'VPC logical resource ID',
@@ -55,11 +63,15 @@ describe('outputs', () => {
         },
         DAXSubnetGroup: {
           Description: 'Subnet Group for dax',
-          Value: ['DAXSubnetGroup'],
+          Value: {
+            Ref: 'DAXSubnetGroup',
+          },
         },
         ElastiCacheSubnetGroup: {
           Description: 'Subnet Group for redshift',
-          Value: ['ElastiCacheSubnetGroup'],
+          Value: {
+            Ref: 'ElastiCacheSubnetGroup',
+          },
         },
         LambdaExecutionSecurityGroupId: {
           Description:
@@ -70,11 +82,15 @@ describe('outputs', () => {
         },
         RDSSubnetGroup: {
           Description: 'Subnet Group for rds',
-          Value: ['RDSSubnetGroup'],
+          Value: {
+            Ref: 'RDSSubnetGroup',
+          },
         },
         RedshiftSubnetGroup: {
           Description: 'Subnet Group for elasticache',
-          Value: ['RedshiftSubnetGroup'],
+          Value: {
+            Ref: 'RedshiftSubnetGroup',
+          },
         },
         VPC: {
           Description: 'VPC logical resource ID',
@@ -98,7 +114,9 @@ describe('outputs', () => {
               'Fn::Join': ['-', ["Fn::Ref 'AWS::StackName'", 'DAXSubnetGroup']],
             },
           },
-          Value: ['DAXSubnetGroup'],
+          Value: {
+            Ref: 'DAXSubnetGroup',
+          },
         },
         ElastiCacheSubnetGroup: {
           Description: 'Subnet Group for redshift',
@@ -107,7 +125,9 @@ describe('outputs', () => {
               'Fn::Join': ['-', ["Fn::Ref 'AWS::StackName'", 'ElastiCacheSubnetGroup']],
             },
           },
-          Value: ['ElastiCacheSubnetGroup'],
+          Value: {
+            Ref: 'ElastiCacheSubnetGroup',
+          },
         },
         LambdaExecutionSecurityGroupId: {
           Description:
@@ -128,7 +148,9 @@ describe('outputs', () => {
               'Fn::Join': ['-', ["Fn::Ref 'AWS::StackName'", 'RDSSubnetGroup']],
             },
           },
-          Value: ['RDSSubnetGroup'],
+          Value: {
+            Ref: 'RDSSubnetGroup',
+          },
         },
         RedshiftSubnetGroup: {
           Description: 'Subnet Group for elasticache',
@@ -137,7 +159,9 @@ describe('outputs', () => {
               'Fn::Join': ['-', ["Fn::Ref 'AWS::StackName'", 'RedshiftSubnetGroup']],
             },
           },
-          Value: ['RedshiftSubnetGroup'],
+          Value: {
+            Ref: 'RedshiftSubnetGroup',
+          },
         },
         VPC: {
           Description: 'VPC logical resource ID',

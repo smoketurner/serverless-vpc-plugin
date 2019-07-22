@@ -12,7 +12,7 @@ function appendSubnets(subnetGroups, outputs) {
     const subnetOutputs = subnetGroups.map(subnetGroup => ({
       [typesToNames[subnetGroup]]: {
         Description: `Subnet Group for ${subnetGroup}`,
-        Value: [typesToNames[subnetGroup]],
+        Value: { Ref: typesToNames[subnetGroup] },
       },
     }));
 
