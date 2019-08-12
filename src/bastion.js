@@ -144,7 +144,8 @@ function buildBastionLaunchConfiguration(
             Ref: 'BastionSecurityGroup',
           },
         ],
-        SpotPrice: '0.0116', // On-Demand price of t2.micro in us-east-1
+        // On-Demand price of t2.micro in us-east-1 (https://aws.amazon.com/ec2/pricing/on-demand/)
+        SpotPrice: '0.0116',
         // https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cfn-helper-scripts-reference.html
         UserData: {
           'Fn::Base64': {
@@ -306,15 +307,14 @@ async function buildBastion(keyPairName, numZones = 0) {
     console.error('Unable to discover public IP address:', err);
   }
 
-  return Object.assign(
-    {},
-    buildBastionEIP(),
-    buildBastionIamRole(),
-    buildBastionInstanceProfile(),
-    buildBastionSecurityGroup(publicIp),
-    buildBastionLaunchConfiguration(keyPairName),
-    buildBastionAutoScalingGroup(numZones),
-  );
+  return {
+    ...buildBastionEIP(),
+    ...buildBastionIamRole(),
+    ...buildBastionInstanceProfile(),
+    ...buildBastionSecurityGroup(publicIp),
+    ...buildBastionLaunchConfiguration(keyPairName),
+    ...buildBastionAutoScalingGroup(numZones),
+  };
 }
 
 module.exports = {
