@@ -264,7 +264,7 @@ class ServerlessVpcPlugin {
     const outputs = providerObj.compiledCloudFormationTemplate.Outputs;
     Object.assign(
       outputs,
-      buildOutputs(createBastionHost, subnetGroups, exportOutputs, vpc.subnetIds),
+      buildOutputs(createBastionHost, subnetGroups, vpc.subnetIds, exportOutputs),
     );
 
     this.serverless.service.provider.vpc = vpc;
