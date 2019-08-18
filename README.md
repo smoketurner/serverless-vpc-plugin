@@ -134,6 +134,7 @@ After executing `serverless deploy`, the following CloudFormation Stack Outputs 
 - `ElastiCacheSubnetGroup`: SubnetGroup associated to ElastiCache, if provisioned
 - `RedshiftSubnetGroup`: SubnetGroup associated to Redshift, if provisioned
 - `DAXSubnetGroup`: SubnetGroup associated to DAX, if provisioned
+- `AppSubnet{i}`: Each of the generated "Application" Subnets, where i is a 1 based index
 
 ### Exporting CloudFormation Outputs
 Setting `exportOutputs: true` will export stack outputs.  
