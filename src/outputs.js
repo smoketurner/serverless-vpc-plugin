@@ -1,12 +1,24 @@
 const { VALID_SUBNET_GROUPS } = require('./constants');
 
 /**
+ * Append subnets to output
+ *
+ * @param {Array<{ Ref: String }>} subnets
+ * @param {Object} outputs
+ */
+function appendSubnets(subnets, outputs) {
+  const subnetOutputs = subnets.map(subnet => ({ [`${subnet.Ref}`]: { Value: subnet } }));
+
+  Object.assign(outputs, ...subnetOutputs);
+}
+
+/**
  * Append subnet groups to output
  *
  * @param {Array<String>} subnetGroups
  * @param {Object} outputs
  */
-function appendSubnets(subnetGroups, outputs) {
+function appendSubnetGroups(subnetGroups, outputs) {
   if (subnetGroups) {
     const typesToNames = {
       rds: 'RDSSubnetGroup',
@@ -15,14 +27,14 @@ function appendSubnets(subnetGroups, outputs) {
       dax: 'DAXSubnetGroup',
     };
 
-    const subnetOutputs = subnetGroups.map(subnetGroup => ({
+    const subnetGroupOutputs = subnetGroups.map(subnetGroup => ({
       [typesToNames[subnetGroup]]: {
         Description: `Subnet Group for ${subnetGroup}`,
         Value: { Ref: typesToNames[subnetGroup] },
       },
     }));
 
-    Object.assign(outputs, ...subnetOutputs);
+    Object.assign(outputs, ...subnetGroupOutputs);
   }
 }
 
@@ -73,6 +85,7 @@ function appendExports(exportOutputs, outputs) {
  *
  * @param {Boolean} createBastionHost
  * @param {Array<String>} subnetGroups
+ *  * @param {Array<{ Ref: String }>} subnets
  * @param {Boolean} exportOutputs
  * @return {Object}
  */
@@ -80,6 +93,7 @@ function appendExports(exportOutputs, outputs) {
 function buildOutputs(
   createBastionHost = false,
   subnetGroups = VALID_SUBNET_GROUPS,
+  subnets = [],
   exportOutputs = false,
 ) {
   const outputs = {
@@ -98,7 +112,9 @@ function buildOutputs(
     },
   };
 
-  appendSubnets(subnetGroups, outputs);
+  appendSubnetGroups(subnetGroups, outputs);
+
+  appendSubnets(subnets, outputs);
 
   appendBastionHost(createBastionHost, outputs);
 

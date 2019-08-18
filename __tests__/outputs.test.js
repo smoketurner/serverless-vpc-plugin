@@ -105,6 +105,17 @@ describe('outputs', () => {
       expect.assertions(1);
     });
 
+    it('builds the outputs with subnets', () => {
+      const subnets = [1, 2, 3].map(i => ({ Ref: `AppSubnet${i}` }));
+      const expected = {
+        AppSubnet1: { Value: { Ref: 'AppSubnet1' } },
+        AppSubnet2: { Value: { Ref: 'AppSubnet2' } },
+        AppSubnet3: { Value: { Ref: 'AppSubnet3' } },
+      };
+      const actual = buildOutputs(false, VALID_SUBNET_GROUPS, subnets);
+      expect(actual).toEqual(expect.objectContaining(expected));
+    });
+
     it('exports the stack output', () => {
       const expected = {
         DAXSubnetGroup: {
@@ -224,7 +235,7 @@ describe('outputs', () => {
         },
       };
 
-      const actual = buildOutputs(false, VALID_SUBNET_GROUPS, true);
+      const actual = buildOutputs(false, VALID_SUBNET_GROUPS, [], true);
       expect(actual).toEqual(expected);
       expect.assertions(1);
     });

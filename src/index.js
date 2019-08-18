@@ -246,9 +246,6 @@ class ServerlessVpcPlugin {
       Object.assign(resources, buildLogBucket(), buildLogBucketPolicy(), buildVpcFlowLogs());
     }
 
-    const outputs = providerObj.compiledCloudFormationTemplate.Outputs;
-    Object.assign(outputs, buildOutputs(createBastionHost, subnetGroups, exportOutputs));
-
     this.serverless.cli.log('Updating Lambda VPC configuration');
     const { vpc = {} } = providerObj;
 
@@ -263,6 +260,13 @@ class ServerlessVpcPlugin {
     for (let i = 1; i <= numZones; i += 1) {
       vpc.subnetIds.push({ Ref: `${APP_SUBNET}Subnet${i}` });
     }
+
+    const outputs = providerObj.compiledCloudFormationTemplate.Outputs;
+    Object.assign(
+      outputs,
+      buildOutputs(createBastionHost, subnetGroups, exportOutputs, vpc.subnetIds),
+    );
+
     this.serverless.service.provider.vpc = vpc;
   }
 
