@@ -1,6 +1,19 @@
 const { VALID_SUBNET_GROUPS } = require('./constants');
 
 /**
+ * Append Security Groups to output
+ *
+ * @param {Object} outputs
+ */
+function appendSecurityGroups(outputs) {
+  Object.assign(
+    outputs,
+    { LambdaExecutionSecurityGroup: { Value: { Ref: 'LambdaExecutionSecurityGroup' } } },
+    { LambdaEndpointSecurityGroup: { Value: { Ref: 'LambdaEndpointSecurityGroup' } } },
+  );
+}
+
+/**
  * Append subnets to output
  *
  * @param {Array<{ Ref: String }>} subnets
@@ -85,7 +98,7 @@ function appendExports(exportOutputs, outputs) {
  *
  * @param {Boolean} createBastionHost
  * @param {Array<String>} subnetGroups
- *  * @param {Array<{ Ref: String }>} subnets
+ * @param {Array<{ Ref: String }>} subnets
  * @param {Boolean} exportOutputs
  * @return {Object}
  */
@@ -115,6 +128,8 @@ function buildOutputs(
   appendSubnetGroups(subnetGroups, outputs);
 
   appendSubnets(subnets, outputs);
+
+  appendSecurityGroups(outputs);
 
   appendBastionHost(createBastionHost, outputs);
 
