@@ -116,15 +116,6 @@ describe('outputs', () => {
       expect(actual).toEqual(expect.objectContaining(expected));
     });
 
-    it('builds the outputs with Security Groups', () => {
-      const expected = {
-        LambdaExecutionSecurityGroup: { Value: { Ref: 'LambdaExecutionSecurityGroup' } },
-        LambdaEndpointSecurityGroup: { Value: { Ref: 'LambdaEndpointSecurityGroup' } },
-      };
-      const actual = buildOutputs();
-      expect(actual).toEqual(expect.objectContaining(expected));
-    });
-
     it('exports the stack output', () => {
       const expected = {
         DAXSubnetGroup: {

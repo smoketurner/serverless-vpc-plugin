@@ -134,8 +134,6 @@ After executing `serverless deploy`, the following CloudFormation Stack Outputs 
 - `ElastiCacheSubnetGroup`: SubnetGroup associated to ElastiCache, if provisioned
 - `RedshiftSubnetGroup`: SubnetGroup associated to Redshift, if provisioned
 - `DAXSubnetGroup`: SubnetGroup associated to DAX, if provisioned
-- `LambdaExecutionSecurityGroup`: Security Group allowing inbound HTTPS traffic from LambdaExecutionSecurityGroup
-- `LambdaEndpointSecurityGroup`: Security Group allowing Lambda access to VPC endpoints
 - `AppSubnet{i}`: Each of the generated "Application" Subnets, where i is a 1 based index
 
 ### Exporting CloudFormation Outputs
