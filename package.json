@@ -23,7 +23,7 @@
   ],
   "main": "src/index.js",
   "scripts": {
-    "test": "jest --coverage"
+    "test": "SLS_DEBUG=* jest --coverage"
   },
   "dependencies": {
     "cidr-split": "0.1.2"
