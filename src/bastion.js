@@ -5,7 +5,7 @@ const { PUBLIC_SUBNET } = require('./constants');
 /**
  * Return the public IP
  *
- * @return {Promise}
+ * @return {Promise<String>}
  */
 function getPublicIp() {
   const options = {
@@ -77,7 +77,7 @@ function buildBastionIamRole({ name = 'BastionIamRole' } = {}) {
             },
           },
         ],
-        ManagedPolicyArns: ['arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM'],
+        ManagedPolicyArns: ['arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore'],
       },
     },
   };

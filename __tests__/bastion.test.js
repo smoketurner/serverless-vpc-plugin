@@ -61,7 +61,7 @@ describe('bastion', () => {
                 },
               },
             ],
-            ManagedPolicyArns: ['arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM'],
+            ManagedPolicyArns: ['arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore'],
           },
         },
       };
@@ -243,8 +243,7 @@ describe('bastion', () => {
                 Ref: 'BastionSecurityGroup',
               },
             ],
-            SpotPrice: '0.0116', // On-Demand price of t2.micro in us-east-1
-            // https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cfn-helper-scripts-reference.html
+            SpotPrice: '0.0116',
             UserData: {
               'Fn::Base64': {
                 'Fn::Join': [
@@ -383,7 +382,7 @@ describe('bastion', () => {
                 },
               },
             ],
-            ManagedPolicyArns: ['arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM'],
+            ManagedPolicyArns: ['arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore'],
           },
         },
         BastionAutoScalingGroup: {
@@ -457,8 +456,7 @@ describe('bastion', () => {
                 Ref: 'BastionSecurityGroup',
               },
             ],
-            SpotPrice: '0.0116', // On-Demand price of t2.micro in us-east-1
-            // https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cfn-helper-scripts-reference.html
+            SpotPrice: '0.0116',
             UserData: {
               'Fn::Base64': {
                 'Fn::Join': [
