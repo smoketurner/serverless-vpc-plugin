@@ -97,7 +97,7 @@ class ServerlessVpcPlugin {
         ({ bastionHostKeyName } = vpcConfig);
       }
 
-      if (createBastionHost && (!bastionHostKeyName || bastionHostKeyName.length < 1)) {
+      if (createBastionHost && !bastionHostKeyName) {
         throw new this.serverless.classes.Error(
           'bastionHostKeyName must be provided if createBastionHost is true',
         );
