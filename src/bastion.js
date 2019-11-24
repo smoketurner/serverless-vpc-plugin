@@ -12,6 +12,7 @@ function getPublicIp() {
     host: 'api.ipify.org',
     port: 80,
     path: '/',
+    timeout: 1000,
   };
   return new Promise((resolve, reject) => {
     const req = http.get(options, res => {
@@ -19,6 +20,10 @@ function getPublicIp() {
       res.on('data', data => buffers.push(data));
       res.once('end', () => resolve(Buffer.concat(buffers).toString()));
       res.once('error', reject);
+    });
+    req.once('timeout', () => {
+      req.abort();
+      return reject(new Error(`request timed out after ${options.timeout}ms`));
     });
     req.once('error', reject);
   });
