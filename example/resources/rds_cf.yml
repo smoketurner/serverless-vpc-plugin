@@ -1,61 +1,16 @@
 ---
 Resources:
-
-  DBSecurityGroup:
-    Type: 'AWS::EC2::SecurityGroup'
+  DBCluster:
+    Type: 'AWS::RDS::DBCluster'
     Properties:
-      GroupDescription: Access to Postgres
-      VpcId:
-        Ref: VPC
-      SecurityGroupIngress:
-        - SourceSecurityGroupId:
-            Ref: BastionSecurityGroup
-          Description: Bastion access to Postgres
-          IpProtocol: tcp
-          FromPort: 5432
-          ToPort: 5432
-        - SourceSecurityGroupId:
-            Ref: LambdaExecutionSecurityGroup
-          Description: Lambda access to Postgres
-          IpProtocol: tcp
-          FromPort: 5432
-          ToPort: 5432
-      Tags:
-        - Key: Name
-          Value:
-            'Fn::Join':
-              - '-'
-              - - Ref: 'AWS::StackName'
-                - rds
-
-  PostgresParameterGroup:
-    Type: 'AWS::RDS::DBParameterGroup'
-    Properties:
-      Description: Require SSL Connections
-      Family: postgres11
-      Parameters:
-        "rds.force_ssl": 1
-
-  DBInstance:
-    Type: 'AWS::RDS::DBInstance'
-    Properties:
-      AllocatedStorage: 20
-      AllowMajorVersionUpgrade: true
-      AutoMinorVersionUpgrade: true
-      AvailabilityZone:
-        'Fn::Select':
-          - 0
-          - 'Fn::GetAZs': ''
-      BackupRetentionPeriod: 1
-      CopyTagsToSnapshot: true
-      DBInstanceClass: 'db.t2.micro'
-      DBParameterGroupName:
-        Ref: PostgresParameterGroup
+      DatabaseName: ${self:custom.databaseName}
+      DBClusterIdentifier: '${self:service}-${self:provider.stage}'
       DBSubnetGroupName:
         Ref: RDSSubnetGroup
-      EnableIAMDatabaseAuthentication: true
-      Engine: postgres
-      EngineVersion: '11.4'
+      EnableHttpEndpoint: true
+      Engine: aurora-postgresql
+      EngineMode: serverless
+      EngineVersion: '10.7'
       MasterUsername:
         'Fn::Join':
           - ''
@@ -68,9 +23,7 @@ Resources:
           - - '{{resolve:secretsmanager:'
             - Ref: DBSecret
             - ':SecretString:password}}'
-      MultiAZ: false
-      PubliclyAccessible: false
-      StorageType: gp2
+      StorageEncrypted: true
       Tags:
         - Key: Name
           Value:
@@ -78,20 +31,18 @@ Resources:
               - '-'
               - - Ref: 'AWS::StackName'
                 - rds
-      VPCSecurityGroups:
-        - Ref: DBSecurityGroup
 
 Outputs:
-  DBInstanceAddress:
-    Description: RDS Instance Address
+  DBClusterAddress:
+    Description: RDS Cluster Address
     Value:
       'Fn::GetAtt':
-        - DBInstance
+        - DBCluster
         - 'Endpoint.Address'
 
-  DBInstancePort:
-    Description: RDS Instance Port
+  DBClusterPort:
+    Description: RDS Cluster Port
     Value:
       'Fn::GetAtt':
-        - DBInstance
+        - DBCluster
         - 'Endpoint.Port'

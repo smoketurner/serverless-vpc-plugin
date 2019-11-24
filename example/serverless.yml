@@ -2,14 +2,18 @@ service: sls-vpc-example
 
 provider:
   name: aws
-  runtime: nodejs10.x
+  runtime: nodejs12.x
   stage: ${opt:stage, 'dev'}
   region: ${opt:region, 'us-east-1'}
   versionFunctions: false
   logRetentionInDays: 1
   deploymentBucket:
     serverSideEncryption: AES256
+    blockPublicAccess: true
   endpointType: regional
+  environment:
+    AWS_NODEJS_CONNECTION_REUSE_ENABLED: '1'
+    NODE_ENV: development
 
 plugins:
   - serverless-vpc-plugin
@@ -20,22 +24,18 @@ package:
   excludeDevDependencies: true
 
 custom:
-  secretName: '${self:service}/${self:provider.stage}/rds'
+  secretName: 'rds-db-credentials/${self:service}/${self:provider.stage}'
+  databaseName: slsvpcexample
   vpcConfig:
     cidrBlock: '10.0.0.0/16'
-    createNatGateway: false
     createDbSubnet: true
-    createNetworkAcl: false
-    createFlowLogs: true
     createNatInstance: true
-    createBastionHost: true
-    bastionHostKeyName: philjr
     zones:
       - us-east-1a
       - us-east-1b
       - us-east-1c
     services:
-      #- s3
+      - secretsmanager
   webpack:
     includeModules:
       forceExclude:
@@ -48,7 +48,17 @@ functions:
     description: RDS Test Handler
     role: ExampleLambdaRole
     environment:
-      SECRET_NAME: ${self:custom.secretName}
+      SECRET_ARN:
+        Ref: DBSecret
+      RESOURCE_ARN:
+        'Fn::Join':
+          - ':'
+          - - 'arn:aws:rds'
+            - Ref: 'AWS::Region'
+            - Ref: 'AWS::AccountId'
+            - 'cluster:${self:service}-${self:provider.stage}'
+      DATABASE_NAME: ${self:custom.databaseName}
+      SCHEMA_NAME: public
 
 resources:
   - ${file(resources/iam_cf.yml)}
