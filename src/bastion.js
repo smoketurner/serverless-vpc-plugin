@@ -23,7 +23,6 @@ function getPublicIp() {
     });
     req.once('timeout', () => {
       req.abort();
-      return reject(new Error(`request timed out after ${options.timeout}ms`));
     });
     req.once('error', reject);
   });
