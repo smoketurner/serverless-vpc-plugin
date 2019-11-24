@@ -13,7 +13,4 @@ module.exports = {
   performance: {
     hints: false,
   },
-  module: {
-    rules: [{ test: /\.pem$/, use: 'raw-loader' }],
-  },
 };
