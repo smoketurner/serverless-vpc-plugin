@@ -16,8 +16,7 @@ Resources:
             Statement:
               - Effect: Allow
                 Action: "secretsmanager:GetSecretValue"
-                Resource:
-                  Ref: DBSecret
+                Resource: !Ref DBSecret
               - Effect: Allow
                 Action:
                   - "rds-data:BatchExecuteStatement"
@@ -27,4 +26,4 @@ Resources:
                   - "rds-data:RollbackTransaction"
                 Resource: "*"
       ManagedPolicyArns:
-        - "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
+        - !Sub "arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
