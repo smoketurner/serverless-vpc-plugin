@@ -48,15 +48,8 @@ functions:
     description: RDS Test Handler
     role: ExampleLambdaRole
     environment:
-      SECRET_ARN:
-        Ref: DBSecret
-      RESOURCE_ARN:
-        'Fn::Join':
-          - ':'
-          - - 'arn:aws:rds'
-            - Ref: 'AWS::Region'
-            - Ref: 'AWS::AccountId'
-            - 'cluster:${self:service}-${self:provider.stage}'
+      SECRET_ARN: !Ref DBSecret
+      RESOURCE_ARN: !Sub 'arn:${AWS::Partition}:rds:${AWS::Region}:${AWS::AccountId}:cluster:${self:service}-${self:provider.stage}'
       DATABASE_NAME: ${self:custom.databaseName}
       SCHEMA_NAME: public
 
