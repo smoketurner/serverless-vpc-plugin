@@ -10,7 +10,7 @@ Resources:
       EnableHttpEndpoint: true
       Engine: aurora-postgresql
       EngineMode: serverless
-      EngineVersion: '10.7'
+      EngineVersion: '11.4'
       MasterUsername:
         'Fn::Join':
           - ''
