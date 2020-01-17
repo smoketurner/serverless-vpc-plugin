@@ -39,6 +39,6 @@
     "jest": "24.9.0",
     "nock": "11.7.2",
     "prettier": "1.19.1",
-    "serverless": "1.61.1"
+    "serverless": "1.61.2"
   }
 }
