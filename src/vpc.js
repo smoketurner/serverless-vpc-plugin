@@ -193,6 +193,7 @@ function buildRoute(
 ) {
   const route = {
     Type: 'AWS::EC2::Route',
+    DependsOn: ['InternetGatewayAttachment'],
     Properties: {
       DestinationCidrBlock: '0.0.0.0/0',
       RouteTableId: {
