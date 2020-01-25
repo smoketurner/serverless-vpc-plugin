@@ -205,6 +205,7 @@
   },
   "PublicRoute1": {
     "Type": "AWS::EC2::Route",
+    "DependsOn": ["InternetGatewayAttachment"],
     "Properties": {
       "DestinationCidrBlock": "0.0.0.0/0",
       "RouteTableId": {
@@ -355,6 +356,7 @@
   },
   "PublicRoute2": {
     "Type": "AWS::EC2::Route",
+    "DependsOn": ["InternetGatewayAttachment"],
     "Properties": {
       "DestinationCidrBlock": "0.0.0.0/0",
       "RouteTableId": {
@@ -505,6 +507,7 @@
   },
   "PublicRoute3": {
     "Type": "AWS::EC2::Route",
+    "DependsOn": ["InternetGatewayAttachment"],
     "Properties": {
       "DestinationCidrBlock": "0.0.0.0/0",
       "RouteTableId": {

@@ -1,3 +1,5 @@
+const { PUBLIC_SUBNET } = require('./constants');
+
 /**
  * Build a VPC
  *
@@ -201,6 +203,11 @@ function buildRoute(
     },
   };
 
+  // fixes "route table rtb-x and network gateway igw-x belong to different networks"
+  // see https://stackoverflow.com/questions/48865762
+  if (name === PUBLIC_SUBNET) {
+    route.DependsOn = ['InternetGatewayAttachment'];
+  }
   if (NatGatewayId) {
     route.Properties.NatGatewayId = {
       Ref: NatGatewayId,
