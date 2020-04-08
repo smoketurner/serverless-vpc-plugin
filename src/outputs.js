@@ -22,8 +22,8 @@ function appendSubnetGroups(subnetGroups, outputs) {
   if (subnetGroups) {
     const typesToNames = {
       rds: 'RDSSubnetGroup',
-      redshift: 'ElastiCacheSubnetGroup',
-      elasticache: 'RedshiftSubnetGroup',
+      redshift: 'RedshiftSubnetGroup',
+      elasticache: 'ElastiCacheSubnetGroup',
       dax: 'DAXSubnetGroup',
     };
 

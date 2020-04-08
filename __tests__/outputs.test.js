@@ -12,7 +12,7 @@ describe('outputs', () => {
           },
         },
         ElastiCacheSubnetGroup: {
-          Description: 'Subnet Group for redshift',
+          Description: 'Subnet Group for elasticache',
           Value: {
             Ref: 'ElastiCacheSubnetGroup',
           },
@@ -31,7 +31,7 @@ describe('outputs', () => {
           },
         },
         RedshiftSubnetGroup: {
-          Description: 'Subnet Group for elasticache',
+          Description: 'Subnet Group for redshift',
           Value: {
             Ref: 'RedshiftSubnetGroup',
           },
@@ -68,7 +68,7 @@ describe('outputs', () => {
           },
         },
         ElastiCacheSubnetGroup: {
-          Description: 'Subnet Group for redshift',
+          Description: 'Subnet Group for elasticache',
           Value: {
             Ref: 'ElastiCacheSubnetGroup',
           },
@@ -87,7 +87,7 @@ describe('outputs', () => {
           },
         },
         RedshiftSubnetGroup: {
-          Description: 'Subnet Group for elasticache',
+          Description: 'Subnet Group for redshift',
           Value: {
             Ref: 'RedshiftSubnetGroup',
           },
@@ -138,7 +138,7 @@ describe('outputs', () => {
           },
         },
         ElastiCacheSubnetGroup: {
-          Description: 'Subnet Group for redshift',
+          Description: 'Subnet Group for elasticache',
           Export: {
             Name: {
               'Fn::Join': [
@@ -196,7 +196,7 @@ describe('outputs', () => {
           },
         },
         RedshiftSubnetGroup: {
-          Description: 'Subnet Group for elasticache',
+          Description: 'Subnet Group for redshift',
           Export: {
             Name: {
               'Fn::Join': [
