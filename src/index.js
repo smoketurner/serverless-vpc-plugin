@@ -67,13 +67,13 @@ class ServerlessVpcPlugin {
       }
 
       if (Array.isArray(vpcConfig.zones) && vpcConfig.zones.length > 0) {
-        zones = vpcConfig.zones.map(z => z.trim().toLowerCase());
+        zones = vpcConfig.zones.map((z) => z.trim().toLowerCase());
       }
       if (Array.isArray(vpcConfig.services)) {
-        services = vpcConfig.services.map(s => s.trim().toLowerCase());
+        services = vpcConfig.services.map((s) => s.trim().toLowerCase());
       }
       if (Array.isArray(vpcConfig.subnetGroups)) {
-        subnetGroups = vpcConfig.subnetGroups.map(s => s.trim().toLowerCase());
+        subnetGroups = vpcConfig.subnetGroups.map((s) => s.trim().toLowerCase());
       }
 
       if ('createDbSubnet' in vpcConfig && typeof vpcConfig.createDbSubnet === 'boolean') {
@@ -200,7 +200,7 @@ class ServerlessVpcPlugin {
     if (createBastionHost) {
       this.serverless.cli.log(`Provisioning bastion host using key pair "${bastionHostKeyName}"`);
 
-      // @see https://aws.amazon.com/blogs/compute/query-for-the-latest-amazon-linux-ami-ids-using-aws-systems-manager-parameter-store/
+      // @see https://docs.aws.amazon.com/systems-manager/latest/userguide/parameter-store-public-parameters.html#parameter-store-public-parameters-ami
       providerObj.compiledCloudFormationTemplate.Parameters = {
         LatestAmiId: {
           Type: 'AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>',
@@ -231,7 +231,7 @@ class ServerlessVpcPlugin {
       if (numZones < 2) {
         this.serverless.cli.log('WARNING: less than 2 AZs; skipping subnet group provisioning');
       } else {
-        const invalidGroup = subnetGroups.some(group => !VALID_SUBNET_GROUPS.includes(group));
+        const invalidGroup = subnetGroups.some((group) => !VALID_SUBNET_GROUPS.includes(group));
         if (invalidGroup) {
           throw new this.serverless.classes.Error(
             'WARNING: Invalid subnetGroups option. Valid options: rds, redshift, elasticache, dax',
@@ -264,7 +264,12 @@ class ServerlessVpcPlugin {
     const outputs = providerObj.compiledCloudFormationTemplate.Outputs;
     Object.assign(
       outputs,
-      buildOutputs(createBastionHost, subnetGroups, vpc.subnetIds, exportOutputs),
+      buildOutputs({
+        createBastionHost,
+        subnetGroups,
+        subnets: vpc.subnetIds,
+        exportOutputs,
+      }),
     );
 
     this.serverless.service.provider.vpc = vpc;
@@ -285,9 +290,9 @@ class ServerlessVpcPlugin {
         },
       ],
     };
-    return this.provider.request('EC2', 'describeAvailabilityZones', params).then(data =>
-      data.AvailabilityZones.filter(z => z.State === 'available')
-        .map(z => z.ZoneName)
+    return this.provider.request('EC2', 'describeAvailabilityZones', params).then((data) =>
+      data.AvailabilityZones.filter((z) => z.State === 'available')
+        .map((z) => z.ZoneName)
         .sort(),
     );
   }
@@ -303,7 +308,7 @@ class ServerlessVpcPlugin {
     };
     return this.provider
       .request('EC2', 'describeVpcEndpointServices', params)
-      .then(data => data.ServiceNames.sort());
+      .then((data) => data.ServiceNames.sort());
   }
 
   /**
@@ -346,7 +351,7 @@ class ServerlessVpcPlugin {
         },
       ],
     };
-    return this.provider.request('EC2', 'describeImages', params).then(data =>
+    return this.provider.request('EC2', 'describeImages', params).then((data) =>
       data.Images.sort((a, b) => {
         if (a.CreationDate > b.CreationDate) {
           return -1;
@@ -355,7 +360,7 @@ class ServerlessVpcPlugin {
           return 1;
         }
         return 0;
-      }).map(image => image.ImageId),
+      }).map((image) => image.ImageId),
     );
   }
 
@@ -373,8 +378,8 @@ class ServerlessVpcPlugin {
 
     const available = await this.getVpcEndpointServicesPerRegion();
     return services
-      .map(service => `com.amazonaws.${region}.${service}`)
-      .filter(service => !available.includes(service));
+      .map((service) => `com.amazonaws.${region}.${service}`)
+      .filter((service) => !available.includes(service));
   }
 }
 

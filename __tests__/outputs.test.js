@@ -1,10 +1,27 @@
-const { VALID_SUBNET_GROUPS } = require('../src/constants');
 const { buildOutputs } = require('../src/outputs');
 
 describe('outputs', () => {
   describe('#buildOutputs', () => {
     it('builds the outputs with no bastion host', () => {
+      const subnets = [1, 2, 3].map((i) => ({
+        Ref: `AppSubnet${i}`,
+      }));
       const expected = {
+        AppSubnet1: {
+          Value: {
+            Ref: 'AppSubnet1',
+          },
+        },
+        AppSubnet2: {
+          Value: {
+            Ref: 'AppSubnet2',
+          },
+        },
+        AppSubnet3: {
+          Value: {
+            Ref: 'AppSubnet3',
+          },
+        },
         DAXSubnetGroup: {
           Description: 'Subnet Group for dax',
           Value: {
@@ -44,13 +61,31 @@ describe('outputs', () => {
         },
       };
 
-      const actual = buildOutputs();
+      const actual = buildOutputs({ subnets });
       expect(actual).toEqual(expected);
       expect.assertions(1);
     });
 
     it('builds the outputs with a bastion host', () => {
+      const subnets = [1, 2, 3].map((i) => ({
+        Ref: `AppSubnet${i}`,
+      }));
       const expected = {
+        AppSubnet1: {
+          Value: {
+            Ref: 'AppSubnet1',
+          },
+        },
+        AppSubnet2: {
+          Value: {
+            Ref: 'AppSubnet2',
+          },
+        },
+        AppSubnet3: {
+          Value: {
+            Ref: 'AppSubnet3',
+          },
+        },
         BastionEIP: {
           Description: 'Public IP of Bastion host',
           Value: {
@@ -100,24 +135,71 @@ describe('outputs', () => {
         },
       };
 
-      const actual = buildOutputs(true);
+      const actual = buildOutputs({ createBastionHost: true, subnets });
       expect(actual).toEqual(expected);
       expect.assertions(1);
     });
 
     it('builds the outputs with subnets', () => {
-      const subnets = [1, 2, 3].map(i => ({ Ref: `AppSubnet${i}` }));
+      const subnets = [1, 2, 3].map((i) => ({
+        Ref: `AppSubnet${i}`,
+      }));
       const expected = {
-        AppSubnet1: { Value: { Ref: 'AppSubnet1' } },
-        AppSubnet2: { Value: { Ref: 'AppSubnet2' } },
-        AppSubnet3: { Value: { Ref: 'AppSubnet3' } },
+        AppSubnet1: {
+          Value: {
+            Ref: 'AppSubnet1',
+          },
+        },
+        AppSubnet2: {
+          Value: {
+            Ref: 'AppSubnet2',
+          },
+        },
+        AppSubnet3: {
+          Value: {
+            Ref: 'AppSubnet3',
+          },
+        },
       };
-      const actual = buildOutputs(false, VALID_SUBNET_GROUPS, subnets);
+      const actual = buildOutputs({ createBastionHost: false, subnets });
       expect(actual).toEqual(expect.objectContaining(expected));
     });
 
     it('exports the stack output', () => {
+      const subnets = [1, 2, 3].map((i) => ({
+        Ref: `AppSubnet${i}`,
+      }));
       const expected = {
+        AppSubnet1: {
+          Export: {
+            Name: {
+              'Fn::Join': ['-', [{ Ref: 'AWS::StackName' }, 'AppSubnet1']],
+            },
+          },
+          Value: {
+            Ref: 'AppSubnet1',
+          },
+        },
+        AppSubnet2: {
+          Export: {
+            Name: {
+              'Fn::Join': ['-', [{ Ref: 'AWS::StackName' }, 'AppSubnet2']],
+            },
+          },
+          Value: {
+            Ref: 'AppSubnet2',
+          },
+        },
+        AppSubnet3: {
+          Export: {
+            Name: {
+              'Fn::Join': ['-', [{ Ref: 'AWS::StackName' }, 'AppSubnet3']],
+            },
+          },
+          Value: {
+            Ref: 'AppSubnet3',
+          },
+        },
         DAXSubnetGroup: {
           Description: 'Subnet Group for dax',
           Export: {
@@ -235,7 +317,40 @@ describe('outputs', () => {
         },
       };
 
-      const actual = buildOutputs(false, VALID_SUBNET_GROUPS, [], true);
+      const actual = buildOutputs({ createBastionHost: false, subnets, exportOutputs: true });
+      expect(actual).toEqual(expected);
+      expect.assertions(1);
+    });
+
+    it('does not output subnet groups with only a single subnet', () => {
+      const subnets = [
+        {
+          Ref: 'AppSubnet1',
+        },
+      ];
+      const expected = {
+        AppSubnet1: {
+          Value: {
+            Ref: 'AppSubnet1',
+          },
+        },
+        LambdaExecutionSecurityGroupId: {
+          Description:
+            'Security Group logical resource ID that the Lambda functions use when executing within the VPC',
+          Value: {
+            Ref: 'LambdaExecutionSecurityGroup',
+          },
+        },
+        VPC: {
+          Description: 'VPC logical resource ID',
+
+          Value: {
+            Ref: 'VPC',
+          },
+        },
+      };
+
+      const actual = buildOutputs({ subnets });
       expect(actual).toEqual(expected);
       expect.assertions(1);
     });
