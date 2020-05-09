@@ -3,13 +3,19 @@ const { VALID_SUBNET_GROUPS } = require('./constants');
 /**
  * Append subnets to output
  *
- * @param {Array<{ Ref: String }>} subnets
+ * @param {Array<String>} subnets
  * @param {Object} outputs
  */
 function appendSubnets(subnets, outputs) {
-  const subnetOutputs = subnets.map(subnet => ({ [`${subnet.Ref}`]: { Value: subnet } }));
+  if (Array.isArray(subnets) && subnets.length > 0) {
+    const subnetOutputs = subnets.map((subnet) => ({
+      [`${subnet.Ref}`]: {
+        Value: subnet,
+      },
+    }));
 
-  Object.assign(outputs, ...subnetOutputs);
+    Object.assign(outputs, ...subnetOutputs);
+  }
 }
 
 /**
@@ -19,7 +25,7 @@ function appendSubnets(subnets, outputs) {
  * @param {Object} outputs
  */
 function appendSubnetGroups(subnetGroups, outputs) {
-  if (subnetGroups) {
+  if (Array.isArray(subnetGroups) && subnetGroups.length > 0) {
     const typesToNames = {
       rds: 'RDSSubnetGroup',
       redshift: 'RedshiftSubnetGroup',
@@ -27,10 +33,12 @@ function appendSubnetGroups(subnetGroups, outputs) {
       dax: 'DAXSubnetGroup',
     };
 
-    const subnetGroupOutputs = subnetGroups.map(subnetGroup => ({
+    const subnetGroupOutputs = subnetGroups.map((subnetGroup) => ({
       [typesToNames[subnetGroup]]: {
         Description: `Subnet Group for ${subnetGroup}`,
-        Value: { Ref: typesToNames[subnetGroup] },
+        Value: {
+          Ref: typesToNames[subnetGroup],
+        },
       },
     }));
 
@@ -85,17 +93,17 @@ function appendExports(exportOutputs, outputs) {
  *
  * @param {Boolean} createBastionHost
  * @param {Array<String>} subnetGroups
- *  * @param {Array<{ Ref: String }>} subnets
+ * @param {Array<String>} subnets
  * @param {Boolean} exportOutputs
  * @return {Object}
  */
 
-function buildOutputs(
+function buildOutputs({
   createBastionHost = false,
   subnetGroups = VALID_SUBNET_GROUPS,
   subnets = [],
   exportOutputs = false,
-) {
+} = {}) {
   const outputs = {
     VPC: {
       Description: 'VPC logical resource ID',
@@ -112,7 +120,10 @@ function buildOutputs(
     },
   };
 
-  appendSubnetGroups(subnetGroups, outputs);
+  // subnet groups need at least 2 subnets
+  if (Array.isArray(subnets) && subnets.length > 1) {
+    appendSubnetGroups(subnetGroups, outputs);
+  }
 
   appendSubnets(subnets, outputs);
 
