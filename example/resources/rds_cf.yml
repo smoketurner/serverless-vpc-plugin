@@ -1,48 +1,73 @@
 ---
 Resources:
+  DBClusterParameterGroup:
+    Type: 'AWS::RDS::DBClusterParameterGroup'
+    Properties:
+      Description: 'Aurora PostgreSQL 10 Parameter Group'
+      Family: aurora-postgresql10
+      Parameters:
+        rds.force_ssl: 1
+
+  DBSecurityGroup:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      GroupDescription: 'RDS Database Access'
+      SecurityGroupIngress:
+        - Description: 'Allow inbound PostgreSQL access from Lambda'
+          FromPort: 5432
+          IpProtocol: tcp
+          SourceSecurityGroupId: !GetAtt LambdaExecutionSecurityGroup.GroupId
+          ToPort: 5432
+      VpcId: !Ref VPC
+
   DBCluster:
     Type: 'AWS::RDS::DBCluster'
+    DeletionPolicy: Snapshot
     Properties:
       DatabaseName: ${self:custom.databaseName}
       DBClusterIdentifier: '${self:service}-${self:provider.stage}'
-      DBSubnetGroupName:
-        Ref: RDSSubnetGroup
+      DBClusterParameterGroupName: !Ref DBClusterParameterGroup
+      DBSubnetGroupName: !Ref RDSSubnetGroup
       EnableHttpEndpoint: true
       Engine: aurora-postgresql
       EngineMode: serverless
-      EngineVersion: '11.4'
+      EngineVersion: '10.7' # Data API only supports PostgreSQL 10.7 https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/data-api.html#data-api.regions
       MasterUsername:
-        'Fn::Join':
-          - ''
-          - - '{{resolve:secretsmanager:'
-            - Ref: DBSecret
-            - ':SecretString:username}}'
+        !Join ['', ['{{resolve:secretsmanager:', !Ref DBSecret, ':SecretString:username}}']]
       MasterUserPassword:
-        'Fn::Join':
-          - ''
-          - - '{{resolve:secretsmanager:'
-            - Ref: DBSecret
-            - ':SecretString:password}}'
+        !Join ['', ['{{resolve:secretsmanager:', !Ref DBSecret, ':SecretString:password}}']]
+      ScalingConfiguration:
+        AutoPause: true
+        MaxCapacity: 2
+        MinCapacity: 2
+        SecondsUntilAutoPause: 300 # 5 minutes
       StorageEncrypted: true
       Tags:
         - Key: Name
-          Value:
-            'Fn::Join':
-              - '-'
-              - - Ref: 'AWS::StackName'
-                - rds
+          Value: !Join ['-', [!Ref 'AWS::StackName', rds]]
+      UseLatestRestorableTime: true
+      VpcSecurityGroupIds:
+        - !Ref DBSecurityGroup
+
+  DBVpcEndpoint:
+    Type: 'AWS::EC2::VPCEndpoint'
+    Properties:
+      PrivateDnsEnabled: true
+      ServiceName: !Join ['.', ['com.amazonaws', !Ref 'AWS::Region', 'rds-data']]
+      SecurityGroupIds:
+        - !Ref LambdaEndpointSecurityGroup
+      SubnetIds:
+        - !Ref AppSubnet1
+        - !Ref AppSubnet2
+        - !Ref AppSubnet3
+      VpcEndpointType: Interface
+      VpcId: !Ref VPC
 
 Outputs:
   DBClusterAddress:
     Description: RDS Cluster Address
-    Value:
-      'Fn::GetAtt':
-        - DBCluster
-        - 'Endpoint.Address'
+    Value: !GetAtt DBCluster.Endpoint.Address
 
   DBClusterPort:
     Description: RDS Cluster Port
-    Value:
-      'Fn::GetAtt':
-        - DBCluster
-        - 'Endpoint.Port'
+    Value: !GetAtt DBCluster.Endpoint.Port
