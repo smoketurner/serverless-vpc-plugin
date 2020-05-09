@@ -16,11 +16,11 @@
     "test": "sls invoke -f rds"
   },
   "devDependencies": {
-    "aws-sdk": "2.656.0",
-    "serverless": "1.67.3",
+    "aws-sdk": "2.673.0",
+    "serverless": "1.70.0",
     "serverless-vpc-plugin": "smoketurner/serverless-vpc-plugin#master",
-    "serverless-webpack": "5.3.1",
-    "webpack": "4.42.1",
+    "serverless-webpack": "5.3.2",
+    "webpack": "4.43.0",
     "webpack-node-externals": "1.7.2"
   }
 }

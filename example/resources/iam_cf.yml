@@ -1,29 +1,29 @@
 ---
 Resources:
   ExampleLambdaRole:
-    Type: "AWS::IAM::Role"
+    Type: 'AWS::IAM::Role'
     Properties:
-      RoleName: "${self:service}-${self:provider.stage}-${self:provider.region}-ExampleLambdaRole"
+      RoleName: '${self:service}-${self:provider.stage}-${self:provider.region}-ExampleLambdaRole'
       AssumeRolePolicyDocument:
         Statement:
           - Effect: Allow
             Principal:
-              Service: "lambda.amazonaws.com"
-            Action: "sts:AssumeRole"
+              Service: 'lambda.amazonaws.com'
+            Action: 'sts:AssumeRole'
       Policies:
         - PolicyName: ExampleLambdaPolicy
           PolicyDocument:
             Statement:
               - Effect: Allow
-                Action: "secretsmanager:GetSecretValue"
+                Action: 'secretsmanager:GetSecretValue'
                 Resource: !Ref DBSecret
               - Effect: Allow
                 Action:
-                  - "rds-data:BatchExecuteStatement"
-                  - "rds-data:BeginTransaction"
-                  - "rds-data:CommitTransaction"
-                  - "rds-data:ExecuteStatement"
-                  - "rds-data:RollbackTransaction"
-                Resource: "*"
+                  - 'rds-data:BatchExecuteStatement'
+                  - 'rds-data:BeginTransaction'
+                  - 'rds-data:CommitTransaction'
+                  - 'rds-data:ExecuteStatement'
+                  - 'rds-data:RollbackTransaction'
+                Resource: '*'
       ManagedPolicyArns:
-        - !Sub "arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
+        - 'arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole'
