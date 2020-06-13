@@ -9,15 +9,15 @@ const { PUBLIC_SUBNET } = require('./constants');
  */
 function getPublicIp() {
   const options = {
-    host: 'api.ipify.org',
+    host: 'checkip.amazonaws.com',
     port: 80,
     path: '/',
     timeout: 1000,
   };
   return new Promise((resolve, reject) => {
-    const req = http.get(options, res => {
+    const req = http.get(options, (res) => {
       const buffers = [];
-      res.on('data', data => buffers.push(data));
+      res.on('data', (data) => buffers.push(data));
       res.once('end', () => resolve(Buffer.concat(buffers).toString()));
       res.once('error', reject);
     });
@@ -81,7 +81,10 @@ function buildBastionIamRole({ name = 'BastionIamRole' } = {}) {
             },
           },
         ],
-        ManagedPolicyArns: ['arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore'],
+        ManagedPolicyArns: [
+          // eslint-disable-next-line no-template-curly-in-string
+          { 'Fn::Sub': 'arn:${AWS::Partition}:iam::aws:policy/AmazonSSMManagedInstanceCore' },
+        ],
       },
     },
   };
@@ -221,15 +224,8 @@ function buildBastionAutoScalingGroup(numZones = 0, { name = 'BastionAutoScaling
           {
             Key: 'Name',
             Value: {
-              'Fn::Join': [
-                '-',
-                [
-                  {
-                    Ref: 'AWS::StackName',
-                  },
-                  'bastion',
-                ],
-              ],
+              // eslint-disable-next-line no-template-curly-in-string
+              'Fn::Sub': '${AWS::StackName}-bastion',
             },
             PropagateAtLaunch: true,
           },
@@ -275,15 +271,8 @@ function buildBastionSecurityGroup(sourceIp = '0.0.0.0/0', { name = 'BastionSecu
           {
             Key: 'Name',
             Value: {
-              'Fn::Join': [
-                '-',
-                [
-                  {
-                    Ref: 'AWS::StackName',
-                  },
-                  'bastion',
-                ],
-              ],
+              // eslint-disable-next-line no-template-curly-in-string
+              'Fn::Sub': '${AWS::StackName}-bastion',
             },
           },
         ],

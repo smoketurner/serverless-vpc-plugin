@@ -11,11 +11,11 @@ const { APP_SUBNET, PUBLIC_SUBNET, DB_SUBNET } = require('./constants');
 function splitVpc(cidrBlock) {
   return CIDR.fromString(cidrBlock)
     .split()
-    .map(cidr => cidr.split())
+    .map((cidr) => cidr.split())
     .reduce((all, halves) => all.concat(...halves))
-    .map(cidr => cidr.split())
+    .map((cidr) => cidr.split())
     .reduce((all, halves) => all.concat(...halves))
-    .map(cidr => cidr.split())
+    .map((cidr) => cidr.split())
     .reduce((all, halves) => all.concat(...halves));
 }
 
@@ -49,15 +49,19 @@ function splitSubnets(cidrBlock, zones = []) {
 
     const azSubnets = CIDR.fromString(azCidrBlock)
       .split()
-      .map(cidr => cidr.toString());
+      .map((cidr) => cidr.toString());
     subnets.push(azSubnets[0]); // Application subnet is a /21
 
     const smallerSubnets = CIDR.fromString(azSubnets[1])
       .split()
-      .map(cidr => cidr.toString());
+      .map((cidr) => cidr.toString());
     subnets.push(...smallerSubnets); // Public and DB subnets are both /22
 
-    const parts = [[APP_SUBNET, subnets[0]], [PUBLIC_SUBNET, subnets[1]], [DB_SUBNET, subnets[2]]];
+    const parts = [
+      [APP_SUBNET, subnets[0]],
+      [PUBLIC_SUBNET, subnets[1]],
+      [DB_SUBNET, subnets[2]],
+    ];
 
     appSubnets.push(subnets[0]);
     publicSubnets.push(subnets[1]);

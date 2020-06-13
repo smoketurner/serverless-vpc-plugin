@@ -29,7 +29,8 @@ function buildLogBucket() {
           {
             Key: 'Name',
             Value: {
-              'Fn::Join': [' ', [{ Ref: 'AWS::StackName' }, 'Logs']],
+              // eslint-disable-next-line no-template-curly-in-string
+              'Fn::Sub': '${AWS::StackName} Logs',
             },
           },
         ],
@@ -74,16 +75,8 @@ function buildLogBucketPolicy() {
               },
               Action: 's3:PutObject',
               Resource: {
-                'Fn::Join': [
-                  '',
-                  [
-                    'arn:aws:s3:::',
-                    { Ref: 'LogBucket' },
-                    '/AWSLogs/',
-                    { Ref: 'AWS::AccountId' },
-                    '/*',
-                  ],
-                ],
+                // eslint-disable-next-line no-template-curly-in-string
+                'Fn::Sub': 'arn:${AWS::Partition}:s3:::${LogBucket}/AWSLogs/${AWS::AccountId}/*',
               },
               Condition: {
                 StringEquals: {

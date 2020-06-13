@@ -18,9 +18,7 @@ describe('bastion', () => {
 
   describe('#getPublicIp', () => {
     it('gets the public IP', async () => {
-      const scope = nock('http://api.ipify.org')
-        .get('/')
-        .reply(200, '127.0.0.1');
+      const scope = nock('http://checkip.amazonaws.com').get('/').reply(200, '127.0.0.1');
 
       const actual = await getPublicIp();
       expect(actual).toEqual('127.0.0.1');
@@ -61,7 +59,10 @@ describe('bastion', () => {
                 },
               },
             ],
-            ManagedPolicyArns: ['arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore'],
+            ManagedPolicyArns: [
+              // eslint-disable-next-line no-template-curly-in-string
+              { 'Fn::Sub': 'arn:${AWS::Partition}:iam::aws:policy/AmazonSSMManagedInstanceCore' },
+            ],
           },
         },
       };
@@ -102,15 +103,8 @@ describe('bastion', () => {
               {
                 Key: 'Name',
                 Value: {
-                  'Fn::Join': [
-                    '-',
-                    [
-                      {
-                        Ref: 'AWS::StackName',
-                      },
-                      'bastion',
-                    ],
-                  ],
+                  // eslint-disable-next-line no-template-curly-in-string
+                  'Fn::Sub': '${AWS::StackName}-bastion',
                 },
               },
             ],
@@ -152,15 +146,8 @@ describe('bastion', () => {
               {
                 Key: 'Name',
                 Value: {
-                  'Fn::Join': [
-                    '-',
-                    [
-                      {
-                        Ref: 'AWS::StackName',
-                      },
-                      'bastion',
-                    ],
-                  ],
+                  // eslint-disable-next-line no-template-curly-in-string
+                  'Fn::Sub': '${AWS::StackName}-bastion',
                 },
               },
             ],
@@ -317,15 +304,8 @@ describe('bastion', () => {
               {
                 Key: 'Name',
                 Value: {
-                  'Fn::Join': [
-                    '-',
-                    [
-                      {
-                        Ref: 'AWS::StackName',
-                      },
-                      'bastion',
-                    ],
-                  ],
+                  // eslint-disable-next-line no-template-curly-in-string
+                  'Fn::Sub': '${AWS::StackName}-bastion',
                 },
                 PropagateAtLaunch: true,
               },
@@ -342,9 +322,7 @@ describe('bastion', () => {
 
   describe('#buildBastion', () => {
     it('builds the complete bastion host', async () => {
-      const scope = nock('http://api.ipify.org')
-        .get('/')
-        .reply(200, '127.0.0.1');
+      const scope = nock('http://checkip.amazonaws.com').get('/').reply(200, '127.0.0.1');
 
       const expected = {
         BastionEIP: {
@@ -382,7 +360,10 @@ describe('bastion', () => {
                 },
               },
             ],
-            ManagedPolicyArns: ['arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore'],
+            ManagedPolicyArns: [
+              // eslint-disable-next-line no-template-curly-in-string
+              { 'Fn::Sub': 'arn:${AWS::Partition}:iam::aws:policy/AmazonSSMManagedInstanceCore' },
+            ],
           },
         },
         BastionAutoScalingGroup: {
@@ -413,15 +394,8 @@ describe('bastion', () => {
               {
                 Key: 'Name',
                 Value: {
-                  'Fn::Join': [
-                    '-',
-                    [
-                      {
-                        Ref: 'AWS::StackName',
-                      },
-                      'bastion',
-                    ],
-                  ],
+                  // eslint-disable-next-line no-template-curly-in-string
+                  'Fn::Sub': '${AWS::StackName}-bastion',
                 },
                 PropagateAtLaunch: true,
               },
@@ -522,15 +496,8 @@ describe('bastion', () => {
               {
                 Key: 'Name',
                 Value: {
-                  'Fn::Join': [
-                    '-',
-                    [
-                      {
-                        Ref: 'AWS::StackName',
-                      },
-                      'bastion',
-                    ],
-                  ],
+                  // eslint-disable-next-line no-template-curly-in-string
+                  'Fn::Sub': '${AWS::StackName}-bastion',
                 },
               },
             ],
