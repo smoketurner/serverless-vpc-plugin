@@ -72,7 +72,7 @@ function buildVPCEndpoint(service, { routeTableIds = [], subnetIds = [] } = {}) 
 
   const parts = service.split(/[-_.]/g);
   parts.push('VPCEndpoint');
-  const cfName = parts.map(part => part.charAt(0).toUpperCase() + part.slice(1)).join('');
+  const cfName = parts.map((part) => part.charAt(0).toUpperCase() + part.slice(1)).join('');
 
   return {
     [cfName]: endpoint,
@@ -102,7 +102,7 @@ function buildEndpointServices(services = [], numZones = 0) {
   }
 
   const resources = {};
-  services.forEach(service => {
+  services.forEach((service) => {
     Object.assign(resources, buildVPCEndpoint(service, { routeTableIds, subnetIds }));
   });
 
@@ -139,15 +139,7 @@ function buildLambdaVPCEndpointSecurityGroup({ name = 'LambdaEndpointSecurityGro
           {
             Key: 'Name',
             Value: {
-              'Fn::Join': [
-                '-',
-                [
-                  {
-                    Ref: 'AWS::StackName',
-                  },
-                  'lambda-endpoint',
-                ],
-              ],
+              'Fn::Sub': '${AWS::StackName}-lambda-endpoint',
             },
           },
         ],

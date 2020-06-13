@@ -205,7 +205,7 @@ describe('ServerlessVpcPlugin', () => {
   describe('#getImagesByName', () => {
     it('returns an AMI image by name', async () => {
       const mockCallback = jest.fn((params, callback) => {
-        expect(params.Filters.find(f => f.Name === 'name').Values).toEqual(['test']);
+        expect(params.Filters.find((f) => f.Name === 'name').Values).toEqual(['test']);
         const response = {
           Images: [
             {

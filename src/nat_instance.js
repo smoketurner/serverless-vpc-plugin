@@ -61,15 +61,8 @@ function buildNatSecurityGroup(subnets = [], { name = 'NatSecurityGroup' } = {})
           {
             Key: 'Name',
             Value: {
-              'Fn::Join': [
-                '-',
-                [
-                  {
-                    Ref: 'AWS::StackName',
-                  },
-                  'nat',
-                ],
-              ],
+              // eslint-disable-next-line no-template-curly-in-string
+              'Fn::Sub': '${AWS::StackName}-nat',
             },
           },
         ],
@@ -136,15 +129,8 @@ function buildNatInstance(imageId, zones = [], { name = 'NatInstance' } = {}) {
           {
             Key: 'Name',
             Value: {
-              'Fn::Join': [
-                '-',
-                [
-                  {
-                    Ref: 'AWS::StackName',
-                  },
-                  'nat',
-                ],
-              ],
+              // eslint-disable-next-line no-template-curly-in-string
+              'Fn::Sub': '${AWS::StackName}-nat',
             },
           },
         ],

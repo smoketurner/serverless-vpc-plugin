@@ -61,15 +61,8 @@ describe('nat_instance', () => {
               {
                 Key: 'Name',
                 Value: {
-                  'Fn::Join': [
-                    '-',
-                    [
-                      {
-                        Ref: 'AWS::StackName',
-                      },
-                      'nat',
-                    ],
-                  ],
+                  // eslint-disable-next-line no-template-curly-in-string
+                  'Fn::Sub': '${AWS::StackName}-nat',
                 },
               },
             ],
@@ -127,15 +120,8 @@ describe('nat_instance', () => {
               {
                 Key: 'Name',
                 Value: {
-                  'Fn::Join': [
-                    '-',
-                    [
-                      {
-                        Ref: 'AWS::StackName',
-                      },
-                      'nat',
-                    ],
-                  ],
+                  // eslint-disable-next-line no-template-curly-in-string
+                  'Fn::Sub': '${AWS::StackName}-nat',
                 },
               },
             ],

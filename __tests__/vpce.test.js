@@ -296,15 +296,8 @@ describe('vpce', () => {
               {
                 Key: 'Name',
                 Value: {
-                  'Fn::Join': [
-                    '-',
-                    [
-                      {
-                        Ref: 'AWS::StackName',
-                      },
-                      'lambda-endpoint',
-                    ],
-                  ],
+                  // eslint-disable-next-line no-template-curly-in-string
+                  'Fn::Sub': '${AWS::StackName}-lambda-endpoint',
                 },
               },
             ],
@@ -340,15 +333,8 @@ describe('vpce', () => {
               {
                 Key: 'Name',
                 Value: {
-                  'Fn::Join': [
-                    '-',
-                    [
-                      {
-                        Ref: 'AWS::StackName',
-                      },
-                      'lambda-endpoint',
-                    ],
-                  ],
+                  // eslint-disable-next-line no-template-curly-in-string
+                  'Fn::Sub': '${AWS::StackName}-lambda-endpoint',
                 },
               },
             ],

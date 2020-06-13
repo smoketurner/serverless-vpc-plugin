@@ -58,16 +58,9 @@ describe('flow_logs', () => {
                   },
                   Action: 's3:PutObject',
                   Resource: {
-                    'Fn::Join': [
-                      '',
-                      [
-                        'arn:aws:s3:::',
-                        { Ref: 'LogBucket' },
-                        '/AWSLogs/',
-                        { Ref: 'AWS::AccountId' },
-                        '/*',
-                      ],
-                    ],
+                    'Fn::Sub':
+                      // eslint-disable-next-line no-template-curly-in-string
+                      'arn:${AWS::Partition}:s3:::${LogBucket}/AWSLogs/${AWS::AccountId}/*',
                   },
                   Condition: {
                     StringEquals: {
@@ -113,7 +106,8 @@ describe('flow_logs', () => {
               {
                 Key: 'Name',
                 Value: {
-                  'Fn::Join': [' ', [{ Ref: 'AWS::StackName' }, 'Logs']],
+                  // eslint-disable-next-line no-template-curly-in-string
+                  'Fn::Sub': '${AWS::StackName} Logs',
                 },
               },
             ],

@@ -251,15 +251,8 @@ function buildLambdaSecurityGroup({ name = 'LambdaExecutionSecurityGroup' } = {}
           {
             Key: 'Name',
             Value: {
-              'Fn::Join': [
-                '-',
-                [
-                  {
-                    Ref: 'AWS::StackName',
-                  },
-                  'lambda-exec',
-                ],
-              ],
+              // eslint-disable-next-line no-template-curly-in-string
+              'Fn::Sub': '${AWS::StackName}-lambda-exec',
             },
           },
         ],
