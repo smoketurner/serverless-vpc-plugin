@@ -17,15 +17,7 @@ function buildNetworkAcl(name) {
           {
             Key: 'Name',
             Value: {
-              'Fn::Join': [
-                '-',
-                [
-                  {
-                    Ref: 'AWS::StackName',
-                  },
-                  name.toLowerCase(),
-                ],
-              ],
+              'Fn::Sub': `\${AWS::StackName}-${name.toLowerCase()}`,
             },
           },
         ],

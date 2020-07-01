@@ -1,7 +1,7 @@
 const {
   buildEndpointServices,
   buildVPCEndpoint,
-  buildLambdaVPCEndpointSecurityGroup,
+  buildVPCEndpointSecurityGroup,
 } = require('../src/vpce');
 
 describe('vpce', () => {
@@ -23,16 +23,8 @@ describe('vpce', () => {
               },
             ],
             ServiceName: {
-              'Fn::Join': [
-                '.',
-                [
-                  'com.amazonaws',
-                  {
-                    Ref: 'AWS::Region',
-                  },
-                  's3',
-                ],
-              ],
+              // eslint-disable-next-line no-template-curly-in-string
+              'Fn::Sub': 'com.amazonaws.${AWS::Region}.s3',
             },
             PolicyDocument: {
               Statement: [
@@ -67,16 +59,8 @@ describe('vpce', () => {
               },
             ],
             ServiceName: {
-              'Fn::Join': [
-                '.',
-                [
-                  'com.amazonaws',
-                  {
-                    Ref: 'AWS::Region',
-                  },
-                  'dynamodb',
-                ],
-              ],
+              // eslint-disable-next-line no-template-curly-in-string
+              'Fn::Sub': 'com.amazonaws.${AWS::Region}.dynamodb',
             },
             PolicyDocument: {
               Statement: [
@@ -108,7 +92,7 @@ describe('vpce', () => {
             PrivateDnsEnabled: true,
             SecurityGroupIds: [
               {
-                Ref: 'LambdaEndpointSecurityGroup',
+                Ref: 'EndpointSecurityGroup',
               },
             ],
             SubnetIds: [
@@ -117,16 +101,8 @@ describe('vpce', () => {
               },
             ],
             ServiceName: {
-              'Fn::Join': [
-                '.',
-                [
-                  'com.amazonaws',
-                  {
-                    Ref: 'AWS::Region',
-                  },
-                  'kms',
-                ],
-              ],
+              // eslint-disable-next-line no-template-curly-in-string
+              'Fn::Sub': 'com.amazonaws.${AWS::Region}.kms',
             },
             VpcEndpointType: 'Interface',
             VpcId: {
@@ -148,7 +124,7 @@ describe('vpce', () => {
             PrivateDnsEnabled: true,
             SecurityGroupIds: [
               {
-                Ref: 'LambdaEndpointSecurityGroup',
+                Ref: 'EndpointSecurityGroup',
               },
             ],
             SubnetIds: [
@@ -157,16 +133,8 @@ describe('vpce', () => {
               },
             ],
             ServiceName: {
-              'Fn::Join': [
-                '.',
-                [
-                  'com.amazonaws',
-                  {
-                    Ref: 'AWS::Region',
-                  },
-                  'sagemaker.runtime-fips',
-                ],
-              ],
+              // eslint-disable-next-line no-template-curly-in-string
+              'Fn::Sub': 'com.amazonaws.${AWS::Region}.sagemaker.runtime-fips',
             },
             VpcEndpointType: 'Interface',
             VpcId: {
@@ -193,16 +161,8 @@ describe('vpce', () => {
               },
             ],
             ServiceName: {
-              'Fn::Join': [
-                '.',
-                [
-                  'com.amazonaws',
-                  {
-                    Ref: 'AWS::Region',
-                  },
-                  's3',
-                ],
-              ],
+              // eslint-disable-next-line no-template-curly-in-string
+              'Fn::Sub': 'com.amazonaws.${AWS::Region}.s3',
             },
             PolicyDocument: {
               Statement: [
@@ -236,7 +196,7 @@ describe('vpce', () => {
             PrivateDnsEnabled: true,
             SecurityGroupIds: [
               {
-                Ref: 'LambdaEndpointSecurityGroup',
+                Ref: 'EndpointSecurityGroup',
               },
             ],
             SubnetIds: [
@@ -245,16 +205,8 @@ describe('vpce', () => {
               },
             ],
             ServiceName: {
-              'Fn::Join': [
-                '.',
-                [
-                  'com.amazonaws',
-                  {
-                    Ref: 'AWS::Region',
-                  },
-                  'sagemaker.runtime-fips',
-                ],
-              ],
+              // eslint-disable-next-line no-template-curly-in-string
+              'Fn::Sub': 'com.amazonaws.${AWS::Region}.sagemaker.runtime-fips',
             },
             VpcEndpointType: 'Interface',
             VpcId: {
@@ -271,22 +223,22 @@ describe('vpce', () => {
     });
   });
 
-  describe('#buildLambdaVPCEndpointSecurityGroup', () => {
-    it('builds a Lambda endpoint security group with no options', () => {
+  describe('#buildVPCEndpointSecurityGroup', () => {
+    it('builds a endpoint security group with no options', () => {
       const expected = {
-        LambdaEndpointSecurityGroup: {
+        EndpointSecurityGroup: {
           Type: 'AWS::EC2::SecurityGroup',
           Properties: {
-            GroupDescription: 'Lambda access to VPC endpoints',
+            GroupDescription: 'VPC Endpoint Security Group',
             VpcId: {
               Ref: 'VPC',
             },
             SecurityGroupIngress: [
               {
                 SourceSecurityGroupId: {
-                  Ref: 'LambdaExecutionSecurityGroup',
+                  Ref: 'AppSecurityGroup',
                 },
-                Description: 'Allow inbound HTTPS traffic from LambdaExecutionSecurityGroup',
+                Description: 'Allow inbound HTTPS traffic from AppSecurityGroup',
                 IpProtocol: 'tcp',
                 FromPort: 443,
                 ToPort: 443,
@@ -297,53 +249,14 @@ describe('vpce', () => {
                 Key: 'Name',
                 Value: {
                   // eslint-disable-next-line no-template-curly-in-string
-                  'Fn::Sub': '${AWS::StackName}-lambda-endpoint',
+                  'Fn::Sub': '${AWS::StackName}-vpce',
                 },
               },
             ],
           },
         },
       };
-      const actual = buildLambdaVPCEndpointSecurityGroup();
-      expect(actual).toEqual(expected);
-      expect.assertions(1);
-    });
-
-    it('builds a Lambda security group with a custom name', () => {
-      const expected = {
-        MyLambdaEndpointSecurityGroup: {
-          Type: 'AWS::EC2::SecurityGroup',
-          Properties: {
-            GroupDescription: 'Lambda access to VPC endpoints',
-            VpcId: {
-              Ref: 'VPC',
-            },
-            SecurityGroupIngress: [
-              {
-                SourceSecurityGroupId: {
-                  Ref: 'LambdaExecutionSecurityGroup',
-                },
-                Description: 'Allow inbound HTTPS traffic from LambdaExecutionSecurityGroup',
-                IpProtocol: 'tcp',
-                FromPort: 443,
-                ToPort: 443,
-              },
-            ],
-            Tags: [
-              {
-                Key: 'Name',
-                Value: {
-                  // eslint-disable-next-line no-template-curly-in-string
-                  'Fn::Sub': '${AWS::StackName}-lambda-endpoint',
-                },
-              },
-            ],
-          },
-        },
-      };
-      const actual = buildLambdaVPCEndpointSecurityGroup({
-        name: 'MyLambdaEndpointSecurityGroup',
-      });
+      const actual = buildVPCEndpointSecurityGroup();
       expect(actual).toEqual(expected);
       expect.assertions(1);
     });

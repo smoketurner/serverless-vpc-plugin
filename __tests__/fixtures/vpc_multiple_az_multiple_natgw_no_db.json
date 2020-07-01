@@ -9,7 +9,10 @@
     "Type": "AWS::EC2::NatGateway",
     "Properties": {
       "AllocationId": {
-        "Fn::GetAtt": ["EIP1", "AllocationId"]
+        "Fn::GetAtt": [
+          "EIP1",
+          "AllocationId"
+        ]
       },
       "SubnetId": {
         "Ref": "PublicSubnet1"
@@ -18,16 +21,12 @@
         {
           "Key": "Name",
           "Value": {
-            "Fn::Join": [
-              "-",
-              [
-                {
-                  "Ref": "AWS::StackName"
-                },
-                "us-east-1a"
-              ]
-            ]
+            "Fn::Sub": "${AWS::StackName}-us-east-1a"
           }
+        },
+        {
+          "Key": "Network",
+          "Value": "Public"
         }
       ]
     }
@@ -42,7 +41,10 @@
     "Type": "AWS::EC2::NatGateway",
     "Properties": {
       "AllocationId": {
-        "Fn::GetAtt": ["EIP2", "AllocationId"]
+        "Fn::GetAtt": [
+          "EIP2",
+          "AllocationId"
+        ]
       },
       "SubnetId": {
         "Ref": "PublicSubnet2"
@@ -51,16 +53,12 @@
         {
           "Key": "Name",
           "Value": {
-            "Fn::Join": [
-              "-",
-              [
-                {
-                  "Ref": "AWS::StackName"
-                },
-                "us-east-1b"
-              ]
-            ]
+            "Fn::Sub": "${AWS::StackName}-us-east-1b"
           }
+        },
+        {
+          "Key": "Network",
+          "Value": "Public"
         }
       ]
     }
@@ -74,17 +72,12 @@
         {
           "Key": "Name",
           "Value": {
-            "Fn::Join": [
-              "-",
-              [
-                {
-                  "Ref": "AWS::StackName"
-                },
-                "app",
-                "us-east-1a"
-              ]
-            ]
+            "Fn::Sub": "${AWS::StackName}-app-us-east-1a"
           }
+        },
+        {
+          "Key": "Network",
+          "Value": "Private"
         }
       ],
       "VpcId": {
@@ -102,17 +95,12 @@
         {
           "Key": "Name",
           "Value": {
-            "Fn::Join": [
-              "-",
-              [
-                {
-                  "Ref": "AWS::StackName"
-                },
-                "app",
-                "us-east-1a"
-              ]
-            ]
+            "Fn::Sub": "${AWS::StackName}-app-${AppSubnet1.AvailabilityZone}"
           }
+        },
+        {
+          "Key": "Network",
+          "Value": "Private"
         }
       ]
     }
@@ -128,18 +116,6 @@
       }
     }
   },
-  "AppRoute1": {
-    "Type": "AWS::EC2::Route",
-    "Properties": {
-      "DestinationCidrBlock": "0.0.0.0/0",
-      "RouteTableId": {
-        "Ref": "AppRouteTable1"
-      },
-      "NatGatewayId": {
-        "Ref": "NatGateway1"
-      }
-    }
-  },
   "PublicSubnet1": {
     "Type": "AWS::EC2::Subnet",
     "Properties": {
@@ -149,17 +125,12 @@
         {
           "Key": "Name",
           "Value": {
-            "Fn::Join": [
-              "-",
-              [
-                {
-                  "Ref": "AWS::StackName"
-                },
-                "public",
-                "us-east-1a"
-              ]
-            ]
+            "Fn::Sub": "${AWS::StackName}-public-us-east-1a"
           }
+        },
+        {
+          "Key": "Network",
+          "Value": "Public"
         }
       ],
       "VpcId": {
@@ -177,17 +148,12 @@
         {
           "Key": "Name",
           "Value": {
-            "Fn::Join": [
-              "-",
-              [
-                {
-                  "Ref": "AWS::StackName"
-                },
-                "public",
-                "us-east-1a"
-              ]
-            ]
+            "Fn::Sub": "${AWS::StackName}-public-${PublicSubnet1.AvailabilityZone}"
           }
+        },
+        {
+          "Key": "Network",
+          "Value": "Public"
         }
       ]
     }
@@ -205,7 +171,6 @@
   },
   "PublicRoute1": {
     "Type": "AWS::EC2::Route",
-    "DependsOn": ["InternetGatewayAttachment"],
     "Properties": {
       "DestinationCidrBlock": "0.0.0.0/0",
       "RouteTableId": {
@@ -213,6 +178,21 @@
       },
       "GatewayId": {
         "Ref": "InternetGateway"
+      }
+    },
+    "DependsOn": [
+      "InternetGatewayAttachment"
+    ]
+  },
+  "AppRoute1": {
+    "Type": "AWS::EC2::Route",
+    "Properties": {
+      "DestinationCidrBlock": "0.0.0.0/0",
+      "RouteTableId": {
+        "Ref": "AppRouteTable1"
+      },
+      "NatGatewayId": {
+        "Ref": "NatGateway1"
       }
     }
   },
@@ -225,17 +205,12 @@
         {
           "Key": "Name",
           "Value": {
-            "Fn::Join": [
-              "-",
-              [
-                {
-                  "Ref": "AWS::StackName"
-                },
-                "app",
-                "us-east-1b"
-              ]
-            ]
+            "Fn::Sub": "${AWS::StackName}-app-us-east-1b"
           }
+        },
+        {
+          "Key": "Network",
+          "Value": "Private"
         }
       ],
       "VpcId": {
@@ -253,17 +228,12 @@
         {
           "Key": "Name",
           "Value": {
-            "Fn::Join": [
-              "-",
-              [
-                {
-                  "Ref": "AWS::StackName"
-                },
-                "app",
-                "us-east-1b"
-              ]
-            ]
+            "Fn::Sub": "${AWS::StackName}-app-${AppSubnet2.AvailabilityZone}"
           }
+        },
+        {
+          "Key": "Network",
+          "Value": "Private"
         }
       ]
     }
@@ -279,18 +249,6 @@
       }
     }
   },
-  "AppRoute2": {
-    "Type": "AWS::EC2::Route",
-    "Properties": {
-      "DestinationCidrBlock": "0.0.0.0/0",
-      "RouteTableId": {
-        "Ref": "AppRouteTable2"
-      },
-      "NatGatewayId": {
-        "Ref": "NatGateway2"
-      }
-    }
-  },
   "PublicSubnet2": {
     "Type": "AWS::EC2::Subnet",
     "Properties": {
@@ -300,17 +258,12 @@
         {
           "Key": "Name",
           "Value": {
-            "Fn::Join": [
-              "-",
-              [
-                {
-                  "Ref": "AWS::StackName"
-                },
-                "public",
-                "us-east-1b"
-              ]
-            ]
+            "Fn::Sub": "${AWS::StackName}-public-us-east-1b"
           }
+        },
+        {
+          "Key": "Network",
+          "Value": "Public"
         }
       ],
       "VpcId": {
@@ -328,17 +281,12 @@
         {
           "Key": "Name",
           "Value": {
-            "Fn::Join": [
-              "-",
-              [
-                {
-                  "Ref": "AWS::StackName"
-                },
-                "public",
-                "us-east-1b"
-              ]
-            ]
+            "Fn::Sub": "${AWS::StackName}-public-${PublicSubnet2.AvailabilityZone}"
           }
+        },
+        {
+          "Key": "Network",
+          "Value": "Public"
         }
       ]
     }
@@ -356,7 +304,6 @@
   },
   "PublicRoute2": {
     "Type": "AWS::EC2::Route",
-    "DependsOn": ["InternetGatewayAttachment"],
     "Properties": {
       "DestinationCidrBlock": "0.0.0.0/0",
       "RouteTableId": {
@@ -364,6 +311,21 @@
       },
       "GatewayId": {
         "Ref": "InternetGateway"
+      }
+    },
+    "DependsOn": [
+      "InternetGatewayAttachment"
+    ]
+  },
+  "AppRoute2": {
+    "Type": "AWS::EC2::Route",
+    "Properties": {
+      "DestinationCidrBlock": "0.0.0.0/0",
+      "RouteTableId": {
+        "Ref": "AppRouteTable2"
+      },
+      "NatGatewayId": {
+        "Ref": "NatGateway2"
       }
     }
   },
@@ -376,17 +338,12 @@
         {
           "Key": "Name",
           "Value": {
-            "Fn::Join": [
-              "-",
-              [
-                {
-                  "Ref": "AWS::StackName"
-                },
-                "app",
-                "us-east-1c"
-              ]
-            ]
+            "Fn::Sub": "${AWS::StackName}-app-us-east-1c"
           }
+        },
+        {
+          "Key": "Network",
+          "Value": "Private"
         }
       ],
       "VpcId": {
@@ -404,17 +361,12 @@
         {
           "Key": "Name",
           "Value": {
-            "Fn::Join": [
-              "-",
-              [
-                {
-                  "Ref": "AWS::StackName"
-                },
-                "app",
-                "us-east-1c"
-              ]
-            ]
+            "Fn::Sub": "${AWS::StackName}-app-${AppSubnet3.AvailabilityZone}"
           }
+        },
+        {
+          "Key": "Network",
+          "Value": "Private"
         }
       ]
     }
@@ -430,18 +382,6 @@
       }
     }
   },
-  "AppRoute3": {
-    "Type": "AWS::EC2::Route",
-    "Properties": {
-      "DestinationCidrBlock": "0.0.0.0/0",
-      "RouteTableId": {
-        "Ref": "AppRouteTable3"
-      },
-      "NatGatewayId": {
-        "Ref": "NatGateway1"
-      }
-    }
-  },
   "PublicSubnet3": {
     "Type": "AWS::EC2::Subnet",
     "Properties": {
@@ -451,17 +391,12 @@
         {
           "Key": "Name",
           "Value": {
-            "Fn::Join": [
-              "-",
-              [
-                {
-                  "Ref": "AWS::StackName"
-                },
-                "public",
-                "us-east-1c"
-              ]
-            ]
+            "Fn::Sub": "${AWS::StackName}-public-us-east-1c"
           }
+        },
+        {
+          "Key": "Network",
+          "Value": "Public"
         }
       ],
       "VpcId": {
@@ -479,17 +414,12 @@
         {
           "Key": "Name",
           "Value": {
-            "Fn::Join": [
-              "-",
-              [
-                {
-                  "Ref": "AWS::StackName"
-                },
-                "public",
-                "us-east-1c"
-              ]
-            ]
+            "Fn::Sub": "${AWS::StackName}-public-${PublicSubnet3.AvailabilityZone}"
           }
+        },
+        {
+          "Key": "Network",
+          "Value": "Public"
         }
       ]
     }
@@ -507,7 +437,6 @@
   },
   "PublicRoute3": {
     "Type": "AWS::EC2::Route",
-    "DependsOn": ["InternetGatewayAttachment"],
     "Properties": {
       "DestinationCidrBlock": "0.0.0.0/0",
       "RouteTableId": {
@@ -515,6 +444,21 @@
       },
       "GatewayId": {
         "Ref": "InternetGateway"
+      }
+    },
+    "DependsOn": [
+      "InternetGatewayAttachment"
+    ]
+  },
+  "AppRoute3": {
+    "Type": "AWS::EC2::Route",
+    "Properties": {
+      "DestinationCidrBlock": "0.0.0.0/0",
+      "RouteTableId": {
+        "Ref": "AppRouteTable3"
+      },
+      "NatGatewayId": {
+        "Ref": "NatGateway1"
       }
     }
   }

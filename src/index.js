@@ -10,12 +10,12 @@ const { buildAvailabilityZones } = require('./az');
 const {
   buildVpc,
   buildInternetGateway,
-  buildInternetGatewayAttachment,
-  buildLambdaSecurityGroup,
+  buildAppSecurityGroup,
+  buildDHCPOptions,
 } = require('./vpc');
 const { buildAppNetworkAcl, buildPublicNetworkAcl, buildDBNetworkAcl } = require('./nacl');
 const { buildSubnetGroups } = require('./subnet_groups');
-const { buildEndpointServices, buildLambdaVPCEndpointSecurityGroup } = require('./vpce');
+const { buildEndpointServices, buildVPCEndpointSecurityGroup } = require('./vpce');
 const { buildLogBucket, buildLogBucketPolicy, buildVpcFlowLogs } = require('./flow_logs');
 const { buildBastion } = require('./bastion');
 const { buildNatInstance, buildNatSecurityGroup } = require('./nat_instance');
@@ -58,20 +58,10 @@ class ServerlessVpcPlugin {
 
       if ('createNatGateway' in vpcConfig) {
         ({ createNatGateway } = vpcConfig);
-      } else if ('useNatGateway' in vpcConfig) {
-        this.serverless.cli.log(
-          'WARNING: useNatGateway has been deprecated, please use createNatGateway',
-        );
-        createNatGateway = vpcConfig.useNatGateway;
       }
 
       if ('createNetworkAcl' in vpcConfig && typeof vpcConfig.createNetworkAcl === 'boolean') {
         ({ createNetworkAcl } = vpcConfig);
-      } else if ('useNetworkAcl' in vpcConfig && typeof vpcConfig.useNetworkAcl === 'boolean') {
-        this.serverless.cli.log(
-          'WARNING: useNetworkAcl has been deprecated, please use createNetworkAcl',
-        );
-        createNetworkAcl = vpcConfig.useNetworkAcl;
       }
 
       if (Array.isArray(vpcConfig.zones) && vpcConfig.zones.length > 0) {
@@ -86,11 +76,6 @@ class ServerlessVpcPlugin {
 
       if ('createDbSubnet' in vpcConfig && typeof vpcConfig.createDbSubnet === 'boolean') {
         ({ createDbSubnet } = vpcConfig);
-      } else if ('skipDbCreation' in vpcConfig && typeof vpcConfig.skipDbCreation === 'boolean') {
-        this.serverless.cli.log(
-          'WARNING: skipDbCreation has been deprecated, please use createDbSubnet',
-        );
-        createDbSubnet = !vpcConfig.skipDbCreation;
       }
 
       if ('createFlowLogs' in vpcConfig && typeof vpcConfig.createFlowLogs === 'boolean') {
@@ -179,13 +164,13 @@ class ServerlessVpcPlugin {
       resources,
       buildVpc(cidrBlock),
       buildInternetGateway(),
-      buildInternetGatewayAttachment(),
       buildAvailabilityZones(subnets, zones, {
         numNatGateway: createNatGateway,
         createDbSubnet,
         createNatInstance: !!(createNatInstance && vpcNatAmi),
       }),
-      buildLambdaSecurityGroup(),
+      buildAppSecurityGroup(),
+      buildDHCPOptions(region),
     );
 
     if (createNetworkAcl) {
@@ -235,7 +220,7 @@ class ServerlessVpcPlugin {
       Object.assign(
         resources,
         buildEndpointServices(services, numZones),
-        buildLambdaVPCEndpointSecurityGroup(),
+        buildVPCEndpointSecurityGroup(),
       );
     }
 

@@ -8,17 +8,12 @@
         {
           "Key": "Name",
           "Value": {
-            "Fn::Join": [
-              "-",
-              [
-                {
-                  "Ref": "AWS::StackName"
-                },
-                "app",
-                "us-east-1a"
-              ]
-            ]
+            "Fn::Sub": "${AWS::StackName}-app-us-east-1a"
           }
+        },
+        {
+          "Key": "Network",
+          "Value": "Private"
         }
       ],
       "VpcId": {
@@ -36,17 +31,12 @@
         {
           "Key": "Name",
           "Value": {
-            "Fn::Join": [
-              "-",
-              [
-                {
-                  "Ref": "AWS::StackName"
-                },
-                "app",
-                "us-east-1a"
-              ]
-            ]
+            "Fn::Sub": "${AWS::StackName}-app-${AppSubnet1.AvailabilityZone}"
           }
+        },
+        {
+          "Key": "Network",
+          "Value": "Private"
         }
       ]
     }
@@ -71,17 +61,12 @@
         {
           "Key": "Name",
           "Value": {
-            "Fn::Join": [
-              "-",
-              [
-                {
-                  "Ref": "AWS::StackName"
-                },
-                "public",
-                "us-east-1a"
-              ]
-            ]
+            "Fn::Sub": "${AWS::StackName}-public-us-east-1a"
           }
+        },
+        {
+          "Key": "Network",
+          "Value": "Public"
         }
       ],
       "VpcId": {
@@ -99,17 +84,12 @@
         {
           "Key": "Name",
           "Value": {
-            "Fn::Join": [
-              "-",
-              [
-                {
-                  "Ref": "AWS::StackName"
-                },
-                "public",
-                "us-east-1a"
-              ]
-            ]
+            "Fn::Sub": "${AWS::StackName}-public-${PublicSubnet1.AvailabilityZone}"
           }
+        },
+        {
+          "Key": "Network",
+          "Value": "Public"
         }
       ]
     }
@@ -127,7 +107,6 @@
   },
   "PublicRoute1": {
     "Type": "AWS::EC2::Route",
-    "DependsOn": ["InternetGatewayAttachment"],
     "Properties": {
       "DestinationCidrBlock": "0.0.0.0/0",
       "RouteTableId": {
@@ -136,6 +115,9 @@
       "GatewayId": {
         "Ref": "InternetGateway"
       }
-    }
+    },
+    "DependsOn": [
+      "InternetGatewayAttachment"
+    ]
   }
 }

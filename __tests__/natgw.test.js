@@ -33,16 +33,13 @@ describe('natgw', () => {
               {
                 Key: 'Name',
                 Value: {
-                  'Fn::Join': [
-                    '-',
-                    [
-                      {
-                        Ref: 'AWS::StackName',
-                      },
-                      'us-east-1a',
-                    ],
-                  ],
+                  // eslint-disable-next-line no-template-curly-in-string
+                  'Fn::Sub': '${AWS::StackName}-us-east-1a',
                 },
+              },
+              {
+                Key: 'Network',
+                Value: 'Public',
               },
             ],
           },

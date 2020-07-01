@@ -77,7 +77,50 @@ function splitSubnets(cidrBlock, zones = []) {
   return mapping;
 }
 
+/**
+ * Create a subnet
+ *
+ * @param {String} name Name of subnet
+ * @param {Number} position Subnet position
+ * @param {String} zone Availability zone
+ * @param {String} cidrBlock Subnet CIDR block
+ * @return {Object}
+ */
+function buildSubnet(name, position, zone, cidrBlock) {
+  const cfName = `${name}Subnet${position}`;
+
+  const Tags = [
+    {
+      Key: 'Name',
+      Value: {
+        'Fn::Sub': `\${AWS::StackName}-${name.toLowerCase()}-${zone}`,
+      },
+    },
+  ];
+
+  if (name === PUBLIC_SUBNET) {
+    Tags.push({ Key: 'Network', Value: 'Public' });
+  } else {
+    Tags.push({ Key: 'Network', Value: 'Private' });
+  }
+
+  return {
+    [cfName]: {
+      Type: 'AWS::EC2::Subnet',
+      Properties: {
+        AvailabilityZone: zone,
+        CidrBlock: cidrBlock,
+        Tags,
+        VpcId: {
+          Ref: 'VPC',
+        },
+      },
+    },
+  };
+}
+
 module.exports = {
   splitVpc,
   splitSubnets,
+  buildSubnet,
 };

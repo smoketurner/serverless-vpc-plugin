@@ -1,18 +1,16 @@
-const { PUBLIC_SUBNET } = require('./constants');
-
 /**
  * Build a VPC
  *
- * @param {String} cidrBlock
+ * @param {String} CidrBlock
  * @param {Object} params
  * @return {Object}
  */
-function buildVpc(cidrBlock = '10.0.0.0/16', { name = 'VPC' } = {}) {
+function buildVpc(CidrBlock = '10.0.0.0/16') {
   return {
-    [name]: {
+    VPC: {
       Type: 'AWS::EC2::VPC',
       Properties: {
-        CidrBlock: cidrBlock,
+        CidrBlock,
         EnableDnsSupport: true,
         EnableDnsHostnames: true,
         InstanceTenancy: 'default',
@@ -30,38 +28,31 @@ function buildVpc(cidrBlock = '10.0.0.0/16', { name = 'VPC' } = {}) {
 }
 
 /**
- * Build an InternetGateway
+ * Build an InternetGateway and InternetGatewayAttachment
  *
- * @param {Object} params
  * @return {Object}
  */
-function buildInternetGateway({ name = 'InternetGateway' } = {}) {
+function buildInternetGateway() {
   return {
-    [name]: {
+    InternetGateway: {
       Type: 'AWS::EC2::InternetGateway',
       Properties: {
         Tags: [
           {
             Key: 'Name',
             Value: {
-              Ref: 'AWS::StackName',
+              // eslint-disable-next-line no-template-curly-in-string
+              'Fn::Sub': '${AWS::StackName}-igw',
             },
+          },
+          {
+            Key: 'Network',
+            Value: 'Public',
           },
         ],
       },
     },
-  };
-}
-
-/**
- * Build an InternetGatewayAttachment
- *
- * @param {Object} params
- * @return {Object}
- */
-function buildInternetGatewayAttachment({ name = 'InternetGatewayAttachment' } = {}) {
-  return {
-    [name]: {
+    InternetGatewayAttachment: {
       Type: 'AWS::EC2::VPCGatewayAttachment',
       Properties: {
         InternetGatewayId: {
@@ -76,174 +67,46 @@ function buildInternetGatewayAttachment({ name = 'InternetGatewayAttachment' } =
 }
 
 /**
- * Create a subnet
+ * Build a SecurityGroup to be used by applications
  *
- * @param {String} name Name of subnet
- * @param {Number} position Subnet position
- * @param {String} zone Availability zone
- * @param {String} cidrBlock Subnet CIDR block
  * @return {Object}
  */
-function buildSubnet(name, position, zone, cidrBlock) {
-  const cfName = `${name}Subnet${position}`;
+function buildAppSecurityGroup() {
   return {
-    [cfName]: {
-      Type: 'AWS::EC2::Subnet',
+    DefaultSecurityGroupEgress: {
+      Type: 'AWS::EC2::SecurityGroupEgress',
       Properties: {
-        AvailabilityZone: zone,
-        CidrBlock: cidrBlock,
-        Tags: [
-          {
-            Key: 'Name',
-            Value: {
-              'Fn::Join': [
-                '-',
-                [
-                  {
-                    Ref: 'AWS::StackName',
-                  },
-                  name.toLowerCase(),
-                  zone,
-                ],
-              ],
-            },
-          },
-        ],
-        VpcId: {
-          Ref: 'VPC',
+        IpProtocol: '-1',
+        DestinationSecurityGroupId: {
+          'Fn::GetAtt': ['VPC', 'DefaultSecurityGroup'],
+        },
+        GroupId: {
+          'Fn::GetAtt': ['VPC', 'DefaultSecurityGroup'],
         },
       },
     },
-  };
-}
-
-/**
- * Build a RouteTable in a given AZ
- *
- * @param {String} name
- * @param {Number} position
- * @param {String} zone
- * @return {Object}
- */
-function buildRouteTable(name, position, zone) {
-  const cfName = `${name}RouteTable${position}`;
-  return {
-    [cfName]: {
-      Type: 'AWS::EC2::RouteTable',
-      Properties: {
-        VpcId: {
-          Ref: 'VPC',
-        },
-        Tags: [
-          {
-            Key: 'Name',
-            Value: {
-              'Fn::Join': [
-                '-',
-                [
-                  {
-                    Ref: 'AWS::StackName',
-                  },
-                  name.toLowerCase(),
-                  zone,
-                ],
-              ],
-            },
-          },
-        ],
-      },
-    },
-  };
-}
-
-/**
- * Build a RouteTableAssociation
- *
- * @param {String} name
- * @param {Number} position
- * @return {Object}
- */
-function buildRouteTableAssociation(name, position) {
-  const cfName = `${name}RouteTableAssociation${position}`;
-  return {
-    [cfName]: {
-      Type: 'AWS::EC2::SubnetRouteTableAssociation',
-      Properties: {
-        RouteTableId: {
-          Ref: `${name}RouteTable${position}`,
-        },
-        SubnetId: {
-          Ref: `${name}Subnet${position}`,
-        },
-      },
-    },
-  };
-}
-
-/**
- * Build a Route for a NatGateway or InternetGateway
- *
- * @param {String} name
- * @param {Number} position
- * @param {Object} params
- * @return {Object}
- */
-function buildRoute(
-  name,
-  position,
-  { NatGatewayId = null, GatewayId = null, InstanceId = null } = {},
-) {
-  const route = {
-    Type: 'AWS::EC2::Route',
-    Properties: {
-      DestinationCidrBlock: '0.0.0.0/0',
-      RouteTableId: {
-        Ref: `${name}RouteTable${position}`,
-      },
-    },
-  };
-
-  // fixes "route table rtb-x and network gateway igw-x belong to different networks"
-  // see https://stackoverflow.com/questions/48865762
-  if (name === PUBLIC_SUBNET) {
-    route.DependsOn = ['InternetGatewayAttachment'];
-  }
-  if (NatGatewayId) {
-    route.Properties.NatGatewayId = {
-      Ref: NatGatewayId,
-    };
-  } else if (GatewayId) {
-    route.Properties.GatewayId = {
-      Ref: GatewayId,
-    };
-  } else if (InstanceId) {
-    route.Properties.InstanceId = {
-      Ref: InstanceId,
-    };
-  } else {
-    throw new Error(
-      'Unable to create route: either NatGatewayId, GatewayId or InstanceId must be provided',
-    );
-  }
-
-  const cfName = `${name}Route${position}`;
-  return {
-    [cfName]: route,
-  };
-}
-
-/**
- * Build a SecurityGroup to be used by Lambda's when they execute.
- *
- * @param {Object} params
- * @return {Object}
- */
-function buildLambdaSecurityGroup({ name = 'LambdaExecutionSecurityGroup' } = {}) {
-  return {
-    [name]: {
+    AppSecurityGroup: {
       Type: 'AWS::EC2::SecurityGroup',
       Properties: {
-        GroupDescription: 'Lambda Execution Group',
+        GroupDescription: 'Application Security Group',
+        SecurityGroupEgress: [
+          {
+            Description: 'permit HTTPS outbound',
+            IpProtocol: 'tcp',
+            FromPort: 443,
+            ToPort: 443,
+            CidrIp: '0.0.0.0/0',
+          },
+        ],
+        SecurityGroupIngress: [
+          {
+            Description: 'permit HTTPS inbound',
+            IpProtocol: 'tcp',
+            FromPort: 443,
+            ToPort: 443,
+            CidrIp: '0.0.0.0/0',
+          },
+        ],
         VpcId: {
           Ref: 'VPC',
         },
@@ -252,7 +115,7 @@ function buildLambdaSecurityGroup({ name = 'LambdaExecutionSecurityGroup' } = {}
             Key: 'Name',
             Value: {
               // eslint-disable-next-line no-template-curly-in-string
-              'Fn::Sub': '${AWS::StackName}-lambda-exec',
+              'Fn::Sub': '${AWS::StackName}-sg',
             },
           },
         ],
@@ -261,13 +124,57 @@ function buildLambdaSecurityGroup({ name = 'LambdaExecutionSecurityGroup' } = {}
   };
 }
 
+/**
+ * Build a DHCP Option Set
+ *
+ * @param {String} region
+ * @return {Object}
+ */
+function buildDHCPOptions(region) {
+  let domainName;
+  if (region === 'us-east-1') {
+    domainName = 'ec2.internal';
+  } else {
+    domainName = {
+      // eslint-disable-next-line no-template-curly-in-string
+      'Fn::Sub': '${AWS::Region}.compute.internal',
+    };
+  }
+
+  return {
+    DHCPOptions: {
+      Type: 'AWS::EC2::DHCPOptions',
+      Properties: {
+        DomainName: domainName,
+        DomainNameServers: ['AmazonProvidedDNS'],
+        Tags: [
+          {
+            Key: 'Name',
+            Value: {
+              // eslint-disable-next-line no-template-curly-in-string
+              'Fn:Sub': '${AWS::StackName}-DHCPOptionsSet',
+            },
+          },
+        ],
+      },
+    },
+    VPCDHCPOptionsAssociation: {
+      Type: 'AWS::EC2::VPCDHCPOptionsAssociation',
+      Properties: {
+        VpcId: {
+          Ref: 'VPC',
+        },
+        DhcpOptionsId: {
+          Ref: 'DHCPOptions',
+        },
+      },
+    },
+  };
+}
+
 module.exports = {
   buildVpc,
   buildInternetGateway,
-  buildInternetGatewayAttachment,
-  buildLambdaSecurityGroup,
-  buildSubnet,
-  buildRoute,
-  buildRouteTable,
-  buildRouteTableAssociation,
+  buildAppSecurityGroup,
+  buildDHCPOptions,
 };

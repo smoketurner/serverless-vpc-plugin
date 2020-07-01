@@ -8,17 +8,12 @@
         {
           "Key": "Name",
           "Value": {
-            "Fn::Join": [
-              "-",
-              [
-                {
-                  "Ref": "AWS::StackName"
-                },
-                "app",
-                "us-east-1a"
-              ]
-            ]
+            "Fn::Sub": "${AWS::StackName}-app-us-east-1a"
           }
+        },
+        {
+          "Key": "Network",
+          "Value": "Private"
         }
       ],
       "VpcId": {
@@ -36,17 +31,12 @@
         {
           "Key": "Name",
           "Value": {
-            "Fn::Join": [
-              "-",
-              [
-                {
-                  "Ref": "AWS::StackName"
-                },
-                "app",
-                "us-east-1a"
-              ]
-            ]
+            "Fn::Sub": "${AWS::StackName}-app-${AppSubnet1.AvailabilityZone}"
           }
+        },
+        {
+          "Key": "Network",
+          "Value": "Private"
         }
       ]
     }
@@ -71,17 +61,12 @@
         {
           "Key": "Name",
           "Value": {
-            "Fn::Join": [
-              "-",
-              [
-                {
-                  "Ref": "AWS::StackName"
-                },
-                "public",
-                "us-east-1a"
-              ]
-            ]
+            "Fn::Sub": "${AWS::StackName}-public-us-east-1a"
           }
+        },
+        {
+          "Key": "Network",
+          "Value": "Public"
         }
       ],
       "VpcId": {
@@ -99,17 +84,12 @@
         {
           "Key": "Name",
           "Value": {
-            "Fn::Join": [
-              "-",
-              [
-                {
-                  "Ref": "AWS::StackName"
-                },
-                "public",
-                "us-east-1a"
-              ]
-            ]
+            "Fn::Sub": "${AWS::StackName}-public-${PublicSubnet1.AvailabilityZone}"
           }
+        },
+        {
+          "Key": "Network",
+          "Value": "Public"
         }
       ]
     }
@@ -127,7 +107,6 @@
   },
   "PublicRoute1": {
     "Type": "AWS::EC2::Route",
-    "DependsOn": ["InternetGatewayAttachment"],
     "Properties": {
       "DestinationCidrBlock": "0.0.0.0/0",
       "RouteTableId": {
@@ -136,7 +115,10 @@
       "GatewayId": {
         "Ref": "InternetGateway"
       }
-    }
+    },
+    "DependsOn": [
+      "InternetGatewayAttachment"
+    ]
   },
   "DBSubnet1": {
     "Type": "AWS::EC2::Subnet",
@@ -147,17 +129,12 @@
         {
           "Key": "Name",
           "Value": {
-            "Fn::Join": [
-              "-",
-              [
-                {
-                  "Ref": "AWS::StackName"
-                },
-                "db",
-                "us-east-1a"
-              ]
-            ]
+            "Fn::Sub": "${AWS::StackName}-db-us-east-1a"
           }
+        },
+        {
+          "Key": "Network",
+          "Value": "Private"
         }
       ],
       "VpcId": {
@@ -175,17 +152,12 @@
         {
           "Key": "Name",
           "Value": {
-            "Fn::Join": [
-              "-",
-              [
-                {
-                  "Ref": "AWS::StackName"
-                },
-                "db",
-                "us-east-1a"
-              ]
-            ]
+            "Fn::Sub": "${AWS::StackName}-db-${DBSubnet1.AvailabilityZone}"
           }
+        },
+        {
+          "Key": "Network",
+          "Value": "Private"
         }
       ]
     }
@@ -210,17 +182,12 @@
         {
           "Key": "Name",
           "Value": {
-            "Fn::Join": [
-              "-",
-              [
-                {
-                  "Ref": "AWS::StackName"
-                },
-                "app",
-                "us-east-1b"
-              ]
-            ]
+            "Fn::Sub": "${AWS::StackName}-app-us-east-1b"
           }
+        },
+        {
+          "Key": "Network",
+          "Value": "Private"
         }
       ],
       "VpcId": {
@@ -238,17 +205,12 @@
         {
           "Key": "Name",
           "Value": {
-            "Fn::Join": [
-              "-",
-              [
-                {
-                  "Ref": "AWS::StackName"
-                },
-                "app",
-                "us-east-1b"
-              ]
-            ]
+            "Fn::Sub": "${AWS::StackName}-app-${AppSubnet2.AvailabilityZone}"
           }
+        },
+        {
+          "Key": "Network",
+          "Value": "Private"
         }
       ]
     }
@@ -273,17 +235,12 @@
         {
           "Key": "Name",
           "Value": {
-            "Fn::Join": [
-              "-",
-              [
-                {
-                  "Ref": "AWS::StackName"
-                },
-                "public",
-                "us-east-1b"
-              ]
-            ]
+            "Fn::Sub": "${AWS::StackName}-public-us-east-1b"
           }
+        },
+        {
+          "Key": "Network",
+          "Value": "Public"
         }
       ],
       "VpcId": {
@@ -301,17 +258,12 @@
         {
           "Key": "Name",
           "Value": {
-            "Fn::Join": [
-              "-",
-              [
-                {
-                  "Ref": "AWS::StackName"
-                },
-                "public",
-                "us-east-1b"
-              ]
-            ]
+            "Fn::Sub": "${AWS::StackName}-public-${PublicSubnet2.AvailabilityZone}"
           }
+        },
+        {
+          "Key": "Network",
+          "Value": "Public"
         }
       ]
     }
@@ -329,7 +281,6 @@
   },
   "PublicRoute2": {
     "Type": "AWS::EC2::Route",
-    "DependsOn": ["InternetGatewayAttachment"],
     "Properties": {
       "DestinationCidrBlock": "0.0.0.0/0",
       "RouteTableId": {
@@ -338,7 +289,10 @@
       "GatewayId": {
         "Ref": "InternetGateway"
       }
-    }
+    },
+    "DependsOn": [
+      "InternetGatewayAttachment"
+    ]
   },
   "DBSubnet2": {
     "Type": "AWS::EC2::Subnet",
@@ -349,17 +303,12 @@
         {
           "Key": "Name",
           "Value": {
-            "Fn::Join": [
-              "-",
-              [
-                {
-                  "Ref": "AWS::StackName"
-                },
-                "db",
-                "us-east-1b"
-              ]
-            ]
+            "Fn::Sub": "${AWS::StackName}-db-us-east-1b"
           }
+        },
+        {
+          "Key": "Network",
+          "Value": "Private"
         }
       ],
       "VpcId": {
@@ -377,17 +326,12 @@
         {
           "Key": "Name",
           "Value": {
-            "Fn::Join": [
-              "-",
-              [
-                {
-                  "Ref": "AWS::StackName"
-                },
-                "db",
-                "us-east-1b"
-              ]
-            ]
+            "Fn::Sub": "${AWS::StackName}-db-${DBSubnet2.AvailabilityZone}"
           }
+        },
+        {
+          "Key": "Network",
+          "Value": "Private"
         }
       ]
     }
