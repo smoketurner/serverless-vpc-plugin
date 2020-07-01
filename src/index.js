@@ -1,4 +1,10 @@
-const { DEFAULT_VPC_EIP_LIMIT, APP_SUBNET, VALID_SUBNET_GROUPS } = require('./constants');
+const {
+  DEFAULT_VPC_EIP_LIMIT,
+  PUBLIC_SUBNET,
+  DB_SUBNET,
+  APP_SUBNET,
+  VALID_SUBNET_GROUPS,
+} = require('./constants');
 const { splitSubnets } = require('./subnets');
 const { buildAvailabilityZones } = require('./az');
 const {
@@ -14,6 +20,7 @@ const { buildLogBucket, buildLogBucketPolicy, buildVpcFlowLogs } = require('./fl
 const { buildBastion } = require('./bastion');
 const { buildNatInstance, buildNatSecurityGroup } = require('./nat_instance');
 const { buildOutputs } = require('./outputs');
+const { buildParameter } = require('./parameters');
 
 class ServerlessVpcPlugin {
   constructor(serverless, options) {
@@ -37,6 +44,7 @@ class ServerlessVpcPlugin {
     let createFlowLogs = false;
     let createNatInstance = false;
     let createBastionHost = false;
+    let createParameters = false;
     let bastionHostKeyName = null;
     let exportOutputs = false;
     let subnetGroups = VALID_SUBNET_GROUPS;
@@ -109,6 +117,10 @@ class ServerlessVpcPlugin {
 
       if ('exportOutputs' in vpcConfig && typeof vpcConfig.exportOutputs === 'boolean') {
         ({ exportOutputs } = vpcConfig);
+      }
+
+      if ('createParameters' in vpcConfig && typeof vpcConfig.createParameters === 'boolean') {
+        ({ createParameters } = vpcConfig);
       }
     }
 
@@ -244,6 +256,52 @@ class ServerlessVpcPlugin {
     if (createFlowLogs) {
       this.serverless.cli.log('Enabling VPC Flow Logs to S3');
       Object.assign(resources, buildLogBucket(), buildLogBucketPolicy(), buildVpcFlowLogs());
+    }
+
+    // SSM Parameters
+    if (createParameters) {
+      Object.assign(
+        resources,
+        buildParameter('VPC'),
+        buildParameter('LambdaExecutionSecurityGroup'),
+      );
+
+      if (createDbSubnet && numZones > 1) {
+        if (subnetGroups.includes('rds')) {
+          Object.assign(resources, buildParameter('RDSSubnetGroup'));
+        }
+        if (subnetGroups.includes('elasticache')) {
+          Object.assign(resources, buildParameter('ElastiCacheSubnetGroup'));
+        }
+        if (subnetGroups.includes('redshift')) {
+          Object.assign(resources, buildParameter('RedshiftSubnetGroup'));
+        }
+        if (subnetGroups.includes('dax')) {
+          Object.assign(resources, buildParameter('DAXSubnetGroup'));
+        }
+      }
+
+      const publicSubnets = [];
+      const appSubnets = [];
+      const dbSubnets = [];
+
+      for (let index = 1; index <= numZones; index += 1) {
+        publicSubnets.push({ Ref: `${PUBLIC_SUBNET}Subnet${index}` });
+        appSubnets.push({ Ref: `${APP_SUBNET}Subnet${index}` });
+        if (createDbSubnet) {
+          dbSubnets.push({ Ref: `${DB_SUBNET}Subnet${index}` });
+        }
+      }
+
+      Object.assign(
+        resources,
+        buildParameter('PublicSubnets', { Value: publicSubnets }),
+        buildParameter('AppSubnets', { Value: appSubnets }),
+      );
+
+      if (dbSubnets) {
+        Object.assign(resources, buildParameter('DBSubnets', { Value: dbSubnets }));
+      }
     }
 
     this.serverless.cli.log('Updating Lambda VPC configuration');

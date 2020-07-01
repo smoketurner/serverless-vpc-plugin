@@ -1,4 +1,4 @@
-const http = require('http');
+const https = require('https');
 
 const { PUBLIC_SUBNET } = require('./constants');
 
@@ -9,13 +9,13 @@ const { PUBLIC_SUBNET } = require('./constants');
  */
 function getPublicIp() {
   const options = {
-    host: 'checkip.amazonaws.com',
-    port: 80,
+    hostname: 'checkip.amazonaws.com',
+    port: 443,
     path: '/',
     timeout: 1000,
   };
   return new Promise((resolve, reject) => {
-    const req = http.get(options, (res) => {
+    const req = https.get(options, (res) => {
       const buffers = [];
       res.on('data', (data) => buffers.push(data));
       res.once('end', () => resolve(Buffer.concat(buffers).toString()));

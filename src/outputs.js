@@ -3,19 +3,17 @@ const { VALID_SUBNET_GROUPS } = require('./constants');
 /**
  * Append subnets to output
  *
- * @param {Array<String>} subnets
+ * @param {Array<Object>} subnets
  * @param {Object} outputs
  */
 function appendSubnets(subnets, outputs) {
-  if (Array.isArray(subnets) && subnets.length > 0) {
-    const subnetOutputs = subnets.map((subnet) => ({
-      [`${subnet.Ref}`]: {
-        Value: subnet,
-      },
-    }));
+  const subnetOutputs = subnets.map((subnet) => ({
+    [`${subnet.Ref}`]: {
+      Value: subnet,
+    },
+  }));
 
-    Object.assign(outputs, ...subnetOutputs);
-  }
+  Object.assign(outputs, ...subnetOutputs);
 }
 
 /**
@@ -25,48 +23,43 @@ function appendSubnets(subnets, outputs) {
  * @param {Object} outputs
  */
 function appendSubnetGroups(subnetGroups, outputs) {
-  if (Array.isArray(subnetGroups) && subnetGroups.length > 0) {
-    const typesToNames = {
-      rds: 'RDSSubnetGroup',
-      redshift: 'RedshiftSubnetGroup',
-      elasticache: 'ElastiCacheSubnetGroup',
-      dax: 'DAXSubnetGroup',
-    };
+  const typesToNames = {
+    rds: 'RDSSubnetGroup',
+    redshift: 'RedshiftSubnetGroup',
+    elasticache: 'ElastiCacheSubnetGroup',
+    dax: 'DAXSubnetGroup',
+  };
 
-    const subnetGroupOutputs = subnetGroups.map((subnetGroup) => ({
-      [typesToNames[subnetGroup]]: {
-        Description: `Subnet Group for ${subnetGroup}`,
-        Value: {
-          Ref: typesToNames[subnetGroup],
-        },
+  const subnetGroupOutputs = subnetGroups.map((subnetGroup) => ({
+    [typesToNames[subnetGroup]]: {
+      Description: `Subnet Group for ${subnetGroup}`,
+      Value: {
+        Ref: typesToNames[subnetGroup],
       },
-    }));
+    },
+  }));
 
-    Object.assign(outputs, ...subnetGroupOutputs);
-  }
+  Object.assign(outputs, ...subnetGroupOutputs);
 }
 
 /**
  * Append bastion host to output
  *
- * @param {Boolean} createBastionHost
  * @param {Object} outputs
  */
-function appendBastionHost(createBastionHost, outputs) {
-  if (createBastionHost) {
-    // eslint-disable-next-line no-param-reassign
-    outputs.BastionSSHUser = {
-      Description: 'SSH username for the Bastion host',
-      Value: 'ec2-user',
-    };
-    // eslint-disable-next-line no-param-reassign
-    outputs.BastionEIP = {
-      Description: 'Public IP of Bastion host',
-      Value: {
-        Ref: 'BastionEIP',
-      },
-    };
-  }
+function appendBastionHost(outputs) {
+  // eslint-disable-next-line no-param-reassign
+  outputs.BastionSSHUser = {
+    Description: 'SSH username for the Bastion host',
+    Value: 'ec2-user',
+  };
+  // eslint-disable-next-line no-param-reassign
+  outputs.BastionEIP = {
+    Description: 'Public IP of Bastion host',
+    Value: {
+      Ref: 'BastionEIP',
+    },
+  };
 }
 
 /**
@@ -75,17 +68,15 @@ function appendBastionHost(createBastionHost, outputs) {
  * @param {Boolean} exportOutputs
  * @param {Object} outputs
  */
-function appendExports(exportOutputs, outputs) {
-  if (exportOutputs) {
-    Object.entries(outputs).forEach(([name, value]) => {
-      // eslint-disable-next-line no-param-reassign
-      value.Export = {
-        Name: {
-          'Fn::Join': ['-', [{ Ref: 'AWS::StackName' }, name]],
-        },
-      };
-    });
-  }
+function appendExports(outputs) {
+  Object.entries(outputs).forEach(([name, value]) => {
+    // eslint-disable-next-line no-param-reassign
+    value.Export = {
+      Name: {
+        'Fn::Join': ['-', [{ Ref: 'AWS::StackName' }, name]],
+      },
+    };
+  });
 }
 
 /**
@@ -125,11 +116,17 @@ function buildOutputs({
     appendSubnetGroups(subnetGroups, outputs);
   }
 
-  appendSubnets(subnets, outputs);
+  if (Array.isArray(subnets) && subnets.length > 0) {
+    appendSubnets(subnets, outputs);
+  }
 
-  appendBastionHost(createBastionHost, outputs);
+  if (createBastionHost) {
+    appendBastionHost(outputs);
+  }
 
-  appendExports(exportOutputs, outputs);
+  if (exportOutputs) {
+    appendExports(outputs);
+  }
 
   return outputs;
 }

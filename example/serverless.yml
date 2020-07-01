@@ -14,6 +14,12 @@ provider:
   environment:
     AWS_NODEJS_CONNECTION_REUSE_ENABLED: '1'
     NODE_ENV: development
+  logs:
+    restApi:
+      accessLogging: false
+      executionLogging: false
+      fullExecutionData: false
+      roleManagedExternally: true
 
 plugins:
   - serverless-vpc-plugin
@@ -30,12 +36,14 @@ custom:
     cidrBlock: '10.0.0.0/16'
     createDbSubnet: true
     createNatInstance: true
+    createParameters: true
     zones:
       - us-east-1a
       - us-east-1b
       - us-east-1c
     services:
       - secretsmanager
+      - rds-data
   webpack:
     includeModules:
       forceExclude:

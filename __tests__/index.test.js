@@ -1,4 +1,5 @@
 const AWS = require('aws-sdk-mock');
+const nock = require('nock');
 
 const Serverless = require('serverless');
 const AwsProvider = require('serverless/lib/plugins/aws/provider/awsProvider');
@@ -9,6 +10,8 @@ describe('ServerlessVpcPlugin', () => {
   let plugin;
 
   beforeEach(() => {
+    nock.disableNetConnect();
+
     const options = {
       stage: 'dev',
       region: 'us-east-1',

@@ -23,7 +23,7 @@
   ],
   "main": "src/index.js",
   "scripts": {
-    "test": "SLS_DEBUG=* jest --coverage"
+    "test": "SLS_DEBUG=* DEBUG=nock.* jest --coverage"
   },
   "dependencies": {
     "cidr-split": "0.1.2"

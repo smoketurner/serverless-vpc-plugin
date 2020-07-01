@@ -12,13 +12,16 @@ const {
 } = require('../src/bastion');
 
 describe('bastion', () => {
+  beforeEach(() => {
+    nock.disableNetConnect();
+  });
   afterEach(() => {
     nock.cleanAll();
   });
 
   describe('#getPublicIp', () => {
     it('gets the public IP', async () => {
-      const scope = nock('http://checkip.amazonaws.com').get('/').reply(200, '127.0.0.1');
+      const scope = nock('https://checkip.amazonaws.com').get('/').reply(200, '127.0.0.1');
 
       const actual = await getPublicIp();
       expect(actual).toEqual('127.0.0.1');
