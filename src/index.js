@@ -245,11 +245,7 @@ class ServerlessVpcPlugin {
 
     // SSM Parameters
     if (createParameters) {
-      Object.assign(
-        resources,
-        buildParameter('VPC'),
-        buildParameter('LambdaExecutionSecurityGroup'),
-      );
+      Object.assign(resources, buildParameter('VPC'), buildParameter('AppSecurityGroup'));
 
       if (createDbSubnet && numZones > 1) {
         if (subnetGroups.includes('rds')) {
@@ -295,7 +291,7 @@ class ServerlessVpcPlugin {
     if (!Array.isArray(vpc.securityGroupIds)) {
       vpc.securityGroupIds = [];
     }
-    vpc.securityGroupIds.push({ Ref: 'LambdaExecutionSecurityGroup' });
+    vpc.securityGroupIds.push({ Ref: 'AppSecurityGroup' });
 
     if (!Array.isArray(vpc.subnetIds)) {
       vpc.subnetIds = [];
