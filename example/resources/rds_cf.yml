@@ -11,12 +11,12 @@ Resources:
   DBSecurityGroup:
     Type: 'AWS::EC2::SecurityGroup'
     Properties:
-      GroupDescription: 'RDS Database Access'
+      GroupDescription: 'RDS Database'
       SecurityGroupIngress:
-        - Description: 'Allow inbound PostgreSQL access from Lambda'
+        - Description: 'Allow PostgreSQL (5432) from AppSecurityGroup'
           FromPort: 5432
           IpProtocol: tcp
-          SourceSecurityGroupId: !GetAtt LambdaExecutionSecurityGroup.GroupId
+          SourceSecurityGroupId: !GetAtt AppSecurityGroup.GroupId
           ToPort: 5432
       VpcId: !Ref VPC
 
