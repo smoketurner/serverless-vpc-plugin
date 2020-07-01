@@ -5,6 +5,7 @@ provider:
   runtime: nodejs12.x
   stage: ${opt:stage, 'dev'}
   region: ${opt:region, 'us-east-1'}
+  profile: jplock
   versionFunctions: false
   logRetentionInDays: 1
   deploymentBucket:
@@ -35,7 +36,7 @@ custom:
   vpcConfig:
     cidrBlock: '10.0.0.0/16'
     createDbSubnet: true
-    createNatInstance: true
+    createNatInstance: false
     createParameters: true
     zones:
       - us-east-1a
@@ -44,6 +45,8 @@ custom:
     services:
       - secretsmanager
       - rds-data
+    subnetGroups:
+      - rds
   webpack:
     includeModules:
       forceExclude:
