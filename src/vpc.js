@@ -152,7 +152,7 @@ function buildDHCPOptions(region) {
             Key: 'Name',
             Value: {
               // eslint-disable-next-line no-template-curly-in-string
-              'Fn:Sub': '${AWS::StackName}-DHCPOptionsSet',
+              'Fn::Sub': '${AWS::StackName}-DHCPOptionsSet',
             },
           },
         ],
