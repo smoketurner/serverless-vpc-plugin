@@ -35,10 +35,15 @@ describe('outputs', () => {
           },
         },
         LambdaExecutionSecurityGroupId: {
-          Description:
-            'Security Group logical resource ID that the Lambda functions use when executing within the VPC',
+          Description: 'DEPRECATED - Please use AppSecurityGroupId instead',
           Value: {
-            Ref: 'LambdaExecutionSecurityGroup',
+            Ref: 'AppSecurityGroup',
+          },
+        },
+        AppSecurityGroupId: {
+          Description: 'Security Group ID that the applications use when executing within the VPC',
+          Value: {
+            Ref: 'AppSecurityGroup',
           },
         },
         RDSSubnetGroup: {
@@ -109,10 +114,15 @@ describe('outputs', () => {
           },
         },
         LambdaExecutionSecurityGroupId: {
-          Description:
-            'Security Group logical resource ID that the Lambda functions use when executing within the VPC',
+          Description: 'DEPRECATED - Please use AppSecurityGroupId instead',
           Value: {
-            Ref: 'LambdaExecutionSecurityGroup',
+            Ref: 'AppSecurityGroup',
+          },
+        },
+        AppSecurityGroupId: {
+          Description: 'Security Group ID that the applications use when executing within the VPC',
+          Value: {
+            Ref: 'AppSecurityGroup',
           },
         },
         RDSSubnetGroup: {
@@ -173,7 +183,8 @@ describe('outputs', () => {
         AppSubnet1: {
           Export: {
             Name: {
-              'Fn::Join': ['-', [{ Ref: 'AWS::StackName' }, 'AppSubnet1']],
+              // eslint-disable-next-line no-template-curly-in-string
+              'Fn::Sub': '${AWS::StackName}-AppSubnet1',
             },
           },
           Value: {
@@ -183,7 +194,8 @@ describe('outputs', () => {
         AppSubnet2: {
           Export: {
             Name: {
-              'Fn::Join': ['-', [{ Ref: 'AWS::StackName' }, 'AppSubnet2']],
+              // eslint-disable-next-line no-template-curly-in-string
+              'Fn::Sub': '${AWS::StackName}-AppSubnet2',
             },
           },
           Value: {
@@ -193,7 +205,8 @@ describe('outputs', () => {
         AppSubnet3: {
           Export: {
             Name: {
-              'Fn::Join': ['-', [{ Ref: 'AWS::StackName' }, 'AppSubnet3']],
+              // eslint-disable-next-line no-template-curly-in-string
+              'Fn::Sub': '${AWS::StackName}-AppSubnet3',
             },
           },
           Value: {
@@ -204,15 +217,8 @@ describe('outputs', () => {
           Description: 'Subnet Group for dax',
           Export: {
             Name: {
-              'Fn::Join': [
-                '-',
-                [
-                  {
-                    Ref: 'AWS::StackName',
-                  },
-                  'DAXSubnetGroup',
-                ],
-              ],
+              // eslint-disable-next-line no-template-curly-in-string
+              'Fn::Sub': '${AWS::StackName}-DAXSubnetGroup',
             },
           },
           Value: {
@@ -223,15 +229,8 @@ describe('outputs', () => {
           Description: 'Subnet Group for elasticache',
           Export: {
             Name: {
-              'Fn::Join': [
-                '-',
-                [
-                  {
-                    Ref: 'AWS::StackName',
-                  },
-                  'ElastiCacheSubnetGroup',
-                ],
-              ],
+              // eslint-disable-next-line no-template-curly-in-string
+              'Fn::Sub': '${AWS::StackName}-ElastiCacheSubnetGroup',
             },
           },
           Value: {
@@ -239,38 +238,35 @@ describe('outputs', () => {
           },
         },
         LambdaExecutionSecurityGroupId: {
-          Description:
-            'Security Group logical resource ID that the Lambda functions use when executing within the VPC',
+          Description: 'DEPRECATED - Please use AppSecurityGroupId instead',
           Export: {
             Name: {
-              'Fn::Join': [
-                '-',
-                [
-                  {
-                    Ref: 'AWS::StackName',
-                  },
-                  'LambdaExecutionSecurityGroupId',
-                ],
-              ],
+              // eslint-disable-next-line no-template-curly-in-string
+              'Fn::Sub': '${AWS::StackName}-LambdaExecutionSecurityGroupId',
             },
           },
           Value: {
-            Ref: 'LambdaExecutionSecurityGroup',
+            Ref: 'AppSecurityGroup',
+          },
+        },
+        AppSecurityGroupId: {
+          Description: 'Security Group ID that the applications use when executing within the VPC',
+          Export: {
+            Name: {
+              // eslint-disable-next-line no-template-curly-in-string
+              'Fn::Sub': '${AWS::StackName}-AppSecurityGroupId',
+            },
+          },
+          Value: {
+            Ref: 'AppSecurityGroup',
           },
         },
         RDSSubnetGroup: {
           Description: 'Subnet Group for rds',
           Export: {
             Name: {
-              'Fn::Join': [
-                '-',
-                [
-                  {
-                    Ref: 'AWS::StackName',
-                  },
-                  'RDSSubnetGroup',
-                ],
-              ],
+              // eslint-disable-next-line no-template-curly-in-string
+              'Fn::Sub': '${AWS::StackName}-RDSSubnetGroup',
             },
           },
           Value: {
@@ -281,15 +277,8 @@ describe('outputs', () => {
           Description: 'Subnet Group for redshift',
           Export: {
             Name: {
-              'Fn::Join': [
-                '-',
-                [
-                  {
-                    Ref: 'AWS::StackName',
-                  },
-                  'RedshiftSubnetGroup',
-                ],
-              ],
+              // eslint-disable-next-line no-template-curly-in-string
+              'Fn::Sub': '${AWS::StackName}-RedshiftSubnetGroup',
             },
           },
           Value: {
@@ -300,15 +289,8 @@ describe('outputs', () => {
           Description: 'VPC logical resource ID',
           Export: {
             Name: {
-              'Fn::Join': [
-                '-',
-                [
-                  {
-                    Ref: 'AWS::StackName',
-                  },
-                  'VPC',
-                ],
-              ],
+              // eslint-disable-next-line no-template-curly-in-string
+              'Fn::Sub': '${AWS::StackName}-VPC',
             },
           },
           Value: {
@@ -335,15 +317,19 @@ describe('outputs', () => {
           },
         },
         LambdaExecutionSecurityGroupId: {
-          Description:
-            'Security Group logical resource ID that the Lambda functions use when executing within the VPC',
+          Description: 'DEPRECATED - Please use AppSecurityGroupId instead',
           Value: {
-            Ref: 'LambdaExecutionSecurityGroup',
+            Ref: 'AppSecurityGroup',
+          },
+        },
+        AppSecurityGroupId: {
+          Description: 'Security Group ID that the applications use when executing within the VPC',
+          Value: {
+            Ref: 'AppSecurityGroup',
           },
         },
         VPC: {
           Description: 'VPC logical resource ID',
-
           Value: {
             Ref: 'VPC',
           },

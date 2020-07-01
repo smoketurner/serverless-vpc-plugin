@@ -12,7 +12,7 @@ This plugin provisions the following resources:
 - `AWS::EC2::VPC`
 - `AWS::EC2::InternetGateway` (for outbound internet access from "Public" subnet)
 - `AWS::EC2::VPCGatewayAttachment` (to attach the `InternetGateway` to the VPC)
-- `AWS::EC2::SecurityGroup` (to execute Lambda functions [`LambdaExecutionSecurityGroup`])
+- `AWS::EC2::SecurityGroup` (to execute Lambda functions [`AppSecurityGroup`])
 
 If the VPC is allocated a /16 subnet, each availability zone within the region will be allocated a /20 subnet. Within each availability zone, this plugin will further divide the subnets:
 
@@ -99,6 +99,9 @@ custom:
     # Whether to create a NAT instance
     createNatInstance: false
 
+    # Whether to create AWS Systems Manager (SSM) Parameters
+    createParameters: false
+
     # Optionally specify AZs (defaults to auto-discover all availabile AZs)
     zones:
       - us-east-1a
@@ -117,8 +120,8 @@ custom:
     # for RDS, Redshift, ElasticCache and DAX will be provisioned.
     subnetGroups:
       - rds
-        
-    # Whether to export stack outputs so it may be consumed by other stacks 
+
+    # Whether to export stack outputs so it may be consumed by other stacks
     exportOutputs: false
 ```
 
@@ -127,16 +130,18 @@ custom:
 After executing `serverless deploy`, the following CloudFormation Stack Outputs will be provided:
 
 - `VPC`: VPC logical resource ID
-- `LambdaExecutionSecurityGroup`: Security Group logical resource ID that the Lambda functions use when executing within the VPC
+- `AppSecurityGroup`: Security Group ID that the applications use when executing within the VPC
+- `LambdaExecutionSecurityGroupId`: DEPRECATED - Please use AppSecurityGroupId instead
 - `BastionSSHUser`: SSH username to access the bastion host, if provisioned
 - `BastionEIP`: Elastic IP address associated to the bastion host, if provisioned
-- `RDSSubnetGroup`: SubnetGroup associated to RDS, if provisioned 
+- `RDSSubnetGroup`: SubnetGroup associated to RDS, if provisioned
 - `ElastiCacheSubnetGroup`: SubnetGroup associated to ElastiCache, if provisioned
 - `RedshiftSubnetGroup`: SubnetGroup associated to Redshift, if provisioned
 - `DAXSubnetGroup`: SubnetGroup associated to DAX, if provisioned
 - `AppSubnet{i}`: Each of the generated "Application" Subnets, where i is a 1 based index
 
 ### Exporting CloudFormation Outputs
+
 Setting `exportOutputs: true` will export stack outputs.  
 The name of the exported value will be prefixed by the cloud formation stack name (`AWS::StackName`).
-For example, the value of the `VPC` output of a stack named `foo-prod` will be exported as `foo-prod-VPC`. 
+For example, the value of the `VPC` output of a stack named `foo-prod` will be exported as `foo-prod-VPC`.

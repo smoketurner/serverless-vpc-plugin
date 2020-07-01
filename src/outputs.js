@@ -65,7 +65,6 @@ function appendBastionHost(outputs) {
 /**
  * Append export outputs
  *
- * @param {Boolean} exportOutputs
  * @param {Object} outputs
  */
 function appendExports(outputs) {
@@ -73,7 +72,7 @@ function appendExports(outputs) {
     // eslint-disable-next-line no-param-reassign
     value.Export = {
       Name: {
-        'Fn::Join': ['-', [{ Ref: 'AWS::StackName' }, name]],
+        'Fn::Sub': `\${AWS::StackName}-${name}`,
       },
     };
   });
@@ -88,7 +87,6 @@ function appendExports(outputs) {
  * @param {Boolean} exportOutputs
  * @return {Object}
  */
-
 function buildOutputs({
   createBastionHost = false,
   subnetGroups = VALID_SUBNET_GROUPS,
@@ -103,10 +101,15 @@ function buildOutputs({
       },
     },
     LambdaExecutionSecurityGroupId: {
-      Description:
-        'Security Group logical resource ID that the Lambda functions use when executing within the VPC',
+      Description: 'DEPRECATED - Please use AppSecurityGroupId instead',
       Value: {
-        Ref: 'LambdaExecutionSecurityGroup',
+        Ref: 'AppSecurityGroup',
+      },
+    },
+    AppSecurityGroupId: {
+      Description: 'Security Group ID that the applications use when executing within the VPC',
+      Value: {
+        Ref: 'AppSecurityGroup',
       },
     },
   };
