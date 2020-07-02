@@ -193,11 +193,7 @@ class ServerlessVpcPlugin {
 
     if (createNatInstance && vpcNatAmi) {
       this.serverless.cli.log(`Provisioning NAT Instance using AMI ${vpcNatAmi}`);
-      Object.assign(
-        resources,
-        buildNatSecurityGroup(subnets.get(APP_SUBNET)),
-        buildNatInstance(vpcNatAmi, zones),
-      );
+      Object.assign(resources, buildNatSecurityGroup(), buildNatInstance(vpcNatAmi, zones));
     }
 
     if (createBastionHost) {

@@ -13,14 +13,14 @@ describe('nat_instance', () => {
             },
             SecurityGroupEgress: [
               {
-                Description: 'Allow outbound HTTP access to the Internet',
+                Description: 'permit outbound HTTP to the Internet',
                 IpProtocol: 'tcp',
                 FromPort: 80,
                 ToPort: 80,
                 CidrIp: '0.0.0.0/0',
               },
               {
-                Description: 'Allow outbound HTTPS access to the Internet',
+                Description: 'permit outbound HTTPS to the Internet',
                 IpProtocol: 'tcp',
                 FromPort: 443,
                 ToPort: 443,
@@ -29,32 +29,22 @@ describe('nat_instance', () => {
             ],
             SecurityGroupIngress: [
               {
-                Description: 'Allow inbound HTTP traffic from AppSubnet1',
+                Description: 'permit inbound HTTP from AppSecurityGroup',
                 IpProtocol: 'tcp',
                 FromPort: 80,
                 ToPort: 80,
-                CidrIp: '10.0.0.0/21',
+                SourceSecurityGroupId: {
+                  Ref: 'AppSecurityGroup',
+                },
               },
               {
-                Description: 'Allow inbound HTTPS traffic from AppSubnet1',
+                Description: 'permit inbound HTTPS from AppSecurityGroup',
                 IpProtocol: 'tcp',
                 FromPort: 443,
                 ToPort: 443,
-                CidrIp: '10.0.0.0/21',
-              },
-              {
-                Description: 'Allow inbound HTTP traffic from AppSubnet2',
-                IpProtocol: 'tcp',
-                FromPort: 80,
-                ToPort: 80,
-                CidrIp: '10.0.6.0/21',
-              },
-              {
-                Description: 'Allow inbound HTTPS traffic from AppSubnet2',
-                IpProtocol: 'tcp',
-                FromPort: 443,
-                ToPort: 443,
-                CidrIp: '10.0.6.0/21',
+                SourceSecurityGroupId: {
+                  Ref: 'AppSecurityGroup',
+                },
               },
             ],
             Tags: [
@@ -70,7 +60,7 @@ describe('nat_instance', () => {
         },
       };
 
-      const actual = buildNatSecurityGroup(['10.0.0.0/21', '10.0.6.0/21']);
+      const actual = buildNatSecurityGroup();
       expect(actual).toEqual(expected);
       expect.assertions(1);
     });

@@ -88,14 +88,14 @@ describe('bastion', () => {
             },
             SecurityGroupIngress: [
               {
-                Description: 'Allow inbound SSH access to the bastion host',
+                Description: 'permit inbound SSH',
                 IpProtocol: 'tcp',
                 FromPort: 22,
                 ToPort: 22,
                 CidrIp: '0.0.0.0/0',
               },
               {
-                Description: 'Allow inbound ICMP to the bastion host',
+                Description: 'permit inbound ICMP',
                 IpProtocol: 'icmp',
                 FromPort: -1,
                 ToPort: -1,
@@ -131,14 +131,14 @@ describe('bastion', () => {
             },
             SecurityGroupIngress: [
               {
-                Description: 'Allow inbound SSH access to the bastion host',
+                Description: 'permit inbound SSH',
                 IpProtocol: 'tcp',
                 FromPort: 22,
                 ToPort: 22,
                 CidrIp: '127.0.0.1/32',
               },
               {
-                Description: 'Allow inbound ICMP to the bastion host',
+                Description: 'permit inbound ICMP',
                 IpProtocol: 'icmp',
                 FromPort: -1,
                 ToPort: -1,
@@ -481,14 +481,14 @@ describe('bastion', () => {
             },
             SecurityGroupIngress: [
               {
-                Description: 'Allow inbound SSH access to the bastion host',
+                Description: 'permit inbound SSH',
                 IpProtocol: 'tcp',
                 FromPort: 22,
                 ToPort: 22,
                 CidrIp: '127.0.0.1/32',
               },
               {
-                Description: 'Allow inbound ICMP to the bastion host',
+                Description: 'permit inbound ICMP',
                 IpProtocol: 'icmp',
                 FromPort: -1,
                 ToPort: -1,
