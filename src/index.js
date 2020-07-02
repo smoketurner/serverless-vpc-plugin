@@ -15,7 +15,7 @@ const {
 } = require('./vpc');
 const { buildAppNetworkAcl, buildPublicNetworkAcl, buildDBNetworkAcl } = require('./nacl');
 const { buildSubnetGroups } = require('./subnet_groups');
-const { buildEndpointServices, buildVPCEndpointSecurityGroup } = require('./vpce');
+const { buildEndpointServices } = require('./vpce');
 const { buildLogBucket, buildLogBucketPolicy, buildVpcFlowLogs } = require('./flow_logs');
 const { buildBastion } = require('./bastion');
 const { buildNatInstance, buildNatSecurityGroup } = require('./nat_instance');
@@ -223,11 +223,7 @@ class ServerlessVpcPlugin {
       }
       this.serverless.cli.log(`Provisioning VPC endpoints for: ${services.join(', ')}`);
 
-      Object.assign(
-        resources,
-        buildEndpointServices(services, numZones),
-        buildVPCEndpointSecurityGroup(),
-      );
+      Object.assign(resources, buildEndpointServices(services, numZones));
     }
 
     if (createDbSubnet) {

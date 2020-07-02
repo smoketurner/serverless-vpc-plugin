@@ -8,21 +8,39 @@ Resources:
       Parameters:
         rds.force_ssl: 1
 
+  AppSecurityGroupEgress:
+    Type: 'AWS::EC2::SecurityGroupEgress'
+    Properties:
+      Description: 'permit PostgreSQL (5432) to DBSecurityGroup'
+      DestinationSecurityGroupId: !Ref DBSecurityGroup
+      FromPort: 5432
+      GroupId: !GetAtt AppSecurityGroup.GroupId
+      IpProtocol: tcp
+      ToPort: 5432
+
   DBSecurityGroup:
     Type: 'AWS::EC2::SecurityGroup'
     Properties:
-      GroupDescription: 'RDS Database'
+      GroupDescription: 'RDS Security Group'
+      SecurityGroupEgress:
+        - Description: 'deny all outbound'
+          IpProtocol: '-1'
+          CidrIp: '127.0.0.1/32'
       SecurityGroupIngress:
-        - Description: 'Allow PostgreSQL (5432) from AppSecurityGroup'
+        - Description: 'permit PostgreSQL (5432) from AppSecurityGroup'
           FromPort: 5432
           IpProtocol: tcp
           SourceSecurityGroupId: !GetAtt AppSecurityGroup.GroupId
           ToPort: 5432
+      Tags:
+        - Key: Name
+          Value: !Join ['-', [!Ref 'AWS::StackName', rds]]
       VpcId: !Ref VPC
 
   DBCluster:
     Type: 'AWS::RDS::DBCluster'
     DeletionPolicy: Snapshot
+    UpdateReplacePolicy: Snapshot
     Properties:
       DatabaseName: ${self:custom.databaseName}
       DBClusterIdentifier: '${self:service}-${self:provider.stage}'

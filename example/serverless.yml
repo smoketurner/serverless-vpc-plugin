@@ -45,6 +45,7 @@ custom:
     services:
       - secretsmanager
       - rds-data
+      - s3
     subnetGroups:
       - rds
   webpack:

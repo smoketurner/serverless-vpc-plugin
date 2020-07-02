@@ -44,7 +44,7 @@ function buildVPCEndpoint(service, { routeTableIds = [], subnetIds = [] } = {}) 
     endpoint.Properties.PrivateDnsEnabled = true;
     endpoint.Properties.SecurityGroupIds = [
       {
-        Ref: 'EndpointSecurityGroup',
+        Ref: 'AppSecurityGroup',
       },
     ];
   }
@@ -88,47 +88,7 @@ function buildEndpointServices(services = [], numZones = 0) {
   return resources;
 }
 
-/**
- * Build a SecurityGroup to allow the access to VPC endpoints over HTTPS.
- *
- * @return {Object}
- */
-function buildVPCEndpointSecurityGroup() {
-  return {
-    EndpointSecurityGroup: {
-      Type: 'AWS::EC2::SecurityGroup',
-      Properties: {
-        GroupDescription: 'VPC Endpoint Security Group',
-        VpcId: {
-          Ref: 'VPC',
-        },
-        SecurityGroupIngress: [
-          {
-            SourceSecurityGroupId: {
-              Ref: 'AppSecurityGroup',
-            },
-            Description: 'Allow inbound HTTPS traffic from AppSecurityGroup',
-            IpProtocol: 'tcp',
-            FromPort: 443,
-            ToPort: 443,
-          },
-        ],
-        Tags: [
-          {
-            Key: 'Name',
-            Value: {
-              // eslint-disable-next-line no-template-curly-in-string
-              'Fn::Sub': '${AWS::StackName}-vpce',
-            },
-          },
-        ],
-      },
-    },
-  };
-}
-
 module.exports = {
   buildEndpointServices,
   buildVPCEndpoint,
-  buildVPCEndpointSecurityGroup,
 };

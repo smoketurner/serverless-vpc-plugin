@@ -1,8 +1,4 @@
-const {
-  buildEndpointServices,
-  buildVPCEndpoint,
-  buildVPCEndpointSecurityGroup,
-} = require('../src/vpce');
+const { buildEndpointServices, buildVPCEndpoint } = require('../src/vpce');
 
 describe('vpce', () => {
   describe('#buildEndpointServices', () => {
@@ -92,7 +88,7 @@ describe('vpce', () => {
             PrivateDnsEnabled: true,
             SecurityGroupIds: [
               {
-                Ref: 'EndpointSecurityGroup',
+                Ref: 'AppSecurityGroup',
               },
             ],
             SubnetIds: [
@@ -124,7 +120,7 @@ describe('vpce', () => {
             PrivateDnsEnabled: true,
             SecurityGroupIds: [
               {
-                Ref: 'EndpointSecurityGroup',
+                Ref: 'AppSecurityGroup',
               },
             ],
             SubnetIds: [
@@ -196,7 +192,7 @@ describe('vpce', () => {
             PrivateDnsEnabled: true,
             SecurityGroupIds: [
               {
-                Ref: 'EndpointSecurityGroup',
+                Ref: 'AppSecurityGroup',
               },
             ],
             SubnetIds: [
@@ -218,45 +214,6 @@ describe('vpce', () => {
       const actual = buildVPCEndpoint('sagemaker.runtime-fips', {
         subnetIds: [{ Ref: 'AppSubnet1' }],
       });
-      expect(actual).toEqual(expected);
-      expect.assertions(1);
-    });
-  });
-
-  describe('#buildVPCEndpointSecurityGroup', () => {
-    it('builds a endpoint security group with no options', () => {
-      const expected = {
-        EndpointSecurityGroup: {
-          Type: 'AWS::EC2::SecurityGroup',
-          Properties: {
-            GroupDescription: 'VPC Endpoint Security Group',
-            VpcId: {
-              Ref: 'VPC',
-            },
-            SecurityGroupIngress: [
-              {
-                SourceSecurityGroupId: {
-                  Ref: 'AppSecurityGroup',
-                },
-                Description: 'Allow inbound HTTPS traffic from AppSecurityGroup',
-                IpProtocol: 'tcp',
-                FromPort: 443,
-                ToPort: 443,
-              },
-            ],
-            Tags: [
-              {
-                Key: 'Name',
-                Value: {
-                  // eslint-disable-next-line no-template-curly-in-string
-                  'Fn::Sub': '${AWS::StackName}-vpce',
-                },
-              },
-            ],
-          },
-        },
-      };
-      const actual = buildVPCEndpointSecurityGroup();
       expect(actual).toEqual(expected);
       expect.assertions(1);
     });
