@@ -66,12 +66,6 @@ describe('ServerlessVpcPlugin', () => {
       expect(newPlugin.options).toEqual(options);
       expect.assertions(2);
     });
-
-    it.skip('should be added as a serverless plugin', () => {
-      serverless.pluginManager.addPlugin(ServerlessVpcPlugin);
-      expect(serverless.pluginManager.plugins[0]).toBeInstanceOf(ServerlessVpcPlugin);
-      expect.assertions(1);
-    });
   });
 
   describe('#afterInitialize', () => {
@@ -148,10 +142,6 @@ describe('ServerlessVpcPlugin', () => {
             {
               State: 'available',
               ZoneName: 'us-east-1b',
-            },
-            {
-              State: 'unavailable',
-              ZoneName: 'us-east-1c',
             },
             {
               State: 'available',
@@ -247,6 +237,48 @@ describe('ServerlessVpcPlugin', () => {
 
       const actual = await plugin.validateServices('us-east-1', ['blah']);
       expect(actual).toEqual(['com.amazonaws.us-east-1.blah']);
+      expect(mockCallback).toHaveBeenCalled();
+      expect.assertions(2);
+    });
+  });
+
+  describe('#getPrefixLists', () => {
+    it('returns the prefix lists', async () => {
+      const mockCallback = jest.fn((params, callback) => {
+        const response = {
+          PrefixLists: [
+            {
+              PrefixListId: 'pl-02cd2c6b',
+              AddressFamily: 'IPv4',
+              State: 'create-complete',
+              PrefixListArn: 'arn:aws:ec2:us-east-1:aws:prefix-list/pl-02cd2c6b',
+              PrefixListName: 'com.amazonaws.us-east-1.dynamodb',
+              Tags: [],
+              OwnerId: 'AWS',
+            },
+            {
+              PrefixListId: 'pl-63a5400a',
+              AddressFamily: 'IPv4',
+              State: 'create-complete',
+              PrefixListArn: 'arn:aws:ec2:us-east-1:aws:prefix-list/pl-63a5400a',
+              PrefixListName: 'com.amazonaws.us-east-1.s3',
+              Tags: [],
+              OwnerId: 'AWS',
+            },
+          ],
+        };
+        return callback(null, response);
+      });
+
+      AWS.mock('EC2', 'describeManagedPrefixLists', mockCallback);
+
+      const expected = {
+        s3: 'pl-63a5400a',
+        dynamodb: 'pl-02cd2c6b',
+      };
+
+      const actual = await plugin.getPrefixLists();
+      expect(actual).toEqual(expected);
       expect(mockCallback).toHaveBeenCalled();
       expect.assertions(2);
     });

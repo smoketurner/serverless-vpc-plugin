@@ -325,7 +325,7 @@ describe('bastion', () => {
 
   describe('#buildBastion', () => {
     it('builds the complete bastion host', async () => {
-      const scope = nock('http://checkip.amazonaws.com').get('/').reply(200, '127.0.0.1');
+      const scope = nock('https://checkip.amazonaws.com').get('/').reply(200, '127.0.0.1');
 
       const expected = {
         BastionEIP: {

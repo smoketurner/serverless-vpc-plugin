@@ -91,7 +91,6 @@ function buildEndpointServices(services = [], numZones = 0) {
 /**
  * Build a SecurityGroup to allow the access to VPC endpoints over HTTPS.
  *
- * @param {Object} params
  * @return {Object}
  */
 function buildVPCEndpointSecurityGroup() {

@@ -117,6 +117,12 @@ class ServerlessVpcPlugin {
     }
     const numZones = zones.length;
 
+    let prefixLists = null;
+    if (services.includes('s3') || services.includes('dynamodb')) {
+      this.serverless.cli.log(`Getting managed prefix lists in ${region}...`);
+      prefixLists = await this.getPrefixLists();
+    }
+
     if (createNatGateway) {
       if (typeof createNatGateway !== 'boolean' && typeof createNatGateway !== 'number') {
         throw new this.serverless.classes.Error(
@@ -169,7 +175,7 @@ class ServerlessVpcPlugin {
         createDbSubnet,
         createNatInstance: !!(createNatInstance && vpcNatAmi),
       }),
-      buildAppSecurityGroup(),
+      buildAppSecurityGroup(prefixLists),
       buildDHCPOptions(region),
     );
 
@@ -327,13 +333,19 @@ class ServerlessVpcPlugin {
           Name: 'region-name',
           Values: [region],
         },
+        {
+          Name: 'opt-in-status',
+          Values: ['opt-in-not-required'],
+        },
+        {
+          Name: 'state',
+          Values: ['available'],
+        },
       ],
     };
-    return this.provider.request('EC2', 'describeAvailabilityZones', params).then((data) =>
-      data.AvailabilityZones.filter((z) => z.State === 'available')
-        .map((z) => z.ZoneName)
-        .sort(),
-    );
+    return this.provider
+      .request('EC2', 'describeAvailabilityZones', params)
+      .then((data) => data.AvailabilityZones.map((z) => z.ZoneName).sort());
   }
 
   /**
@@ -419,6 +431,31 @@ class ServerlessVpcPlugin {
     return services
       .map((service) => `com.amazonaws.${region}.${service}`)
       .filter((service) => !available.includes(service));
+  }
+
+  /**
+   * Return an array of prefix lists in the provided region.
+   *
+   * @return {Object}
+   */
+  async getPrefixLists() {
+    const params = {
+      Filters: [
+        {
+          Name: 'owner-id',
+          Values: ['AWS'],
+        },
+      ],
+    };
+
+    return this.provider.request('EC2', 'describeManagedPrefixLists', params).then((data) => {
+      const results = {};
+      data.PrefixLists.forEach((prefixList) => {
+        const service = prefixList.PrefixListName.split('.').slice(3).join('.');
+        results[service] = prefixList.PrefixListId;
+      });
+      return results;
+    });
   }
 }
 

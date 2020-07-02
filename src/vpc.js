@@ -69,9 +69,43 @@ function buildInternetGateway() {
 /**
  * Build a SecurityGroup to be used by applications
  *
+ * @param {Object} prefixLists AWS-owned managed prefix lists in the region
  * @return {Object}
  */
-function buildAppSecurityGroup() {
+function buildAppSecurityGroup(prefixLists = null) {
+  const egress = [
+    {
+      Description: 'permit HTTPS outbound',
+      IpProtocol: 'tcp',
+      FromPort: 443,
+      ToPort: 443,
+      CidrIp: '0.0.0.0/0',
+    },
+  ];
+  if (prefixLists) {
+    egress.push({
+      DestinationPrefixListId: prefixLists.s3,
+      Description: 'permit HTTPS to S3',
+      IpProtocol: 'tcp',
+      FromPort: 443,
+      ToPort: 443,
+    });
+    egress.push({
+      DestinationPrefixListId: prefixLists.s3,
+      Description: 'permit HTTP to S3',
+      IpProtocol: 'tcp',
+      FromPort: 80,
+      ToPort: 80,
+    });
+    egress.push({
+      DestinationPrefixListId: prefixLists.dynamodb,
+      Description: 'permit HTTPS to DynamoDB',
+      IpProtocol: 'tcp',
+      FromPort: 443,
+      ToPort: 443,
+    });
+  }
+
   return {
     DefaultSecurityGroupEgress: {
       Type: 'AWS::EC2::SecurityGroupEgress',
@@ -89,15 +123,7 @@ function buildAppSecurityGroup() {
       Type: 'AWS::EC2::SecurityGroup',
       Properties: {
         GroupDescription: 'Application Security Group',
-        SecurityGroupEgress: [
-          {
-            Description: 'permit HTTPS outbound',
-            IpProtocol: 'tcp',
-            FromPort: 443,
-            ToPort: 443,
-            CidrIp: '0.0.0.0/0',
-          },
-        ],
+        SecurityGroupEgress: egress,
         SecurityGroupIngress: [
           {
             Description: 'permit HTTPS inbound',

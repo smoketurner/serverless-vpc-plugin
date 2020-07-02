@@ -127,6 +127,27 @@ describe('vpc', () => {
                 ToPort: 443,
                 CidrIp: '0.0.0.0/0',
               },
+              {
+                DestinationPrefixListId: 'pl-63a5400a',
+                Description: 'permit HTTPS to S3',
+                IpProtocol: 'tcp',
+                FromPort: 443,
+                ToPort: 443,
+              },
+              {
+                DestinationPrefixListId: 'pl-63a5400a',
+                Description: 'permit HTTP to S3',
+                IpProtocol: 'tcp',
+                FromPort: 80,
+                ToPort: 80,
+              },
+              {
+                DestinationPrefixListId: 'pl-02cd2c6b',
+                Description: 'permit HTTPS to DynamoDB',
+                IpProtocol: 'tcp',
+                FromPort: 443,
+                ToPort: 443,
+              },
             ],
             SecurityGroupIngress: [
               {
@@ -152,7 +173,12 @@ describe('vpc', () => {
           },
         },
       };
-      const actual = buildAppSecurityGroup();
+
+      const prefixLists = {
+        s3: 'pl-63a5400a',
+        dynamodb: 'pl-02cd2c6b',
+      };
+      const actual = buildAppSecurityGroup(prefixLists);
       expect(actual).toEqual(expected);
       expect.assertions(1);
     });
@@ -171,7 +197,7 @@ describe('vpc', () => {
                 Key: 'Name',
                 Value: {
                   // eslint-disable-next-line no-template-curly-in-string
-                  'Fn:Sub': '${AWS::StackName}-DHCPOptionsSet',
+                  'Fn::Sub': '${AWS::StackName}-DHCPOptionsSet',
                 },
               },
             ],
@@ -209,7 +235,7 @@ describe('vpc', () => {
                 Key: 'Name',
                 Value: {
                   // eslint-disable-next-line no-template-curly-in-string
-                  'Fn:Sub': '${AWS::StackName}-DHCPOptionsSet',
+                  'Fn::Sub': '${AWS::StackName}-DHCPOptionsSet',
                 },
               },
             ],
