@@ -4,10 +4,9 @@ const { DB_SUBNET } = require('./constants');
  * Build an RDSubnetGroup for a given number of zones
  *
  * @param {Number} numZones Number of availability zones
- * @param {Objects} params
  * @return {Object}
  */
-function buildRDSSubnetGroup(numZones = 0, { name = 'RDSSubnetGroup' } = {}) {
+function buildRDSSubnetGroup(numZones = 0) {
   if (numZones < 1) {
     return {};
   }
@@ -18,7 +17,7 @@ function buildRDSSubnetGroup(numZones = 0, { name = 'RDSSubnetGroup' } = {}) {
   }
 
   return {
-    [name]: {
+    RDSSubnetGroup: {
       Type: 'AWS::RDS::DBSubnetGroup',
       Properties: {
         DBSubnetGroupName: {
@@ -37,10 +36,9 @@ function buildRDSSubnetGroup(numZones = 0, { name = 'RDSSubnetGroup' } = {}) {
  * Build an ElastiCacheSubnetGroup for a given number of zones
  *
  * @param {Number} numZones Number of availability zones
- * @param {Object} params
  * @return {Object}
  */
-function buildElastiCacheSubnetGroup(numZones = 0, { name = 'ElastiCacheSubnetGroup' } = {}) {
+function buildElastiCacheSubnetGroup(numZones = 0) {
   if (numZones < 1) {
     return {};
   }
@@ -51,7 +49,7 @@ function buildElastiCacheSubnetGroup(numZones = 0, { name = 'ElastiCacheSubnetGr
   }
 
   return {
-    [name]: {
+    ElastiCacheSubnetGroup: {
       Type: 'AWS::ElastiCache::SubnetGroup',
       Properties: {
         CacheSubnetGroupName: {
@@ -70,10 +68,9 @@ function buildElastiCacheSubnetGroup(numZones = 0, { name = 'ElastiCacheSubnetGr
  * Build an RedshiftSubnetGroup for a given number of zones
  *
  * @param {Number} numZones Number of availability zones
- * @param {Object} params
  * @return {Object}
  */
-function buildRedshiftSubnetGroup(numZones = 0, { name = 'RedshiftSubnetGroup' } = {}) {
+function buildRedshiftSubnetGroup(numZones = 0) {
   if (numZones < 1) {
     return {};
   }
@@ -84,7 +81,7 @@ function buildRedshiftSubnetGroup(numZones = 0, { name = 'RedshiftSubnetGroup' }
   }
 
   return {
-    [name]: {
+    RedshiftSubnetGroup: {
       Type: 'AWS::Redshift::ClusterSubnetGroup',
       Properties: {
         Description: {
@@ -100,10 +97,9 @@ function buildRedshiftSubnetGroup(numZones = 0, { name = 'RedshiftSubnetGroup' }
  * Build an DAXSubnetGroup for a given number of zones
  *
  * @param {Number} numZones Number of availability zones
- * @param {Object} params
  * @return {Object}
  */
-function buildDAXSubnetGroup(numZones = 0, { name = 'DAXSubnetGroup' } = {}) {
+function buildDAXSubnetGroup(numZones = 0) {
   if (numZones < 1) {
     return {};
   }
@@ -114,7 +110,7 @@ function buildDAXSubnetGroup(numZones = 0, { name = 'DAXSubnetGroup' } = {}) {
   }
 
   return {
-    [name]: {
+    DAXSubnetGroup: {
       Type: 'AWS::DAX::SubnetGroup',
       Properties: {
         SubnetGroupName: {

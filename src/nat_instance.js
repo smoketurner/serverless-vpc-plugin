@@ -1,39 +1,13 @@
-const { APP_SUBNET, PUBLIC_SUBNET } = require('./constants');
+const { PUBLIC_SUBNET } = require('./constants');
 
 /**
  * Build a SecurityGroup to be used by the NAT instance
  *
- * @param {Array} subnets Array of subnets
- * @param {Object} params
  * @return {Object}
  */
-function buildNatSecurityGroup(subnets = [], { name = 'NatSecurityGroup' } = {}) {
-  const SecurityGroupIngress = [];
-
-  if (Array.isArray(subnets) && subnets.length > 0) {
-    subnets.forEach((subnet, index) => {
-      const position = index + 1;
-
-      const http = {
-        Description: `Allow inbound HTTP traffic from ${APP_SUBNET}Subnet${position}`,
-        IpProtocol: 'tcp',
-        FromPort: 80,
-        ToPort: 80,
-        CidrIp: subnet,
-      };
-      const https = {
-        Description: `Allow inbound HTTPS traffic from ${APP_SUBNET}Subnet${position}`,
-        IpProtocol: 'tcp',
-        FromPort: 443,
-        ToPort: 443,
-        CidrIp: subnet,
-      };
-      SecurityGroupIngress.push(http, https);
-    });
-  }
-
+function buildNatSecurityGroup() {
   return {
-    [name]: {
+    NatSecurityGroup: {
       Type: 'AWS::EC2::SecurityGroup',
       Properties: {
         GroupDescription: 'NAT Instance',
@@ -42,21 +16,40 @@ function buildNatSecurityGroup(subnets = [], { name = 'NatSecurityGroup' } = {})
         },
         SecurityGroupEgress: [
           {
-            Description: 'Allow outbound HTTP access to the Internet',
+            Description: 'permit outbound HTTP to the Internet',
             IpProtocol: 'tcp',
             FromPort: 80,
             ToPort: 80,
             CidrIp: '0.0.0.0/0',
           },
           {
-            Description: 'Allow outbound HTTPS access to the Internet',
+            Description: 'permit outbound HTTPS to the Internet',
             IpProtocol: 'tcp',
             FromPort: 443,
             ToPort: 443,
             CidrIp: '0.0.0.0/0',
           },
         ],
-        SecurityGroupIngress,
+        SecurityGroupIngress: [
+          {
+            Description: 'permit inbound HTTP from AppSecurityGroup',
+            IpProtocol: 'tcp',
+            FromPort: 80,
+            ToPort: 80,
+            SourceSecurityGroupId: {
+              Ref: 'AppSecurityGroup',
+            },
+          },
+          {
+            Description: 'permit inbound HTTPS from AppSecurityGroup',
+            IpProtocol: 'tcp',
+            FromPort: 443,
+            ToPort: 443,
+            SourceSecurityGroupId: {
+              Ref: 'AppSecurityGroup',
+            },
+          },
+        ],
         Tags: [
           {
             Key: 'Name',

@@ -18,15 +18,8 @@ describe('nacl', () => {
               {
                 Key: 'Name',
                 Value: {
-                  'Fn::Join': [
-                    '-',
-                    [
-                      {
-                        Ref: 'AWS::StackName',
-                      },
-                      'app',
-                    ],
-                  ],
+                  // eslint-disable-next-line no-template-curly-in-string
+                  'Fn::Sub': '${AWS::StackName}-app',
                 },
               },
             ],
@@ -115,15 +108,8 @@ describe('nacl', () => {
               {
                 Key: 'Name',
                 Value: {
-                  'Fn::Join': [
-                    '-',
-                    [
-                      {
-                        Ref: 'AWS::StackName',
-                      },
-                      'public',
-                    ],
-                  ],
+                  // eslint-disable-next-line no-template-curly-in-string
+                  'Fn::Sub': '${AWS::StackName}-public',
                 },
               },
             ],
@@ -208,15 +194,8 @@ describe('nacl', () => {
               {
                 Key: 'Name',
                 Value: {
-                  'Fn::Join': [
-                    '-',
-                    [
-                      {
-                        Ref: 'AWS::StackName',
-                      },
-                      'app',
-                    ],
-                  ],
+                  // eslint-disable-next-line no-template-curly-in-string
+                  'Fn::Sub': '${AWS::StackName}-app',
                 },
               },
             ],
@@ -301,15 +280,8 @@ describe('nacl', () => {
               {
                 Key: 'Name',
                 Value: {
-                  'Fn::Join': [
-                    '-',
-                    [
-                      {
-                        Ref: 'AWS::StackName',
-                      },
-                      'db',
-                    ],
-                  ],
+                  // eslint-disable-next-line no-template-curly-in-string
+                  'Fn::Sub': '${AWS::StackName}-db',
                 },
               },
             ],

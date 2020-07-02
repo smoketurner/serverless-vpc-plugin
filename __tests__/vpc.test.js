@@ -1,17 +1,13 @@
 const {
   buildVpc,
   buildInternetGateway,
-  buildInternetGatewayAttachment,
-  buildLambdaSecurityGroup,
-  buildSubnet,
-  buildRoute,
-  buildRouteTable,
-  buildRouteTableAssociation,
+  buildAppSecurityGroup,
+  buildDHCPOptions,
 } = require('../src/vpc');
 
 describe('vpc', () => {
   describe('#buildVpc', () => {
-    it('builds a VPC with default name', () => {
+    it('builds a VPC', () => {
       const expected = {
         VPC: {
           Type: 'AWS::EC2::VPC',
@@ -39,7 +35,7 @@ describe('vpc', () => {
 
     it('builds a VPC with a custom parameters', () => {
       const expected = {
-        MyVpc: {
+        VPC: {
           Type: 'AWS::EC2::VPC',
           Properties: {
             CidrBlock: '192.168.0.0/16',
@@ -58,9 +54,7 @@ describe('vpc', () => {
         },
       };
 
-      const actual = buildVpc('192.168.0.0/16', {
-        name: 'MyVpc',
-      });
+      const actual = buildVpc('192.168.0.0/16');
       expect(actual).toEqual(expected);
       expect.assertions(1);
     });
@@ -76,45 +70,17 @@ describe('vpc', () => {
               {
                 Key: 'Name',
                 Value: {
-                  Ref: 'AWS::StackName',
+                  // eslint-disable-next-line no-template-curly-in-string
+                  'Fn::Sub': '${AWS::StackName}-igw',
                 },
               },
-            ],
-          },
-        },
-      };
-
-      const actual = buildInternetGateway();
-      expect(actual).toEqual(expected);
-      expect.assertions(1);
-    });
-
-    it('builds an Internet Gateway with a custom name', () => {
-      const expected = {
-        MyInternetGateway: {
-          Type: 'AWS::EC2::InternetGateway',
-          Properties: {
-            Tags: [
               {
-                Key: 'Name',
-                Value: {
-                  Ref: 'AWS::StackName',
-                },
+                Key: 'Network',
+                Value: 'Public',
               },
             ],
           },
         },
-      };
-
-      const actual = buildInternetGateway({ name: 'MyInternetGateway' });
-      expect(actual).toEqual(expected);
-      expect.assertions(1);
-    });
-  });
-
-  describe('#buildInternetGatewayAttachment', () => {
-    it('builds an Internet Gateway Attachment with default name', () => {
-      const expected = {
         InternetGatewayAttachment: {
           Type: 'AWS::EC2::VPCGatewayAttachment',
           Properties: {
@@ -128,212 +94,70 @@ describe('vpc', () => {
         },
       };
 
-      const actual = buildInternetGatewayAttachment();
-      expect(actual).toEqual(expected);
-      expect.assertions(1);
-    });
-
-    it('builds an Internet Gateway Attachment with a custom name', () => {
-      const expected = {
-        MyInternetGatewayAttachment: {
-          Type: 'AWS::EC2::VPCGatewayAttachment',
-          Properties: {
-            InternetGatewayId: {
-              Ref: 'InternetGateway',
-            },
-            VpcId: {
-              Ref: 'VPC',
-            },
-          },
-        },
-      };
-
-      const actual = buildInternetGatewayAttachment({
-        name: 'MyInternetGatewayAttachment',
-      });
-
+      const actual = buildInternetGateway();
       expect(actual).toEqual(expected);
       expect.assertions(1);
     });
   });
 
-  describe('#buildSubnet', () => {
-    it('builds a subnet', () => {
+  describe('#buildAppSecurityGroup', () => {
+    it('builds a security group with no options', () => {
       const expected = {
-        AppSubnet1: {
-          Type: 'AWS::EC2::Subnet',
+        DefaultSecurityGroupEgress: {
+          Type: 'AWS::EC2::SecurityGroupEgress',
           Properties: {
-            AvailabilityZone: 'us-east-1a',
-            CidrBlock: '10.0.0.0/22',
-            Tags: [
-              {
-                Key: 'Name',
-                Value: {
-                  'Fn::Join': [
-                    '-',
-                    [
-                      {
-                        Ref: 'AWS::StackName',
-                      },
-                      'app',
-                      'us-east-1a',
-                    ],
-                  ],
-                },
-              },
-            ],
-            VpcId: {
-              Ref: 'VPC',
+            IpProtocol: '-1',
+            DestinationSecurityGroupId: {
+              'Fn::GetAtt': ['VPC', 'DefaultSecurityGroup'],
+            },
+            GroupId: {
+              'Fn::GetAtt': ['VPC', 'DefaultSecurityGroup'],
             },
           },
         },
-      };
-      const actual = buildSubnet('App', 1, 'us-east-1a', '10.0.0.0/22');
-      expect(actual).toEqual(expected);
-      expect.assertions(1);
-    });
-  });
-
-  describe('#buildRouteTable', () => {
-    it('builds a route table', () => {
-      const expected = {
-        AppRouteTable1: {
-          Type: 'AWS::EC2::RouteTable',
-          Properties: {
-            VpcId: {
-              Ref: 'VPC',
-            },
-            Tags: [
-              {
-                Key: 'Name',
-                Value: {
-                  'Fn::Join': [
-                    '-',
-                    [
-                      {
-                        Ref: 'AWS::StackName',
-                      },
-                      'app',
-                      'us-east-1a',
-                    ],
-                  ],
-                },
-              },
-            ],
-          },
-        },
-      };
-      const actual = buildRouteTable('App', 1, 'us-east-1a');
-      expect(actual).toEqual(expected);
-      expect.assertions(1);
-    });
-  });
-
-  describe('#buildRouteTableAssociation', () => {
-    it('builds a route table association', () => {
-      const expected = {
-        AppRouteTableAssociation1: {
-          Type: 'AWS::EC2::SubnetRouteTableAssociation',
-          Properties: {
-            RouteTableId: {
-              Ref: 'AppRouteTable1',
-            },
-            SubnetId: {
-              Ref: 'AppSubnet1',
-            },
-          },
-        },
-      };
-      const actual = buildRouteTableAssociation('App', 1);
-      expect(actual).toEqual(expected);
-      expect.assertions(1);
-    });
-  });
-
-  describe('#buildRoute', () => {
-    it('builds a route with a NAT Gateway', () => {
-      const expected = {
-        AppRoute1: {
-          Type: 'AWS::EC2::Route',
-          Properties: {
-            DestinationCidrBlock: '0.0.0.0/0',
-            NatGatewayId: {
-              Ref: 'NatGateway1',
-            },
-            RouteTableId: {
-              Ref: 'AppRouteTable1',
-            },
-          },
-        },
-      };
-      const actual = buildRoute('App', 1, {
-        NatGatewayId: 'NatGateway1',
-      });
-      expect(actual).toEqual(expected);
-      expect.assertions(1);
-    });
-
-    it('builds a route with an Internet Gateway', () => {
-      const expected = {
-        AppRoute1: {
-          Type: 'AWS::EC2::Route',
-          Properties: {
-            DestinationCidrBlock: '0.0.0.0/0',
-            GatewayId: {
-              Ref: 'InternetGateway',
-            },
-            RouteTableId: {
-              Ref: 'AppRouteTable1',
-            },
-          },
-        },
-      };
-      const actual = buildRoute('App', 1, {
-        GatewayId: 'InternetGateway',
-      });
-      expect(actual).toEqual(expected);
-      expect.assertions(1);
-    });
-
-    it('builds a route with an Instance Gateway', () => {
-      const expected = {
-        AppRoute1: {
-          Type: 'AWS::EC2::Route',
-          Properties: {
-            DestinationCidrBlock: '0.0.0.0/0',
-            InstanceId: {
-              Ref: 'BastionInstance',
-            },
-            RouteTableId: {
-              Ref: 'AppRouteTable1',
-            },
-          },
-        },
-      };
-      const actual = buildRoute('App', 1, {
-        InstanceId: 'BastionInstance',
-      });
-      expect(actual).toEqual(expected);
-      expect.assertions(1);
-    });
-
-    it('throws an error if no gateway provided', () => {
-      expect(() => {
-        buildRoute('App', 1);
-      }).toThrow(
-        'Unable to create route: either NatGatewayId, GatewayId or InstanceId must be provided',
-      );
-      expect.assertions(1);
-    });
-  });
-
-  describe('#buildLambdaSecurityGroup', () => {
-    it('builds a Lambda security group with no options', () => {
-      const expected = {
-        LambdaExecutionSecurityGroup: {
+        AppSecurityGroup: {
           Type: 'AWS::EC2::SecurityGroup',
           Properties: {
-            GroupDescription: 'Lambda Execution Group',
+            GroupDescription: 'Application Security Group',
+            SecurityGroupEgress: [
+              {
+                Description: 'permit HTTPS outbound',
+                IpProtocol: 'tcp',
+                FromPort: 443,
+                ToPort: 443,
+                CidrIp: '0.0.0.0/0',
+              },
+              {
+                DestinationPrefixListId: 'pl-63a5400a',
+                Description: 'permit HTTPS to S3',
+                IpProtocol: 'tcp',
+                FromPort: 443,
+                ToPort: 443,
+              },
+              {
+                DestinationPrefixListId: 'pl-63a5400a',
+                Description: 'permit HTTP to S3',
+                IpProtocol: 'tcp',
+                FromPort: 80,
+                ToPort: 80,
+              },
+              {
+                DestinationPrefixListId: 'pl-02cd2c6b',
+                Description: 'permit HTTPS to DynamoDB',
+                IpProtocol: 'tcp',
+                FromPort: 443,
+                ToPort: 443,
+              },
+            ],
+            SecurityGroupIngress: [
+              {
+                Description: 'permit HTTPS inbound',
+                IpProtocol: 'tcp',
+                FromPort: 443,
+                ToPort: 443,
+                CidrIp: '0.0.0.0/0',
+              },
+            ],
             VpcId: {
               Ref: 'VPC',
             },
@@ -342,42 +166,94 @@ describe('vpc', () => {
                 Key: 'Name',
                 Value: {
                   // eslint-disable-next-line no-template-curly-in-string
-                  'Fn::Sub': '${AWS::StackName}-lambda-exec',
+                  'Fn::Sub': '${AWS::StackName}-sg',
                 },
               },
             ],
           },
         },
       };
-      const actual = buildLambdaSecurityGroup();
+
+      const prefixLists = {
+        s3: 'pl-63a5400a',
+        dynamodb: 'pl-02cd2c6b',
+      };
+      const actual = buildAppSecurityGroup(prefixLists);
       expect(actual).toEqual(expected);
       expect.assertions(1);
     });
+  });
 
-    it('builds a Lambda security group with a custom name', () => {
+  describe('#buildDHCPOptions', () => {
+    it('builds a DHCP option set in us-east-1', () => {
       const expected = {
-        MyLambdaExecutionSecurityGroup: {
-          Type: 'AWS::EC2::SecurityGroup',
+        DHCPOptions: {
+          Type: 'AWS::EC2::DHCPOptions',
           Properties: {
-            GroupDescription: 'Lambda Execution Group',
-            VpcId: {
-              Ref: 'VPC',
-            },
+            DomainName: 'ec2.internal',
+            DomainNameServers: ['AmazonProvidedDNS'],
             Tags: [
               {
                 Key: 'Name',
                 Value: {
                   // eslint-disable-next-line no-template-curly-in-string
-                  'Fn::Sub': '${AWS::StackName}-lambda-exec',
+                  'Fn::Sub': '${AWS::StackName}-DHCPOptionsSet',
                 },
               },
             ],
           },
         },
+        VPCDHCPOptionsAssociation: {
+          Type: 'AWS::EC2::VPCDHCPOptionsAssociation',
+          Properties: {
+            VpcId: {
+              Ref: 'VPC',
+            },
+            DhcpOptionsId: {
+              Ref: 'DHCPOptions',
+            },
+          },
+        },
       };
-      const actual = buildLambdaSecurityGroup({
-        name: 'MyLambdaExecutionSecurityGroup',
-      });
+      const actual = buildDHCPOptions('us-east-1');
+      expect(actual).toEqual(expected);
+      expect.assertions(1);
+    });
+
+    it('builds a DHCP option set in us-west-2', () => {
+      const expected = {
+        DHCPOptions: {
+          Type: 'AWS::EC2::DHCPOptions',
+          Properties: {
+            DomainName: {
+              // eslint-disable-next-line no-template-curly-in-string
+              'Fn::Sub': '${AWS::Region}.compute.internal',
+            },
+            DomainNameServers: ['AmazonProvidedDNS'],
+            Tags: [
+              {
+                Key: 'Name',
+                Value: {
+                  // eslint-disable-next-line no-template-curly-in-string
+                  'Fn::Sub': '${AWS::StackName}-DHCPOptionsSet',
+                },
+              },
+            ],
+          },
+        },
+        VPCDHCPOptionsAssociation: {
+          Type: 'AWS::EC2::VPCDHCPOptionsAssociation',
+          Properties: {
+            VpcId: {
+              Ref: 'VPC',
+            },
+            DhcpOptionsId: {
+              Ref: 'DHCPOptions',
+            },
+          },
+        },
+      };
+      const actual = buildDHCPOptions('us-west-2');
       expect(actual).toEqual(expected);
       expect.assertions(1);
     });

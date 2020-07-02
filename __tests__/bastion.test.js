@@ -12,13 +12,16 @@ const {
 } = require('../src/bastion');
 
 describe('bastion', () => {
+  beforeEach(() => {
+    nock.disableNetConnect();
+  });
   afterEach(() => {
     nock.cleanAll();
   });
 
   describe('#getPublicIp', () => {
     it('gets the public IP', async () => {
-      const scope = nock('http://checkip.amazonaws.com').get('/').reply(200, '127.0.0.1');
+      const scope = nock('https://checkip.amazonaws.com').get('/').reply(200, '127.0.0.1');
 
       const actual = await getPublicIp();
       expect(actual).toEqual('127.0.0.1');
@@ -85,14 +88,14 @@ describe('bastion', () => {
             },
             SecurityGroupIngress: [
               {
-                Description: 'Allow inbound SSH access to the bastion host',
+                Description: 'permit inbound SSH',
                 IpProtocol: 'tcp',
                 FromPort: 22,
                 ToPort: 22,
                 CidrIp: '0.0.0.0/0',
               },
               {
-                Description: 'Allow inbound ICMP to the bastion host',
+                Description: 'permit inbound ICMP',
                 IpProtocol: 'icmp',
                 FromPort: -1,
                 ToPort: -1,
@@ -128,14 +131,14 @@ describe('bastion', () => {
             },
             SecurityGroupIngress: [
               {
-                Description: 'Allow inbound SSH access to the bastion host',
+                Description: 'permit inbound SSH',
                 IpProtocol: 'tcp',
                 FromPort: 22,
                 ToPort: 22,
                 CidrIp: '127.0.0.1/32',
               },
               {
-                Description: 'Allow inbound ICMP to the bastion host',
+                Description: 'permit inbound ICMP',
                 IpProtocol: 'icmp',
                 FromPort: -1,
                 ToPort: -1,
@@ -322,7 +325,7 @@ describe('bastion', () => {
 
   describe('#buildBastion', () => {
     it('builds the complete bastion host', async () => {
-      const scope = nock('http://checkip.amazonaws.com').get('/').reply(200, '127.0.0.1');
+      const scope = nock('https://checkip.amazonaws.com').get('/').reply(200, '127.0.0.1');
 
       const expected = {
         BastionEIP: {
@@ -478,14 +481,14 @@ describe('bastion', () => {
             },
             SecurityGroupIngress: [
               {
-                Description: 'Allow inbound SSH access to the bastion host',
+                Description: 'permit inbound SSH',
                 IpProtocol: 'tcp',
                 FromPort: 22,
                 ToPort: 22,
                 CidrIp: '127.0.0.1/32',
               },
               {
-                Description: 'Allow inbound ICMP to the bastion host',
+                Description: 'permit inbound ICMP',
                 IpProtocol: 'icmp',
                 FromPort: -1,
                 ToPort: -1,

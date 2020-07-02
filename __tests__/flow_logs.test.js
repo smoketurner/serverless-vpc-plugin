@@ -85,6 +85,7 @@ describe('flow_logs', () => {
         LogBucket: {
           Type: 'AWS::S3::Bucket',
           DeletionPolicy: 'Retain',
+          UpdateReplacePolicy: 'Retain',
           Properties: {
             AccessControl: 'LogDeliveryWrite',
             BucketEncryption: {

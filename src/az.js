@@ -1,6 +1,7 @@
 const { APP_SUBNET, PUBLIC_SUBNET, DB_SUBNET } = require('./constants');
 const { buildEIP, buildNatGateway } = require('./natgw');
-const { buildSubnet, buildRoute, buildRouteTable, buildRouteTableAssociation } = require('./vpc');
+const { buildSubnet } = require('./subnets');
+const { buildRoute, buildRouteTable, buildRouteTableAssociation } = require('./routes');
 
 /**
  * Builds the Availability Zones for the region.
@@ -46,13 +47,13 @@ function buildAvailabilityZones(
 
       // App Subnet
       buildSubnet(APP_SUBNET, position, zone, subnets.get(zone).get(APP_SUBNET)),
-      buildRouteTable(APP_SUBNET, position, zone),
+      buildRouteTable(APP_SUBNET, position),
       buildRouteTableAssociation(APP_SUBNET, position),
       // no default route on Application subnet
 
       // Public Subnet
       buildSubnet(PUBLIC_SUBNET, position, zone, subnets.get(zone).get(PUBLIC_SUBNET)),
-      buildRouteTable(PUBLIC_SUBNET, position, zone),
+      buildRouteTable(PUBLIC_SUBNET, position),
       buildRouteTableAssociation(PUBLIC_SUBNET, position),
       buildRoute(PUBLIC_SUBNET, position, {
         GatewayId: 'InternetGateway',
@@ -76,7 +77,7 @@ function buildAvailabilityZones(
       Object.assign(
         resources,
         buildSubnet(DB_SUBNET, position, zone, subnets.get(zone).get(DB_SUBNET)),
-        buildRouteTable(DB_SUBNET, position, zone),
+        buildRouteTable(DB_SUBNET, position),
         buildRouteTableAssociation(DB_SUBNET, position),
         // no default route on DB subnet
       );

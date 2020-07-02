@@ -41,16 +41,12 @@ function buildNatGateway(position, zone) {
           {
             Key: 'Name',
             Value: {
-              'Fn::Join': [
-                '-',
-                [
-                  {
-                    Ref: 'AWS::StackName',
-                  },
-                  zone,
-                ],
-              ],
+              'Fn::Sub': `\${AWS::StackName}-${zone}`,
             },
+          },
+          {
+            Key: 'Network',
+            Value: 'Public',
           },
         ],
       },

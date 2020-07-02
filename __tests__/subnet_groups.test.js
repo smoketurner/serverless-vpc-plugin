@@ -40,35 +40,6 @@ describe('subnet_groups', () => {
       expect(actual).toEqual(expected);
       expect.assertions(1);
     });
-
-    it('builds an RDS subnet group with a custom name', () => {
-      const expected = {
-        MyRDSSubnetGroup: {
-          Type: 'AWS::RDS::DBSubnetGroup',
-          Properties: {
-            DBSubnetGroupName: {
-              Ref: 'AWS::StackName',
-            },
-            DBSubnetGroupDescription: {
-              Ref: 'AWS::StackName',
-            },
-            SubnetIds: [
-              {
-                Ref: 'DBSubnet1',
-              },
-              {
-                Ref: 'DBSubnet2',
-              },
-            ],
-          },
-        },
-      };
-      const actual = buildRDSSubnetGroup(2, {
-        name: 'MyRDSSubnetGroup',
-      });
-      expect(actual).toEqual(expected);
-      expect.assertions(1);
-    });
   });
 
   describe('#buildElastiCacheSubnetGroup', () => {
@@ -104,35 +75,6 @@ describe('subnet_groups', () => {
       expect(actual).toEqual(expected);
       expect.assertions(1);
     });
-
-    it('builds an ElastiCache subnet group with a custom name', () => {
-      const expected = {
-        MyElastiCacheSubnetGroup: {
-          Type: 'AWS::ElastiCache::SubnetGroup',
-          Properties: {
-            CacheSubnetGroupName: {
-              Ref: 'AWS::StackName',
-            },
-            Description: {
-              Ref: 'AWS::StackName',
-            },
-            SubnetIds: [
-              {
-                Ref: 'DBSubnet1',
-              },
-              {
-                Ref: 'DBSubnet2',
-              },
-            ],
-          },
-        },
-      };
-      const actual = buildElastiCacheSubnetGroup(2, {
-        name: 'MyElastiCacheSubnetGroup',
-      });
-      expect(actual).toEqual(expected);
-      expect.assertions(1);
-    });
   });
 
   describe('#buildRedshiftSubnetGroup', () => {
@@ -162,32 +104,6 @@ describe('subnet_groups', () => {
         },
       };
       const actual = buildRedshiftSubnetGroup(2);
-      expect(actual).toEqual(expected);
-      expect.assertions(1);
-    });
-
-    it('builds an Redshift subnet group with a custom name', () => {
-      const expected = {
-        MyRedshiftSubnetGroup: {
-          Type: 'AWS::Redshift::ClusterSubnetGroup',
-          Properties: {
-            Description: {
-              Ref: 'AWS::StackName',
-            },
-            SubnetIds: [
-              {
-                Ref: 'DBSubnet1',
-              },
-              {
-                Ref: 'DBSubnet2',
-              },
-            ],
-          },
-        },
-      };
-      const actual = buildRedshiftSubnetGroup(2, {
-        name: 'MyRedshiftSubnetGroup',
-      });
       expect(actual).toEqual(expected);
       expect.assertions(1);
     });
@@ -223,35 +139,6 @@ describe('subnet_groups', () => {
         },
       };
       const actual = buildDAXSubnetGroup(2);
-      expect(actual).toEqual(expected);
-      expect.assertions(1);
-    });
-
-    it('builds an DAX subnet group with a custom name', () => {
-      const expected = {
-        MyDAXSubnetGroup: {
-          Type: 'AWS::DAX::SubnetGroup',
-          Properties: {
-            SubnetGroupName: {
-              Ref: 'AWS::StackName',
-            },
-            Description: {
-              Ref: 'AWS::StackName',
-            },
-            SubnetIds: [
-              {
-                Ref: 'DBSubnet1',
-              },
-              {
-                Ref: 'DBSubnet2',
-              },
-            ],
-          },
-        },
-      };
-      const actual = buildDAXSubnetGroup(2, {
-        name: 'MyDAXSubnetGroup',
-      });
       expect(actual).toEqual(expected);
       expect.assertions(1);
     });

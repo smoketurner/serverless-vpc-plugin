@@ -1,19 +1,26 @@
-const { DEFAULT_VPC_EIP_LIMIT, APP_SUBNET, VALID_SUBNET_GROUPS } = require('./constants');
+const {
+  DEFAULT_VPC_EIP_LIMIT,
+  PUBLIC_SUBNET,
+  DB_SUBNET,
+  APP_SUBNET,
+  VALID_SUBNET_GROUPS,
+} = require('./constants');
 const { splitSubnets } = require('./subnets');
 const { buildAvailabilityZones } = require('./az');
 const {
   buildVpc,
   buildInternetGateway,
-  buildInternetGatewayAttachment,
-  buildLambdaSecurityGroup,
+  buildAppSecurityGroup,
+  buildDHCPOptions,
 } = require('./vpc');
 const { buildAppNetworkAcl, buildPublicNetworkAcl, buildDBNetworkAcl } = require('./nacl');
 const { buildSubnetGroups } = require('./subnet_groups');
-const { buildEndpointServices, buildLambdaVPCEndpointSecurityGroup } = require('./vpce');
+const { buildEndpointServices } = require('./vpce');
 const { buildLogBucket, buildLogBucketPolicy, buildVpcFlowLogs } = require('./flow_logs');
 const { buildBastion } = require('./bastion');
 const { buildNatInstance, buildNatSecurityGroup } = require('./nat_instance');
 const { buildOutputs } = require('./outputs');
+const { buildParameter } = require('./parameters');
 
 class ServerlessVpcPlugin {
   constructor(serverless, options) {
@@ -37,6 +44,7 @@ class ServerlessVpcPlugin {
     let createFlowLogs = false;
     let createNatInstance = false;
     let createBastionHost = false;
+    let createParameters = false;
     let bastionHostKeyName = null;
     let exportOutputs = false;
     let subnetGroups = VALID_SUBNET_GROUPS;
@@ -50,20 +58,10 @@ class ServerlessVpcPlugin {
 
       if ('createNatGateway' in vpcConfig) {
         ({ createNatGateway } = vpcConfig);
-      } else if ('useNatGateway' in vpcConfig) {
-        this.serverless.cli.log(
-          'WARNING: useNatGateway has been deprecated, please use createNatGateway',
-        );
-        createNatGateway = vpcConfig.useNatGateway;
       }
 
       if ('createNetworkAcl' in vpcConfig && typeof vpcConfig.createNetworkAcl === 'boolean') {
         ({ createNetworkAcl } = vpcConfig);
-      } else if ('useNetworkAcl' in vpcConfig && typeof vpcConfig.useNetworkAcl === 'boolean') {
-        this.serverless.cli.log(
-          'WARNING: useNetworkAcl has been deprecated, please use createNetworkAcl',
-        );
-        createNetworkAcl = vpcConfig.useNetworkAcl;
       }
 
       if (Array.isArray(vpcConfig.zones) && vpcConfig.zones.length > 0) {
@@ -78,11 +76,6 @@ class ServerlessVpcPlugin {
 
       if ('createDbSubnet' in vpcConfig && typeof vpcConfig.createDbSubnet === 'boolean') {
         ({ createDbSubnet } = vpcConfig);
-      } else if ('skipDbCreation' in vpcConfig && typeof vpcConfig.skipDbCreation === 'boolean') {
-        this.serverless.cli.log(
-          'WARNING: skipDbCreation has been deprecated, please use createDbSubnet',
-        );
-        createDbSubnet = !vpcConfig.skipDbCreation;
       }
 
       if ('createFlowLogs' in vpcConfig && typeof vpcConfig.createFlowLogs === 'boolean') {
@@ -110,6 +103,10 @@ class ServerlessVpcPlugin {
       if ('exportOutputs' in vpcConfig && typeof vpcConfig.exportOutputs === 'boolean') {
         ({ exportOutputs } = vpcConfig);
       }
+
+      if ('createParameters' in vpcConfig && typeof vpcConfig.createParameters === 'boolean') {
+        ({ createParameters } = vpcConfig);
+      }
     }
 
     const region = this.provider.getRegion();
@@ -119,6 +116,12 @@ class ServerlessVpcPlugin {
       zones = await this.getZonesPerRegion(region);
     }
     const numZones = zones.length;
+
+    let prefixLists = null;
+    if (services.includes('s3') || services.includes('dynamodb')) {
+      this.serverless.cli.log(`Getting managed prefix lists in ${region}...`);
+      prefixLists = await this.getPrefixLists();
+    }
 
     if (createNatGateway) {
       if (typeof createNatGateway !== 'boolean' && typeof createNatGateway !== 'number') {
@@ -167,13 +170,13 @@ class ServerlessVpcPlugin {
       resources,
       buildVpc(cidrBlock),
       buildInternetGateway(),
-      buildInternetGatewayAttachment(),
       buildAvailabilityZones(subnets, zones, {
         numNatGateway: createNatGateway,
         createDbSubnet,
         createNatInstance: !!(createNatInstance && vpcNatAmi),
       }),
-      buildLambdaSecurityGroup(),
+      buildAppSecurityGroup(prefixLists),
+      buildDHCPOptions(region),
     );
 
     if (createNetworkAcl) {
@@ -190,11 +193,7 @@ class ServerlessVpcPlugin {
 
     if (createNatInstance && vpcNatAmi) {
       this.serverless.cli.log(`Provisioning NAT Instance using AMI ${vpcNatAmi}`);
-      Object.assign(
-        resources,
-        buildNatSecurityGroup(subnets.get(APP_SUBNET)),
-        buildNatInstance(vpcNatAmi, zones),
-      );
+      Object.assign(resources, buildNatSecurityGroup(), buildNatInstance(vpcNatAmi, zones));
     }
 
     if (createBastionHost) {
@@ -220,11 +219,7 @@ class ServerlessVpcPlugin {
       }
       this.serverless.cli.log(`Provisioning VPC endpoints for: ${services.join(', ')}`);
 
-      Object.assign(
-        resources,
-        buildEndpointServices(services, numZones),
-        buildLambdaVPCEndpointSecurityGroup(),
-      );
+      Object.assign(resources, buildEndpointServices(services, numZones));
     }
 
     if (createDbSubnet) {
@@ -246,13 +241,55 @@ class ServerlessVpcPlugin {
       Object.assign(resources, buildLogBucket(), buildLogBucketPolicy(), buildVpcFlowLogs());
     }
 
+    // SSM Parameters
+    if (createParameters) {
+      Object.assign(resources, buildParameter('VPC'), buildParameter('AppSecurityGroup'));
+
+      if (createDbSubnet && numZones > 1) {
+        if (subnetGroups.includes('rds')) {
+          Object.assign(resources, buildParameter('RDSSubnetGroup'));
+        }
+        if (subnetGroups.includes('elasticache')) {
+          Object.assign(resources, buildParameter('ElastiCacheSubnetGroup'));
+        }
+        if (subnetGroups.includes('redshift')) {
+          Object.assign(resources, buildParameter('RedshiftSubnetGroup'));
+        }
+        if (subnetGroups.includes('dax')) {
+          Object.assign(resources, buildParameter('DAXSubnetGroup'));
+        }
+      }
+
+      const publicSubnets = [];
+      const appSubnets = [];
+      const dbSubnets = [];
+
+      for (let index = 1; index <= numZones; index += 1) {
+        publicSubnets.push({ Ref: `${PUBLIC_SUBNET}Subnet${index}` });
+        appSubnets.push({ Ref: `${APP_SUBNET}Subnet${index}` });
+        if (createDbSubnet) {
+          dbSubnets.push({ Ref: `${DB_SUBNET}Subnet${index}` });
+        }
+      }
+
+      Object.assign(
+        resources,
+        buildParameter('PublicSubnets', { Value: publicSubnets }),
+        buildParameter('AppSubnets', { Value: appSubnets }),
+      );
+
+      if (dbSubnets) {
+        Object.assign(resources, buildParameter('DBSubnets', { Value: dbSubnets }));
+      }
+    }
+
     this.serverless.cli.log('Updating Lambda VPC configuration');
     const { vpc = {} } = providerObj;
 
     if (!Array.isArray(vpc.securityGroupIds)) {
       vpc.securityGroupIds = [];
     }
-    vpc.securityGroupIds.push({ Ref: 'LambdaExecutionSecurityGroup' });
+    vpc.securityGroupIds.push({ Ref: 'AppSecurityGroup' });
 
     if (!Array.isArray(vpc.subnetIds)) {
       vpc.subnetIds = [];
@@ -288,13 +325,19 @@ class ServerlessVpcPlugin {
           Name: 'region-name',
           Values: [region],
         },
+        {
+          Name: 'opt-in-status',
+          Values: ['opt-in-not-required'],
+        },
+        {
+          Name: 'state',
+          Values: ['available'],
+        },
       ],
     };
-    return this.provider.request('EC2', 'describeAvailabilityZones', params).then((data) =>
-      data.AvailabilityZones.filter((z) => z.State === 'available')
-        .map((z) => z.ZoneName)
-        .sort(),
-    );
+    return this.provider
+      .request('EC2', 'describeAvailabilityZones', params)
+      .then((data) => data.AvailabilityZones.map((z) => z.ZoneName).sort());
   }
 
   /**
@@ -380,6 +423,31 @@ class ServerlessVpcPlugin {
     return services
       .map((service) => `com.amazonaws.${region}.${service}`)
       .filter((service) => !available.includes(service));
+  }
+
+  /**
+   * Return an array of prefix lists in the provided region.
+   *
+   * @return {Object}
+   */
+  async getPrefixLists() {
+    const params = {
+      Filters: [
+        {
+          Name: 'owner-id',
+          Values: ['AWS'],
+        },
+      ],
+    };
+
+    return this.provider.request('EC2', 'describeManagedPrefixLists', params).then((data) => {
+      const results = {};
+      data.PrefixLists.forEach((prefixList) => {
+        const service = prefixList.PrefixListName.split('.').slice(3).join('.');
+        results[service] = prefixList.PrefixListId;
+      });
+      return results;
+    });
   }
 }
 

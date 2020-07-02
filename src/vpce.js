@@ -12,16 +12,7 @@ function buildVPCEndpoint(service, { routeTableIds = [], subnetIds = [] } = {}) 
     Type: 'AWS::EC2::VPCEndpoint',
     Properties: {
       ServiceName: {
-        'Fn::Join': [
-          '.',
-          [
-            'com.amazonaws',
-            {
-              Ref: 'AWS::Region',
-            },
-            service,
-          ],
-        ],
+        'Fn::Sub': `com.amazonaws.\${AWS::Region}.${service}`,
       },
       VpcId: {
         Ref: 'VPC',
@@ -37,18 +28,6 @@ function buildVPCEndpoint(service, { routeTableIds = [], subnetIds = [] } = {}) 
       Statement: [
         {
           Effect: 'Allow',
-          /*
-          TODO 11/21: We should restrict the VPC Endpoint to only the Lambda
-          IAM role, but this doesn't work.
-
-          Principal: {
-            AWS: {
-              'Fn::GetAtt': [
-                'IamRoleLambdaExecution',
-                'Arn',
-              ],
-            },
-          }, */
           Principal: '*',
           Resource: '*',
         },
@@ -65,7 +44,7 @@ function buildVPCEndpoint(service, { routeTableIds = [], subnetIds = [] } = {}) 
     endpoint.Properties.PrivateDnsEnabled = true;
     endpoint.Properties.SecurityGroupIds = [
       {
-        Ref: 'LambdaEndpointSecurityGroup',
+        Ref: 'AppSecurityGroup',
       },
     ];
   }
@@ -109,47 +88,7 @@ function buildEndpointServices(services = [], numZones = 0) {
   return resources;
 }
 
-/**
- * Build a SecurityGroup to allow the Lambda's access to VPC endpoints over HTTPS.
- *
- * @param {Object} params
- * @return {Object}
- */
-function buildLambdaVPCEndpointSecurityGroup({ name = 'LambdaEndpointSecurityGroup' } = {}) {
-  return {
-    [name]: {
-      Type: 'AWS::EC2::SecurityGroup',
-      Properties: {
-        GroupDescription: 'Lambda access to VPC endpoints',
-        VpcId: {
-          Ref: 'VPC',
-        },
-        SecurityGroupIngress: [
-          {
-            SourceSecurityGroupId: {
-              Ref: 'LambdaExecutionSecurityGroup',
-            },
-            Description: 'Allow inbound HTTPS traffic from LambdaExecutionSecurityGroup',
-            IpProtocol: 'tcp',
-            FromPort: 443,
-            ToPort: 443,
-          },
-        ],
-        Tags: [
-          {
-            Key: 'Name',
-            Value: {
-              'Fn::Sub': '${AWS::StackName}-lambda-endpoint',
-            },
-          },
-        ],
-      },
-    },
-  };
-}
-
 module.exports = {
   buildEndpointServices,
   buildVPCEndpoint,
-  buildLambdaVPCEndpointSecurityGroup,
 };
