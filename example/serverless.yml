@@ -5,7 +5,6 @@ provider:
   runtime: nodejs12.x
   stage: ${opt:stage, 'dev'}
   region: ${opt:region, 'us-east-1'}
-  profile: jplock
   versionFunctions: false
   logRetentionInDays: 1
   deploymentBucket:
