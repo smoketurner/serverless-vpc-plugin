@@ -93,6 +93,30 @@ describe('ServerlessVpcPlugin', () => {
       expect.assertions(1);
     });
 
+    it('should not allow NAT instance and NAT gateway as boolean', async () => {
+      serverless.service.custom.vpcConfig = {
+        createNatGateway: true,
+        createNatInstance: true,
+      };
+
+      await expect(plugin.afterInitialize()).rejects.toThrow(
+        'Please choose either createNatGateway or createNatInstance, not both',
+      );
+      expect.assertions(1);
+    });
+
+    it('should not allow NAT instance and NAT gateway as number', async () => {
+      serverless.service.custom.vpcConfig = {
+        createNatGateway: 3,
+        createNatInstance: true,
+      };
+
+      await expect(plugin.afterInitialize()).rejects.toThrow(
+        'Please choose either createNatGateway or createNatInstance, not both',
+      );
+      expect.assertions(1);
+    });
+
     it('should discover available zones', async () => {
       const mockCallback = jest.fn((params, callback) => {
         expect(params.Filters[0].Values[0]).toEqual('us-east-1');
