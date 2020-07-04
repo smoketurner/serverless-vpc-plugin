@@ -100,6 +100,12 @@ class ServerlessVpcPlugin {
         ({ createNatInstance } = vpcConfig);
       }
 
+      if (createNatGateway && createNatInstance) {
+        throw new this.serverless.classes.Error(
+          'Please choose either createNatGateway or createNatInstance, not both',
+        );
+      }
+
       if ('exportOutputs' in vpcConfig && typeof vpcConfig.exportOutputs === 'boolean') {
         ({ exportOutputs } = vpcConfig);
       }

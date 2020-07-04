@@ -21,7 +21,7 @@
         {
           "Key": "Name",
           "Value": {
-            "Fn::Sub": "${AWS::StackName}-us-east-1a"
+            "Fn::Sub": "${AWS::StackName}-${PublicSubnet1.AvailabilityZone}"
           }
         },
         {
@@ -53,7 +53,7 @@
         {
           "Key": "Name",
           "Value": {
-            "Fn::Sub": "${AWS::StackName}-us-east-1b"
+            "Fn::Sub": "${AWS::StackName}-${PublicSubnet2.AvailabilityZone}"
           }
         },
         {
