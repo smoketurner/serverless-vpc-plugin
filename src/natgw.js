@@ -22,10 +22,9 @@ function buildEIP(position) {
  * Build a NatGateway in a given AZ
  *
  * @param {Number} position
- * @param {String} zone
  * @return {Object}
  */
-function buildNatGateway(position, zone) {
+function buildNatGateway(position) {
   const cfName = `NatGateway${position}`;
   return {
     [cfName]: {
@@ -41,7 +40,7 @@ function buildNatGateway(position, zone) {
           {
             Key: 'Name',
             Value: {
-              'Fn::Sub': `\${AWS::StackName}-${zone}`,
+              'Fn::Sub': `\${AWS::StackName}-\${${PUBLIC_SUBNET}Subnet${position}.AvailabilityZone}`,
             },
           },
           {

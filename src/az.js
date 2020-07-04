@@ -35,7 +35,7 @@ function buildAvailabilityZones(
 
   if (numNatGateway > 0) {
     for (let index = 0; index < numNatGateway; index += 1) {
-      Object.assign(resources, buildEIP(index + 1), buildNatGateway(index + 1, zones[index]));
+      Object.assign(resources, buildEIP(index + 1), buildNatGateway(index + 1));
     }
   }
 

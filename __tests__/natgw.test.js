@@ -34,7 +34,7 @@ describe('natgw', () => {
                 Key: 'Name',
                 Value: {
                   // eslint-disable-next-line no-template-curly-in-string
-                  'Fn::Sub': '${AWS::StackName}-us-east-1a',
+                  'Fn::Sub': '${AWS::StackName}-${PublicSubnet1.AvailabilityZone}',
                 },
               },
               {
@@ -45,7 +45,7 @@ describe('natgw', () => {
           },
         },
       };
-      const actual = buildNatGateway(1, 'us-east-1a');
+      const actual = buildNatGateway(1);
       expect(actual).toEqual(expected);
       expect.assertions(1);
     });
