@@ -157,3 +157,14 @@ Setting `createParameters: true` will create the below parameters in the AWS Sys
 - `/SLS/${AWS::StackName}/PublicSubnets`: Subnet ID's for the "Public" subnets
 - `/SLS/${AWS::StackName}/AppSubnets`: Subnet ID's for the "Application" subnets
 - `/SLS/${AWS::StackName}/DBSubnets`: Subnet ID's for the "Database" subnets
+
+As an example, if the stack name you want to reference is `new-service-dev`, you can then use Serverless' built-in [support](https://www.serverless.com/framework/docs/providers/aws/guide/variables/#reference-variables-using-the-ssm-parameter-store) for reading from SSM:
+
+```
+vpc:
+  securityGroupIds:
+    - ${ssm:/SLS/new-service-dev/AppSecurityGroup}
+  subnetIds: ${ssm:/SLS/new-service-dev/AppSubnets~split}
+```
+
+(Note the usage of `~split` to split the SSM `StringList` parameter type and return an array of values)
