@@ -26,6 +26,7 @@ function buildEIP(position) {
  */
 function buildNatGateway(position) {
   const cfName = `NatGateway${position}`;
+  const subnet = `${PUBLIC_SUBNET}Subnet${position}`;
   return {
     [cfName]: {
       Type: 'AWS::EC2::NatGateway',
@@ -34,13 +35,13 @@ function buildNatGateway(position) {
           'Fn::GetAtt': [`EIP${position}`, 'AllocationId'],
         },
         SubnetId: {
-          Ref: `${PUBLIC_SUBNET}Subnet${position}`,
+          Ref: subnet,
         },
         Tags: [
           {
             Key: 'Name',
             Value: {
-              'Fn::Sub': `\${AWS::StackName}-\${${PUBLIC_SUBNET}Subnet${position}.AvailabilityZone}`,
+              'Fn::Sub': `\${AWS::StackName}-\${${subnet}.AvailabilityZone}`,
             },
           },
           {
