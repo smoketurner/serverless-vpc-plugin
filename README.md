@@ -142,6 +142,18 @@ After executing `serverless deploy`, the following CloudFormation Stack Outputs 
 
 ### Exporting CloudFormation Outputs
 
-Setting `exportOutputs: true` will export stack outputs.  
-The name of the exported value will be prefixed by the cloud formation stack name (`AWS::StackName`).
-For example, the value of the `VPC` output of a stack named `foo-prod` will be exported as `foo-prod-VPC`.
+Setting `exportOutputs: true` will export stack outputs. The name of the exported value will be prefixed by the cloud formation stack name (`AWS::StackName`). For example, the value of the `VPC` output of a stack named `foo-prod` will be exported as `foo-prod-VPC`.
+
+## SSM Parameters
+
+Setting `createParameters: true` will create the below parameters in the AWS Systems Manager (SSM) Parameter Store:
+
+- `/SLS/${AWS::StackName}/VPC`: VPC logical resource ID
+- `/SLS/${AWS::StackName}/AppSecurityGroup`: Security Group ID that the applications use when executing within the VPC
+- `/SLS/${AWS::StackName}/RDSSubnetGroup`: SubnetGroup associated to RDS, if provisioned
+- `/SLS/${AWS::StackName}/ElastiCacheSubnetGroup`: SubnetGroup associated to ElastiCache, if provisioned
+- `/SLS/${AWS::StackName}/RedshiftSubnetGroup`: SubnetGroup associated to Redshift, if provisioned
+- `/SLS/${AWS::StackName}/DAXSubnetGroup`: SubnetGroup associated to DAX, if provisioned
+- `/SLS/${AWS::StackName}/PublicSubnets`: Subnet ID's for the "Public" subnets
+- `/SLS/${AWS::StackName}/AppSubnets`: Subnet ID's for the "Application" subnets
+- `/SLS/${AWS::StackName}/DBSubnets`: Subnet ID's for the "Database" subnets
