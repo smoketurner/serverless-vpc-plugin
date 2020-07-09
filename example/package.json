@@ -21,6 +21,6 @@
     "serverless-vpc-plugin": "smoketurner/serverless-vpc-plugin#master",
     "serverless-webpack": "5.3.2",
     "webpack": "4.43.0",
-    "webpack-node-externals": "1.7.2"
+    "webpack-node-externals": "2.3.0"
   }
 }
