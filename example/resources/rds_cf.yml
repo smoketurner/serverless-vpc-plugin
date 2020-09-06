@@ -1,17 +1,17 @@
 ---
 Resources:
   DBClusterParameterGroup:
-    Type: 'AWS::RDS::DBClusterParameterGroup'
+    Type: "AWS::RDS::DBClusterParameterGroup"
     Properties:
-      Description: 'Aurora PostgreSQL 10 Parameter Group'
+      Description: "Aurora PostgreSQL 10 Parameter Group"
       Family: aurora-postgresql10
       Parameters:
         rds.force_ssl: 1
 
-  AppSecurityGroupEgress:
-    Type: 'AWS::EC2::SecurityGroupEgress'
+  AppSecurityGroupEgressRDS:
+    Type: "AWS::EC2::SecurityGroupEgress"
     Properties:
-      Description: 'permit PostgreSQL (5432) to DBSecurityGroup'
+      Description: "permit PostgreSQL (5432) to DBSecurityGroup"
       DestinationSecurityGroupId: !Ref DBSecurityGroup
       FromPort: 5432
       GroupId: !GetAtt AppSecurityGroup.GroupId
@@ -19,41 +19,55 @@ Resources:
       ToPort: 5432
 
   DBSecurityGroup:
-    Type: 'AWS::EC2::SecurityGroup'
+    Type: "AWS::EC2::SecurityGroup"
     Properties:
-      GroupDescription: 'RDS Security Group'
+      GroupDescription: "RDS Security Group"
       SecurityGroupEgress:
-        - Description: 'deny all outbound'
-          IpProtocol: '-1'
-          CidrIp: '127.0.0.1/32'
+        - Description: "deny all outbound"
+          IpProtocol: "-1"
+          CidrIp: "127.0.0.1/32"
       SecurityGroupIngress:
-        - Description: 'permit PostgreSQL (5432) from AppSecurityGroup'
+        - Description: "permit PostgreSQL (5432) from AppSecurityGroup"
           FromPort: 5432
           IpProtocol: tcp
           SourceSecurityGroupId: !GetAtt AppSecurityGroup.GroupId
           ToPort: 5432
       Tags:
         - Key: Name
-          Value: !Join ['-', [!Ref 'AWS::StackName', rds]]
+          Value: !Join ["-", [!Ref "AWS::StackName", rds]]
       VpcId: !Ref VPC
 
   DBCluster:
-    Type: 'AWS::RDS::DBCluster'
+    Type: "AWS::RDS::DBCluster"
     DeletionPolicy: Snapshot
     UpdateReplacePolicy: Snapshot
     Properties:
       DatabaseName: ${self:custom.databaseName}
-      DBClusterIdentifier: '${self:service}-${self:provider.stage}'
+      DBClusterIdentifier: "${self:service}-${self:provider.stage}"
       DBClusterParameterGroupName: !Ref DBClusterParameterGroup
       DBSubnetGroupName: !Ref RDSSubnetGroup
       EnableHttpEndpoint: true
       Engine: aurora-postgresql
       EngineMode: serverless
-      EngineVersion: '10.7' # Data API only supports PostgreSQL 10.7 https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/data-api.html#data-api.regions
+      EngineVersion: "10.7" # Data API only supports PostgreSQL 10.7 https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/data-api.html#data-api.regions
       MasterUsername:
-        !Join ['', ['{{resolve:secretsmanager:', !Ref DBSecret, ':SecretString:username}}']]
+        !Join [
+          "",
+          [
+            "{{resolve:secretsmanager:",
+            !Ref DBSecret,
+            ":SecretString:username}}",
+          ],
+        ]
       MasterUserPassword:
-        !Join ['', ['{{resolve:secretsmanager:', !Ref DBSecret, ':SecretString:password}}']]
+        !Join [
+          "",
+          [
+            "{{resolve:secretsmanager:",
+            !Ref DBSecret,
+            ":SecretString:password}}",
+          ],
+        ]
       ScalingConfiguration:
         AutoPause: true
         MaxCapacity: 2
@@ -62,7 +76,7 @@ Resources:
       StorageEncrypted: true
       Tags:
         - Key: Name
-          Value: !Join ['-', [!Ref 'AWS::StackName', rds]]
+          Value: !Join ["-", [!Ref "AWS::StackName", rds]]
       UseLatestRestorableTime: true
       VpcSecurityGroupIds:
         - !Ref DBSecurityGroup

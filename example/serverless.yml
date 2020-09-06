@@ -12,7 +12,7 @@ provider:
     blockPublicAccess: true
   endpointType: regional
   environment:
-    AWS_NODEJS_CONNECTION_REUSE_ENABLED: '1'
+    AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1"
     NODE_ENV: development
   logs:
     restApi:
@@ -30,10 +30,10 @@ package:
   excludeDevDependencies: true
 
 custom:
-  secretName: 'rds-db-credentials/${self:service}/${self:provider.stage}'
+  secretName: "rds-db-credentials/${self:service}/${self:provider.stage}"
   databaseName: slsvpcexample
   vpcConfig:
-    cidrBlock: '10.0.0.0/16'
+    cidrBlock: "10.0.0.0/16"
     createDbSubnet: true
     createNatInstance: false
     createParameters: true
@@ -45,6 +45,7 @@ custom:
       - secretsmanager
       - rds-data
       - s3
+      - elasticfilesystem
     subnetGroups:
       - rds
   webpack:
@@ -54,24 +55,34 @@ custom:
     packager: npm
 
 functions:
-  rds:
+  example:
     handler: index.handler
-    description: RDS Test Handler
+    fileSystemConfig:
+      localMountPath: /mnt/efs0
+      arn:
+        "Fn::GetAtt": "EFSAccessPoint.Arn"
+    description: Example Handler
+    dependsOn:
+      - EFSMountTarget1
+      - EFSMountTarget2
+      - EFSMountTarget3
     role: ExampleLambdaRole
+    tracing: Active
     environment:
       SECRET_ARN:
         Ref: DBSecret
       RESOURCE_ARN:
-        'Fn::Join':
-          - ':'
-          - - 'arn:aws:rds'
-            - Ref: 'AWS::Region'
-            - Ref: 'AWS::AccountId'
-            - 'cluster:${self:service}-${self:provider.stage}'
+        "Fn::Join":
+          - ":"
+          - - "arn:aws:rds"
+            - Ref: "AWS::Region"
+            - Ref: "AWS::AccountId"
+            - "cluster:${self:service}-${self:provider.stage}"
       DATABASE_NAME: ${self:custom.databaseName}
       SCHEMA_NAME: public
 
 resources:
   - ${file(resources/iam_cf.yml)}
+  - ${file(resources/efs_cf.yml)}
   - ${file(resources/rds_cf.yml)}
   - ${file(resources/secretsmanager_cf.yml)}

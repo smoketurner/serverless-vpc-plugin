@@ -1,0 +1,95 @@
+---
+Resources:
+  AppSecurityGroupEgressEFS:
+    Type: "AWS::EC2::SecurityGroupEgress"
+    Properties:
+      Description: "permit NFS (2049) to EFSSecurityGroup"
+      DestinationSecurityGroupId: !Ref EFSSecurityGroup
+      FromPort: 2049
+      GroupId: !GetAtt AppSecurityGroup.GroupId
+      IpProtocol: tcp
+      ToPort: 2049
+
+  EFSSecurityGroup:
+    Type: "AWS::EC2::SecurityGroup"
+    Properties:
+      GroupDescription: "EFS Security Group"
+      SecurityGroupEgress:
+        - Description: "deny all outbound"
+          IpProtocol: "-1"
+          CidrIp: "127.0.0.1/32"
+      SecurityGroupIngress:
+        - Description: "permit NFS (2049) from AppSecurityGroup"
+          FromPort: 2049
+          IpProtocol: tcp
+          SourceSecurityGroupId: !GetAtt AppSecurityGroup.GroupId
+          ToPort: 2049
+      Tags:
+        - Key: Name
+          Value: !Join ["-", [!Ref "AWS::StackName", efs]]
+      VpcId: !Ref VPC
+
+  EFSFileSystem:
+    Type: "AWS::EFS::FileSystem"
+    Properties:
+      BackupPolicy:
+        Status: ENABLED
+      Encrypted: true
+      FileSystemPolicy:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS: "*"
+            Action:
+              - "elasticfilesystem:ClientMount"
+              - "elasticfilesystem:ClientWrite"
+          - Effect: Deny
+            Principal:
+              AWS: "*"
+            Action: "*"
+            Condition:
+              Bool:
+                "aws:SecureTransport": "false"
+      LifecyclePolicies:
+        - TransitionToIA: AFTER_7_DAYS
+      PerformanceMode: generalPurpose
+      ThroughputMode: bursting
+
+  EFSMountTarget1:
+    Type: "AWS::EFS::MountTarget"
+    Properties:
+      FileSystemId: !Ref EFSFileSystem
+      SecurityGroups:
+        - !Ref EFSSecurityGroup
+      SubnetId: !Ref AppSubnet1
+
+  EFSMountTarget2:
+    Type: "AWS::EFS::MountTarget"
+    Properties:
+      FileSystemId: !Ref EFSFileSystem
+      SecurityGroups:
+        - !Ref EFSSecurityGroup
+      SubnetId: !Ref AppSubnet2
+
+  EFSMountTarget3:
+    Type: "AWS::EFS::MountTarget"
+    Properties:
+      FileSystemId: !Ref EFSFileSystem
+      SecurityGroups:
+        - !Ref EFSSecurityGroup
+      SubnetId: !Ref AppSubnet3
+
+  EFSAccessPoint:
+    Type: "AWS::EFS::AccessPoint"
+    Properties:
+      FileSystemId: !Ref EFSFileSystem
+      PosixUser:
+        Uid: "1001"
+        Gid: "1001"
+      RootDirectory:
+        CreationInfo:
+          OwnerGid: "1001"
+          OwnerUid: "1001"
+          Permissions: "0755"
+        Path: "/mnt/efs0"
