@@ -35,7 +35,7 @@ custom:
   vpcConfig:
     cidrBlock: "10.0.0.0/16"
     createDbSubnet: true
-    createNatInstance: false
+    createNatInstance: true
     createParameters: true
     zones:
       - us-east-1a
