@@ -73,7 +73,7 @@ exports.handler = async (event, context) => {
   const publicIp = await getPublicIp();
 
   const result = {
-    'Public IP': publicIp,
+    'Public IP': publicIp.trim(),
     'RDS NOW()': row[0].stringValue,
     'EFS Counter': value,
   };

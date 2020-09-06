@@ -35,6 +35,9 @@ Resources:
       BackupPolicy:
         Status: ENABLED
       Encrypted: true
+      FileSystemTags:
+        - Key: Name
+          Value: !Join ["-", [!Ref "AWS::StackName", efs]]
       FileSystemPolicy:
         Version: "2012-10-17"
         Statement:
@@ -72,17 +75,12 @@ Resources:
         - !Ref EFSSecurityGroup
       SubnetId: !Ref AppSubnet2
 
-  EFSMountTarget3:
-    Type: "AWS::EFS::MountTarget"
-    Properties:
-      FileSystemId: !Ref EFSFileSystem
-      SecurityGroups:
-        - !Ref EFSSecurityGroup
-      SubnetId: !Ref AppSubnet3
-
   EFSAccessPoint:
     Type: "AWS::EFS::AccessPoint"
     Properties:
+      AccessPointTags:
+        - Key: Name
+          Value: !Join ["-", [!Ref "AWS::StackName", efs]]
       FileSystemId: !Ref EFSFileSystem
       PosixUser:
         Uid: "1001"

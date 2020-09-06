@@ -40,7 +40,6 @@ custom:
     zones:
       - us-east-1a
       - us-east-1b
-      - us-east-1c
     services:
       - secretsmanager
       - rds-data
@@ -65,7 +64,6 @@ functions:
     dependsOn:
       - EFSMountTarget1
       - EFSMountTarget2
-      - EFSMountTarget3
     role: ExampleLambdaRole
     tracing: Active
     environment:
