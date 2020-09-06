@@ -13,7 +13,7 @@
     "package": "SLS_DEBUG=* sls package",
     "deploy": "sls deploy -v --force",
     "remove": "sls remove -v",
-    "test": "sls invoke -f rds"
+    "test": "sls invoke -f example"
   },
   "devDependencies": {
     "aws-sdk": "2.747.0",

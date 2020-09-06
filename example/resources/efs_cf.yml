@@ -35,6 +35,22 @@ Resources:
       BackupPolicy:
         Status: ENABLED
       Encrypted: true
+      FileSystemPolicy:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS: "*"
+            Action:
+              - "elasticfilesystem:ClientMount"
+              - "elasticfilesystem:ClientWrite"
+          - Effect: Deny
+            Principal:
+              AWS: "*"
+            Action: "*"
+            Condition:
+              Bool:
+                "aws:SecureTransport": "false"
       LifecyclePolicies:
         - TransitionToIA: AFTER_7_DAYS
       PerformanceMode: generalPurpose
