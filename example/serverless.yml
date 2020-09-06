@@ -35,12 +35,11 @@ custom:
   vpcConfig:
     cidrBlock: "10.0.0.0/16"
     createDbSubnet: true
-    createNatInstance: false
+    createNatInstance: true
     createParameters: true
     zones:
       - us-east-1a
       - us-east-1b
-      - us-east-1c
     services:
       - secretsmanager
       - rds-data
@@ -65,7 +64,6 @@ functions:
     dependsOn:
       - EFSMountTarget1
       - EFSMountTarget2
-      - EFSMountTarget3
     role: ExampleLambdaRole
     tracing: Active
     environment:

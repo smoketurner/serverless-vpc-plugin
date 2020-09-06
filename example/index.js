@@ -1,4 +1,5 @@
 const fs = require('fs');
+const https = require('https');
 
 const AWS = require('aws-sdk');
 
@@ -9,7 +10,33 @@ AWS.config.logger = console;
 const FILENAME = '/mnt/efs0/counter';
 
 /**
- * PostgreSQL Handler
+ * Return the public IP
+ *
+ * @return {Promise<String>}
+ */
+function getPublicIp() {
+  const options = {
+    hostname: 'checkip.amazonaws.com',
+    port: 443,
+    path: '/',
+    timeout: 1000,
+  };
+  return new Promise((resolve, reject) => {
+    const req = https.get(options, (res) => {
+      const buffers = [];
+      res.on('data', (data) => buffers.push(data));
+      res.once('end', () => resolve(Buffer.concat(buffers).toString()));
+      res.once('error', reject);
+    });
+    req.once('timeout', () => {
+      req.abort();
+    });
+    req.once('error', reject);
+  });
+}
+
+/**
+ * Example Handler
  *
  * @param {Object} event
  * @param {Object} context
@@ -43,7 +70,10 @@ exports.handler = async (event, context) => {
 
   const [row] = records || [];
 
+  const publicIp = await getPublicIp();
+
   const result = {
+    'Public IP': publicIp.trim(),
     'RDS NOW()': row[0].stringValue,
     'EFS Counter': value,
   };
