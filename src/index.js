@@ -305,6 +305,13 @@ class ServerlessVpcPlugin {
     }
 
     const outputs = providerObj.compiledCloudFormationTemplate.Outputs;
+
+    // remove rds subnet group if not creating DB subnet
+    const pos = subnetGroups.indexOf('rds');
+    if (!createDbSubnet && pos !== -1) {
+      subnetGroups.splice(pos, 1);
+    }
+
     Object.assign(
       outputs,
       buildOutputs({

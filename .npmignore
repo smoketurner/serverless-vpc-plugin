@@ -7,7 +7,6 @@
 .prettierrc
 .prettierignore
 .serverless/
-.travis.yml
 .vscode/
 *.tgz
 CODE_OF_CONDUCT.md

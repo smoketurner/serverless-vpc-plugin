@@ -295,7 +295,9 @@ async function buildBastion(keyPairName, numZones = 0) {
   let publicIp = '0.0.0.0/0';
   try {
     publicIp = await getPublicIp();
-    publicIp = `${publicIp}/32`;
+    if (publicIp) {
+      publicIp = `${publicIp.trim()}/32`;
+    }
   } catch (err) {
     console.error('Unable to discover public IP address:', err);
   }
