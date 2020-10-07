@@ -109,7 +109,7 @@ function buildAppSecurityGroup(prefixLists = null, outboundTcpPorts = []) {
 
   outboundTcpPorts.forEach((port) => {
     egress.push({
-      Description: `permit port ${port}`,
+      Description: `permit port ${port} to the internet`,
       IpProtocol: 'tcp',
       FromPort: port,
       ToPort: port,
