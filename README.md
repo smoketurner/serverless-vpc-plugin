@@ -128,7 +128,9 @@ custom:
 
     # Optionally specify additional outbound TCP ports to the internet.
     # For instance to connect to external databases, like mysql on port 3306 or mongodb on 27017  
-    outboundTcpPorts: [27017, 3306]
+    outboundTcpPorts: 
+      - 27017
+      - 3306
 ```
 
 ## CloudFormation Outputs
