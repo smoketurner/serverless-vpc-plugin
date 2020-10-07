@@ -41,6 +41,8 @@ If your Lambda functions need to [access the internet](https://docs.aws.amazon.c
 
 By default, `AWS::EC2::VPCEndpoint` "Gateway" endpoints for S3 and DynamoDB will be provisioned within each availability zone to provide internal access to these services (there is no additional charge for using Gateway Type VPC endpoints). You can selectively control which `AWS::EC2::VPCEndpoint` "Interface" endpoints are available within your VPC using the `services` configuration option below. Not all AWS services are available in every region, so the plugin will query AWS to validate the services you have selected and notify you if any changes are required (there is an additional charge for using Interface Type VPC endpoints).
 
+In case you want open additional ports to the internet when using external databases and other services, you can use the `outboundTcpPorts` configuration option to specify these ports.
+
 If you specify more then one availability zone, this plugin will also provision the following database-related resources (controlled using the `subnetGroups` plugin option):
 
 - `AWS::RDS::DBSubnetGroup`
@@ -123,6 +125,10 @@ custom:
 
     # Whether to export stack outputs so it may be consumed by other stacks
     exportOutputs: false
+
+    # Optionally specify additional outbound TCP ports to the internet.
+    # For instance to connect to external databases, like mysql on port 3306 or mongodb on 27017  
+    outboundTcpPorts: [27017, 3306]
 ```
 
 ## CloudFormation Outputs
