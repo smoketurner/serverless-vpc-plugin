@@ -184,6 +184,74 @@ describe('vpc', () => {
     });
   });
 
+  describe('#buildAppSecurityGroupOutboundTcpPorts', () => {
+    it('builds a security group with custom outbound tcp ports', () => {
+      const expected = {
+        DefaultSecurityGroupEgress: {
+          Type: 'AWS::EC2::SecurityGroupEgress',
+          Properties: {
+            IpProtocol: '-1',
+            DestinationSecurityGroupId: {
+              'Fn::GetAtt': ['VPC', 'DefaultSecurityGroup'],
+            },
+            GroupId: {
+              'Fn::GetAtt': ['VPC', 'DefaultSecurityGroup'],
+            },
+          },
+        },
+        AppSecurityGroup: {
+          Type: 'AWS::EC2::SecurityGroup',
+          Properties: {
+            GroupDescription: 'Application Security Group',
+            SecurityGroupEgress: [
+              {
+                Description: 'permit HTTPS outbound',
+                IpProtocol: 'tcp',
+                FromPort: 443,
+                ToPort: 443,
+                CidrIp: '0.0.0.0/0',
+              },
+              {
+                Description: 'permit port 8080',
+                IpProtocol: 'tcp',
+                FromPort: 8080,
+                ToPort: 8080,
+                CidrIp: '0.0.0.0/0',
+              },
+            ],
+            SecurityGroupIngress: [
+              {
+                Description: 'permit HTTPS inbound',
+                IpProtocol: 'tcp',
+                FromPort: 443,
+                ToPort: 443,
+                CidrIp: '0.0.0.0/0',
+              },
+            ],
+            VpcId: {
+              Ref: 'VPC',
+            },
+            Tags: [
+              {
+                Key: 'Name',
+                Value: {
+                  // eslint-disable-next-line no-template-curly-in-string
+                  'Fn::Sub': '${AWS::StackName}-sg',
+                },
+              },
+            ],
+          },
+        },
+      };
+
+      const prefixLists = null;
+      const outboundTcpPorts = [8080];
+      const actual = buildAppSecurityGroup(prefixLists, outboundTcpPorts);
+      expect(actual).toEqual(expected);
+      expect.assertions(1);
+    });
+  });
+
   describe('#buildDHCPOptions', () => {
     it('builds a DHCP option set in us-east-1', () => {
       const expected = {
