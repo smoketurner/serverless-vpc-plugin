@@ -212,7 +212,7 @@ describe('vpc', () => {
                 CidrIp: '0.0.0.0/0',
               },
               {
-                Description: 'permit port 8080',
+                Description: 'permit port 8080 to the internet',
                 IpProtocol: 'tcp',
                 FromPort: 8080,
                 ToPort: 8080,
