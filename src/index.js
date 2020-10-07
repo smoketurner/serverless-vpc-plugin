@@ -48,6 +48,7 @@ class ServerlessVpcPlugin {
     let bastionHostKeyName = null;
     let exportOutputs = false;
     let subnetGroups = VALID_SUBNET_GROUPS;
+    let outboundTcpPorts = [];
 
     const { vpcConfig } = this.serverless.service.custom;
 
@@ -112,6 +113,10 @@ class ServerlessVpcPlugin {
 
       if ('createParameters' in vpcConfig && typeof vpcConfig.createParameters === 'boolean') {
         ({ createParameters } = vpcConfig);
+      }
+
+      if (Array.isArray(vpcConfig.outboundTcpPorts)) {
+        outboundTcpPorts = vpcConfig.outboundTcpPorts;
       }
     }
 
@@ -181,7 +186,7 @@ class ServerlessVpcPlugin {
         createDbSubnet,
         createNatInstance: !!(createNatInstance && vpcNatAmi),
       }),
-      buildAppSecurityGroup(prefixLists),
+      buildAppSecurityGroup(prefixLists, outboundTcpPorts),
       buildDHCPOptions(region),
     );
 
