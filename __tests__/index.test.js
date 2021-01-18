@@ -2,7 +2,7 @@ const AWS = require('aws-sdk-mock');
 const nock = require('nock');
 
 const Serverless = require('serverless');
-const AwsProvider = require('serverless/lib/plugins/aws/provider/awsProvider');
+const AwsProvider = require('serverless/lib/plugins/aws/provider');
 const ServerlessVpcPlugin = require('../src/index');
 
 describe('ServerlessVpcPlugin', () => {
