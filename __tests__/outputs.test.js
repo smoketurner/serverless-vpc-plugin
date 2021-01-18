@@ -150,6 +150,51 @@ describe('outputs', () => {
       expect.assertions(1);
     });
 
+    it('builds the outputs with no DB subnet', () => {
+      const subnets = [1, 2, 3].map((i) => ({
+        Ref: `AppSubnet${i}`,
+      }));
+      const expected = {
+        AppSubnet1: {
+          Value: {
+            Ref: 'AppSubnet1',
+          },
+        },
+        AppSubnet2: {
+          Value: {
+            Ref: 'AppSubnet2',
+          },
+        },
+        AppSubnet3: {
+          Value: {
+            Ref: 'AppSubnet3',
+          },
+        },
+        LambdaExecutionSecurityGroupId: {
+          Description: 'DEPRECATED - Please use AppSecurityGroupId instead',
+          Value: {
+            Ref: 'AppSecurityGroup',
+          },
+        },
+        AppSecurityGroupId: {
+          Description: 'Security Group ID that the applications use when executing within the VPC',
+          Value: {
+            Ref: 'AppSecurityGroup',
+          },
+        },
+        VPC: {
+          Description: 'VPC logical resource ID',
+          Value: {
+            Ref: 'VPC',
+          },
+        },
+      };
+
+      const actual = buildOutputs({ createDbSubnet: false, subnets });
+      expect(actual).toEqual(expected);
+      expect.assertions(1);
+    });
+
     it('builds the outputs with subnets', () => {
       const subnets = [1, 2, 3].map((i) => ({
         Ref: `AppSubnet${i}`,

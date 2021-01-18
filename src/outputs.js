@@ -82,6 +82,7 @@ function appendExports(outputs) {
  * Build CloudFormation Outputs on common resources
  *
  * @param {Boolean} createBastionHost
+ * @param {Boolean} createDbSubnet
  * @param {Array<String>} subnetGroups
  * @param {Array<String>} subnets
  * @param {Boolean} exportOutputs
@@ -89,6 +90,7 @@ function appendExports(outputs) {
  */
 function buildOutputs({
   createBastionHost = false,
+  createDbSubnet = true,
   subnetGroups = VALID_SUBNET_GROUPS,
   subnets = [],
   exportOutputs = false,
@@ -115,7 +117,7 @@ function buildOutputs({
   };
 
   // subnet groups need at least 2 subnets
-  if (Array.isArray(subnets) && subnets.length > 1) {
+  if (createDbSubnet && Array.isArray(subnets) && subnets.length > 1) {
     appendSubnetGroups(subnetGroups, outputs);
   }
 

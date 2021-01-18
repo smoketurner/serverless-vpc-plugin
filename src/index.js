@@ -316,6 +316,7 @@ class ServerlessVpcPlugin {
       outputs,
       buildOutputs({
         createBastionHost,
+        createDbSubnet,
         subnetGroups,
         subnets: vpc.subnetIds,
         exportOutputs,
