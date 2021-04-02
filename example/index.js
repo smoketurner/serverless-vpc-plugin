@@ -29,7 +29,7 @@ function getPublicIp() {
       res.once('error', reject);
     });
     req.once('timeout', () => {
-      req.abort();
+      req.destroy();
     });
     req.once('error', reject);
   });

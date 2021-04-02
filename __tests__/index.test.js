@@ -20,6 +20,7 @@ describe('ServerlessVpcPlugin', () => {
     serverless.cli = new serverless.classes.CLI();
 
     const provider = new AwsProvider(serverless, options);
+    // provider.sdk.config.logger = console;
     AWS.setSDKInstance(provider.sdk);
 
     provider.cachedCredentials = {
