@@ -284,7 +284,7 @@ class ServerlessVpcPlugin {
         buildParameter('AppSubnets', { Value: appSubnets }),
       );
 
-      if (dbSubnets) {
+      if (dbSubnets.length > 0) {
         Object.assign(resources, buildParameter('DBSubnets', { Value: dbSubnets }));
       }
     }
@@ -349,9 +349,8 @@ class ServerlessVpcPlugin {
         },
       ],
     };
-    return this.provider
-      .request('EC2', 'describeAvailabilityZones', params)
-      .then((data) => data.AvailabilityZones.map((z) => z.ZoneName).sort());
+    const data = await this.provider.request('EC2', 'describeAvailabilityZones', params);
+    return data.AvailabilityZones.map((z) => z.ZoneName).sort();
   }
 
   /**
@@ -363,9 +362,8 @@ class ServerlessVpcPlugin {
     const params = {
       MaxResults: 1000,
     };
-    return this.provider
-      .request('EC2', 'describeVpcEndpointServices', params)
-      .then((data) => data.ServiceNames.sort());
+    const data = await this.provider.request('EC2', 'describeVpcEndpointServices', params);
+    return data.ServiceNames.sort();
   }
 
   /**
@@ -408,17 +406,16 @@ class ServerlessVpcPlugin {
         },
       ],
     };
-    return this.provider.request('EC2', 'describeImages', params).then((data) =>
-      data.Images.sort((a, b) => {
-        if (a.CreationDate > b.CreationDate) {
-          return -1;
-        }
-        if (a.CreationDate < b.CreationDate) {
-          return 1;
-        }
-        return 0;
-      }).map((image) => image.ImageId),
-    );
+    const data = await this.provider.request('EC2', 'describeImages', params);
+    return data.Images.sort((a, b) => {
+      if (a.CreationDate > b.CreationDate) {
+        return -1;
+      }
+      if (a.CreationDate < b.CreationDate) {
+        return 1;
+      }
+      return 0;
+    }).map((image) => image.ImageId);
   }
 
   /**
@@ -454,14 +451,13 @@ class ServerlessVpcPlugin {
       ],
     };
 
-    return this.provider.request('EC2', 'describeManagedPrefixLists', params).then((data) => {
-      const results = {};
-      data.PrefixLists.forEach((prefixList) => {
-        const service = prefixList.PrefixListName.split('.').slice(3).join('.');
-        results[service] = prefixList.PrefixListId;
-      });
-      return results;
+    const data = await this.provider.request('EC2', 'describeManagedPrefixLists', params);
+    const results = {};
+    data.PrefixLists.forEach((prefixList) => {
+      const service = prefixList.PrefixListName.split('.').slice(3).join('.');
+      results[service] = prefixList.PrefixListId;
     });
+    return results;
   }
 }
 
