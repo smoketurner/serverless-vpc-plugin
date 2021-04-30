@@ -52,6 +52,11 @@ class ServerlessVpcPlugin {
     const { vpcConfig } = this.serverless.service.custom;
 
     if (vpcConfig) {
+      if (vpcConfig.enabled === false) {
+        this.serverless.cli.log('VPC plugin disabled');
+        return;
+      }
+
       if (vpcConfig.cidrBlock && typeof vpcConfig.cidrBlock === 'string') {
         ({ cidrBlock } = vpcConfig);
       }
