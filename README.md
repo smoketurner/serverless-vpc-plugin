@@ -76,6 +76,10 @@ provider:
 
 custom:
   vpcConfig:
+    # Whether plugin is enabled. Can be used to selectively disable plugin
+    # on certain stages or configurations. Defaults to true.
+    enabled: true
+
     cidrBlock: '10.0.0.0/16'
 
     # if createNatGateway is a boolean "true", a NAT Gateway and EIP will be provisioned in each zone
