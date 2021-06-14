@@ -29,16 +29,16 @@
     "cidr-split": "0.1.2"
   },
   "devDependencies": {
-    "aws-sdk-mock": "5.1.0",
-    "eslint": "7.27.0",
+    "@mapbox/aws-sdk-jest": "0.0.4",
+    "eslint": "7.28.0",
     "eslint-config-airbnb-base": "14.2.1",
     "eslint-config-prettier": "8.3.0",
-    "eslint-plugin-import": "2.23.3",
+    "eslint-plugin-import": "2.23.4",
     "eslint-plugin-jest": "24.3.6",
     "eslint-plugin-prettier": "3.4.0",
     "jest": "27.0.4",
-    "nock": "13.0.11",
-    "prettier": "2.3.0",
-    "serverless": "2.44.0"
+    "nock": "13.1.0",
+    "prettier": "2.3.1",
+    "serverless": "2.46.0"
   }
 }
