@@ -16,7 +16,7 @@
     "test": "sls invoke -f example"
   },
   "devDependencies": {
-    "aws-sdk": "2.953.0",
+    "aws-sdk": "2.958.0",
     "serverless": "2.52.1",
     "serverless-vpc-plugin": "smoketurner/serverless-vpc-plugin#master",
     "serverless-webpack": "5.5.1",
