@@ -47,6 +47,8 @@ custom:
       - elasticfilesystem
     subnetGroups:
       - rds
+#    createBastionHost: true
+#    bastionHostKeyName: bastion-key
   webpack:
     includeModules:
       forceExclude:
@@ -59,7 +61,7 @@ functions:
     fileSystemConfig:
       localMountPath: /mnt/efs0
       arn:
-        "Fn::GetAtt": "EFSAccessPoint.Arn"
+        'Fn::GetAtt': [ EFSAccessPoint, Arn ]
     description: Example Handler
     dependsOn:
       - EFSMountTarget1
