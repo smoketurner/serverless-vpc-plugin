@@ -19,7 +19,7 @@
     "aws-sdk": "2.1009.0",
     "serverless": "2.63.0",
     "serverless-vpc-plugin": "smoketurner/serverless-vpc-plugin#master",
-    "serverless-webpack": "5.5.4",
+    "serverless-webpack": "5.5.5",
     "webpack": "5.59.1",
     "webpack-node-externals": "3.0.0"
   }
