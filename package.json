@@ -30,7 +30,7 @@
   },
   "devDependencies": {
     "aws-sdk-mock": "5.4.0",
-    "eslint": "8.4.0",
+    "eslint": "8.4.1",
     "eslint-config-airbnb-base": "15.0.0",
     "eslint-config-prettier": "8.3.0",
     "eslint-plugin-import": "2.25.3",
