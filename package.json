@@ -36,7 +36,7 @@
     "eslint-plugin-import": "2.25.3",
     "eslint-plugin-jest": "25.3.4",
     "eslint-plugin-prettier": "4.0.0",
-    "jest": "27.4.5",
+    "jest": "27.4.7",
     "nock": "13.2.1",
     "prettier": "2.5.1",
     "serverless": "2.70.0"
