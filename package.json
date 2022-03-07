@@ -32,13 +32,13 @@
     "aws-sdk-mock": "5.5.1",
     "eslint": "8.9.0",
     "eslint-config-airbnb-base": "15.0.0",
-    "eslint-config-prettier": "8.3.0",
+    "eslint-config-prettier": "8.5.0",
     "eslint-plugin-import": "2.25.4",
     "eslint-plugin-jest": "26.1.1",
     "eslint-plugin-prettier": "4.0.0",
     "jest": "27.4.7",
     "nock": "13.2.2",
     "prettier": "2.5.1",
-    "serverless": "2.72.1"
+    "serverless": "3.7.1"
   }
 }
