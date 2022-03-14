@@ -17,7 +17,7 @@
   },
   "devDependencies": {
     "aws-sdk": "2.1087.0",
-    "serverless": "3.7.1",
+    "serverless": "3.7.4",
     "serverless-vpc-plugin": "smoketurner/serverless-vpc-plugin#master",
     "serverless-webpack": "5.6.1",
     "webpack": "5.69.1",
