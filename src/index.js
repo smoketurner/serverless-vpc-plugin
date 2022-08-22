@@ -165,7 +165,7 @@ class ServerlessVpcPlugin {
     if (createNatInstance) {
       this.serverless.cli.log('Finding latest VPC NAT Instance AMI...');
 
-      const images = await this.getImagesByName('amzn-ami-vpc-nat-hvm*');
+      const images = await this.getImagesByName('amzn-ami-vpc-nat*');
       if (Array.isArray(images) && images.length > 0) {
         [vpcNatAmi] = images;
       } else {
