@@ -410,6 +410,7 @@ class ServerlessVpcPlugin {
           Values: ['hvm'],
         },
       ],
+      IncludeDeprecated: true,
     };
     const data = await this.provider.request('EC2', 'describeImages', params);
     return data.Images.sort((a, b) => {
