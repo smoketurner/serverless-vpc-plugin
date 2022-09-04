@@ -8,6 +8,12 @@ const ServerlessVpcPlugin = require('../src/index');
 describe('ServerlessVpcPlugin', () => {
   let serverless;
   let plugin;
+  let mockedMethods = [];
+
+  function mockHelper(serviceName, methodName, callback) {
+    AWS.mock(serviceName, methodName, callback);
+    mockedMethods.push([serviceName, methodName]);
+  }
 
   beforeEach(() => {
     nock.disableNetConnect();
@@ -41,7 +47,10 @@ describe('ServerlessVpcPlugin', () => {
   });
 
   afterEach(() => {
-    AWS.restore();
+    while (mockedMethods.length > 0) {
+      const [serviceName, methodName] = mockedMethods.pop();
+      AWS.restore(serviceName, methodName);
+    }
   });
 
   describe('#constructor', () => {
@@ -133,7 +142,7 @@ describe('ServerlessVpcPlugin', () => {
         return callback(null, response);
       });
 
-      AWS.mock('EC2', 'describeAvailabilityZones', mockCallback);
+      mockHelper('EC2', 'describeAvailabilityZones', mockCallback);
 
       serverless.service.custom.vpcConfig = {
         services: [],
@@ -178,7 +187,7 @@ describe('ServerlessVpcPlugin', () => {
         return callback(null, response);
       });
 
-      AWS.mock('EC2', 'describeAvailabilityZones', mockCallback);
+      mockHelper('EC2', 'describeAvailabilityZones', mockCallback);
 
       const actual = await plugin.getZonesPerRegion('us-east-1');
 
@@ -204,7 +213,7 @@ describe('ServerlessVpcPlugin', () => {
         return callback(null, response);
       });
 
-      AWS.mock('EC2', 'describeVpcEndpointServices', mockCallback);
+      mockHelper('EC2', 'describeVpcEndpointServices', mockCallback);
 
       const actual = await plugin.getVpcEndpointServicesPerRegion('us-east-1');
 
@@ -236,7 +245,7 @@ describe('ServerlessVpcPlugin', () => {
         return callback(null, response);
       });
 
-      AWS.mock('EC2', 'describeImages', mockCallback);
+      mockHelper('EC2', 'describeImages', mockCallback);
 
       const actual = await plugin.getImagesByName('test');
       expect(actual).toEqual(['ami-test']);
@@ -259,7 +268,7 @@ describe('ServerlessVpcPlugin', () => {
         return callback(null, response);
       });
 
-      AWS.mock('EC2', 'describeVpcEndpointServices', mockCallback);
+      mockHelper('EC2', 'describeVpcEndpointServices', mockCallback);
 
       const actual = await plugin.validateServices('us-east-1', ['blah']);
       expect(actual).toEqual(['com.amazonaws.us-east-1.blah']);
@@ -296,7 +305,7 @@ describe('ServerlessVpcPlugin', () => {
         return callback(null, response);
       });
 
-      AWS.mock('EC2', 'describeManagedPrefixLists', mockCallback);
+      mockHelper('EC2', 'describeManagedPrefixLists', mockCallback);
 
       const expected = {
         s3: 'pl-63a5400a',
