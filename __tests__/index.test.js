@@ -16,7 +16,8 @@ describe('ServerlessVpcPlugin', () => {
       stage: 'dev',
       region: 'us-east-1',
     };
-    serverless = new Serverless(options);
+    const config = { commands: [], options: options };
+    serverless = new Serverless(config);
     serverless.cli = new serverless.classes.CLI();
 
     const provider = new AwsProvider(serverless, options);
