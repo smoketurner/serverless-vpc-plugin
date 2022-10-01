@@ -85,6 +85,24 @@ function buildLogBucketPolicy() {
                 },
               },
             },
+            {
+              Principal: '*',
+              Action: 's3:*',
+              Resource: [
+                {
+                  // eslint-disable-next-line no-template-curly-in-string
+                  'Fn::Sub': '${WebBucket.Arn}/*',
+                },
+                {
+                  'Fn::GetAtt': 'WebBucket.Arn',
+                },
+              ],
+              Condition: {
+                Bool: {
+                  'aws:SecureTransport': false,
+                },
+              },
+            },
           ],
         },
       },
