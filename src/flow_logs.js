@@ -86,6 +86,7 @@ function buildLogBucketPolicy() {
               },
             },
             {
+              Effect: 'Deny',
               Principal: '*',
               Action: 's3:*',
               Resource: [

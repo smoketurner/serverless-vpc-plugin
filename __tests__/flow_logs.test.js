@@ -69,6 +69,7 @@ describe('flow_logs', () => {
                   },
                 },
                 {
+                  Effect: 'Deny',
                   Principal: '*',
                   Action: 's3:*',
                   Resource: [
