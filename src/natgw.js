@@ -22,16 +22,17 @@ function buildEIP(position) {
  * Build a NatGateway in a given AZ
  *
  * @param {Number} position
+ * @param {String | null | undefined} eipAllocationId
  * @return {Object}
  */
-function buildNatGateway(position) {
+function buildNatGateway(position, eipAllocationId) {
   const cfName = `NatGateway${position}`;
   const subnet = `${PUBLIC_SUBNET}Subnet${position}`;
   return {
     [cfName]: {
       Type: 'AWS::EC2::NatGateway',
       Properties: {
-        AllocationId: {
+        AllocationId: eipAllocationId ? eipAllocationId : {
           'Fn::GetAtt': [`EIP${position}`, 'AllocationId'],
         },
         SubnetId: {

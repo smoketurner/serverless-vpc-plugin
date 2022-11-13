@@ -48,6 +48,7 @@ class ServerlessVpcPlugin {
     let bastionHostKeyName = null;
     let exportOutputs = false;
     let subnetGroups = VALID_SUBNET_GROUPS;
+    let eipAllocationIds = [];
 
     const { vpcConfig } = this.serverless.service.custom;
 
@@ -69,6 +70,17 @@ class ServerlessVpcPlugin {
         ({ createNetworkAcl } = vpcConfig);
       }
 
+      if (Array.isArray(vpcConfig.eipAllocationIds) && vpcConfig.eipAllocationIds.length > 0) {
+        eipAllocationIds = vpcConfig.eipAllocationIds
+          .map((z) => z || '')
+          .map((z) => z.trim().toLowerCase())
+          .map((id) => {
+            if (!id || id === 'null' || id === 'false' || id === '0') {
+              return null;
+            }
+            return id;
+          });
+      }
       if (Array.isArray(vpcConfig.zones) && vpcConfig.zones.length > 0) {
         zones = vpcConfig.zones.map((z) => z.trim().toLowerCase());
       }
@@ -185,6 +197,7 @@ class ServerlessVpcPlugin {
         numNatGateway: createNatGateway,
         createDbSubnet,
         createNatInstance: !!(createNatInstance && vpcNatAmi),
+        eipAllocationIds,
       }),
       buildAppSecurityGroup(prefixLists),
       buildDHCPOptions(region),

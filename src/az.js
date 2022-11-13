@@ -17,12 +17,13 @@ const { buildRoute, buildRouteTable, buildRouteTableAssociation } = require('./r
  * @param {Number} numNatGateway Number of NAT gateways (and EIPs) to provision
  * @param {Boolean} createDbSubnet Whether to create the DBSubnet or not
  * @param {Boolean} createNatInstance Whether to create a NAT instance or not
+ * @param {String | null | undefined} eipAllocationId
  * @return {Object}
  */
 function buildAvailabilityZones(
   subnets,
   zones = [],
-  { numNatGateway = 0, createDbSubnet = true, createNatInstance = false } = {},
+  { numNatGateway = 0, createDbSubnet = true, createNatInstance = false, eipAllocationIds = [] } = {},
 ) {
   if (!(subnets instanceof Map) || subnets.size < 1) {
     return {};
@@ -35,7 +36,11 @@ function buildAvailabilityZones(
 
   if (numNatGateway > 0) {
     for (let index = 1; index <= numNatGateway; index += 1) {
-      Object.assign(resources, buildEIP(index), buildNatGateway(index));
+      const eipAllocationId = eipAllocationIds[index-1];
+      if (!eipAllocationId) {
+        Object.assign(resources, buildEIP(index));
+      }
+      Object.assign(resources, buildNatGateway(index, eipAllocationId));
     }
   }
 
