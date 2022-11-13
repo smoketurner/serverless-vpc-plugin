@@ -85,6 +85,10 @@ custom:
     # if createNatGateway is a boolean "true", a NAT Gateway and EIP will be provisioned in each zone
     # if createNatGateway is a number, that number of NAT Gateways will be provisioned
     createNatGateway: 2
+    
+    eipAllocationIds: # Optional array specifying which VPC EIP each NAT Gateway should connect to
+      - epialloc-abcd012345678 # Connects first NatGateway to this existing EIP
+      - null # Creates a new EIP and connects  the second NatGateway to the newly created EIP
 
     # When enabled, the DB subnet will only be accessible from the Application subnet
     # Both the Public and Application subnets will be accessible from 0.0.0.0/0
