@@ -168,7 +168,5 @@ As an example, if the stack name you want to reference is `new-service-dev`, you
 vpc:
   securityGroupIds:
     - ${ssm:/SLS/new-service-dev/AppSecurityGroup}
-  subnetIds: ${ssm:/SLS/new-service-dev/AppSubnets~split}
+  subnetIds: ${ssm:/SLS/new-service-dev/AppSubnets} # sls will split this comma delimited list automatically because it's a StringList parameter type
 ```
-
-(Note the usage of `~split` to split the SSM `StringList` parameter type and return an array of values)
