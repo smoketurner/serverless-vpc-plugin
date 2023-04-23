@@ -70,7 +70,7 @@ functions:
     tracing: Active
     environment:
       SECRET_ARN:
-        Ref: DBSecret
+        "Fn::GetAtt": [ DBCluster, "MasterUserSecret.SecretArn" ]
       RESOURCE_ARN:
         "Fn::Join":
           - ":"
@@ -85,4 +85,3 @@ resources:
   - ${file(resources/iam_cf.yml)}
   - ${file(resources/efs_cf.yml)}
   - ${file(resources/rds_cf.yml)}
-  - ${file(resources/secretsmanager_cf.yml)}

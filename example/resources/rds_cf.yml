@@ -3,8 +3,8 @@ Resources:
   DBClusterParameterGroup:
     Type: "AWS::RDS::DBClusterParameterGroup"
     Properties:
-      Description: "Aurora PostgreSQL 10 Parameter Group"
-      Family: aurora-postgresql10
+      Description: "Aurora PostgreSQL 11 Parameter Group"
+      Family: aurora-postgresql11
       Parameters:
         rds.force_ssl: 1
 
@@ -49,25 +49,9 @@ Resources:
       EnableHttpEndpoint: true
       Engine: aurora-postgresql
       EngineMode: serverless
-      EngineVersion: "10.7" # Data API only supports PostgreSQL 10.7 https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/data-api.html#data-api.regions
-      MasterUsername:
-        !Join [
-          "",
-          [
-            "{{resolve:secretsmanager:",
-            !Ref DBSecret,
-            ":SecretString:username}}",
-          ],
-        ]
-      MasterUserPassword:
-        !Join [
-          "",
-          [
-            "{{resolve:secretsmanager:",
-            !Ref DBSecret,
-            ":SecretString:password}}",
-          ],
-        ]
+      EngineVersion: "11.16" # Data API only supports PostgreSQL 11.16 https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/Concepts.Aurora_Fea_Regions_DB-eng.Feature.Data_API.html#Concepts.Aurora_Fea_Regions_DB-eng.Feature.Data_API.apg
+      ManageMasterUserPassword: true
+      MasterUsername: postgres
       ScalingConfiguration:
         AutoPause: true
         MaxCapacity: 2
@@ -89,3 +73,7 @@ Outputs:
   DBClusterPort:
     Description: RDS Cluster Port
     Value: !GetAtt DBCluster.Endpoint.Port
+
+  SecretArn:
+    Description: Secret ARN
+    Value: !GetAtt DBCluster.MasterUserSecret.SecretArn
