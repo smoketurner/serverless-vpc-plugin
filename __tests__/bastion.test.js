@@ -214,7 +214,7 @@ describe('bastion', () => {
                 DeviceName: '/dev/xvda',
                 Ebs: {
                   VolumeSize: 10,
-                  VolumeType: 'gp2',
+                  VolumeType: 'gp3',
                   DeleteOnTermination: true,
                 },
               },
@@ -414,7 +414,7 @@ describe('bastion', () => {
                 DeviceName: '/dev/xvda',
                 Ebs: {
                   VolumeSize: 10,
-                  VolumeType: 'gp2',
+                  VolumeType: 'gp3',
                   DeleteOnTermination: true,
                 },
               },

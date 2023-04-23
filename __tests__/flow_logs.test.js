@@ -8,10 +8,17 @@ describe('flow_logs', () => {
           Type: 'AWS::EC2::FlowLog',
           DependsOn: 'LogBucketPolicy',
           Properties: {
+            DestinationOptions: {
+              FileFormat: 'parquet',
+              HiveCompatiblePartitions: true,
+              PerHourPartition: true,
+            },
             LogDestinationType: 's3',
             LogDestination: {
               'Fn::GetAtt': ['LogBucket', 'Arn'],
             },
+            LogFormat: '${version} ${account-id} ${interface-id} ${srcaddr} ${dstaddr} ${srcport} ${dstport} ${protocol} ${packets} ${bytes} ${start} ${end} ${action} ${log-status} ${vpc-id} ${subnet-id} ${instance-id} ${tcp-flags} ${type} ${pkt-srcaddr} ${pkt-dstaddr} ${region} ${az-id} ${sublocation-type} ${sublocation-id} ${pkt-src-aws-service} ${pkt-dst-aws-service} ${flow-direction} ${traffic-path}',
+            MaxAggregationInterval: 60,
             ResourceId: {
               Ref: 'VPC',
             },
@@ -45,9 +52,22 @@ describe('flow_logs', () => {
                   Principal: {
                     Service: 'delivery.logs.amazonaws.com',
                   },
-                  Action: 's3:GetBucketAcl',
+                  Action: ['s3:GetBucketAcl', 's3:ListBucket'],
                   Resource: {
                     'Fn::GetAtt': ['LogBucket', 'Arn'],
+                  },
+                  Condition: {
+                    StringEquals: {
+                      'aws:SourceAccount': {
+                        Ref: 'AWS::AccountId',
+                      },
+                    },
+                    ArnLike: {
+                      'aws:SourceArn': {
+                        // eslint-disable-next-line no-template-curly-in-string
+                        'Fn::Sub': 'arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:*',
+                      },
+                    },
                   },
                 },
                 {
@@ -60,25 +80,35 @@ describe('flow_logs', () => {
                   Resource: {
                     'Fn::Sub':
                       // eslint-disable-next-line no-template-curly-in-string
-                      'arn:${AWS::Partition}:s3:::${LogBucket}/AWSLogs/${AWS::AccountId}/*',
+                      'arn:${AWS::Partition}:s3:::${LogBucket}/*',
                   },
                   Condition: {
                     StringEquals: {
                       's3:x-amz-acl': 'bucket-owner-full-control',
+                      'aws:SourceAccount': {
+                        Ref: 'AWS::AccountId',
+                      },
                     },
+                    ArnLike: {
+                      'aws:SourceArn': {
+                        // eslint-disable-next-line no-template-curly-in-string
+                        'Fn::Sub': 'arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:*',
+                      },
+                    }
                   },
                 },
                 {
+                  Sid: 'AllowSSLRequestsOnly',
                   Effect: 'Deny',
                   Principal: '*',
                   Action: 's3:*',
                   Resource: [
                     {
                       // eslint-disable-next-line no-template-curly-in-string
-                      'Fn::Sub': '${WebBucket.Arn}/*',
+                      'Fn::Sub': '${LogBucket.Arn}/*',
                     },
                     {
-                      'Fn::GetAtt': 'WebBucket.Arn',
+                      'Fn::GetAtt': 'LogBucket.Arn',
                     },
                   ],
                   Condition: {
@@ -106,13 +136,39 @@ describe('flow_logs', () => {
           DeletionPolicy: 'Retain',
           UpdateReplacePolicy: 'Retain',
           Properties: {
-            AccessControl: 'LogDeliveryWrite',
             BucketEncryption: {
               ServerSideEncryptionConfiguration: [
                 {
                   ServerSideEncryptionByDefault: {
                     SSEAlgorithm: 'AES256',
                   },
+                },
+              ],
+            },
+            LifecycleConfiguration: {
+              Rules: [
+                {
+                  ExpirationInDays: 365,
+                  Id: 'RetentionRule',
+                  Prefix: 'AWSLogs',
+                  Status: 'Enabled',
+                  Transitions: [
+                    {
+                      TransitionInDays: 30,
+                      StorageClass: 'STANDARD_IA',
+                    },
+                    {
+                      TransitionInDays: 90,
+                      StorageClass: 'GLACIER',
+                    },
+                  ],
+                },
+              ],
+            },
+            OwnershipControls: {
+              Rules: [
+                {
+                  ObjectOwnership: 'BucketOwnerEnforced',
                 },
               ],
             },
@@ -131,6 +187,9 @@ describe('flow_logs', () => {
                 },
               },
             ],
+            VersioningConfiguration: {
+              Status: 'Enabled',
+            },
           },
         },
       };

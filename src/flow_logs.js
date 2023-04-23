@@ -10,13 +10,39 @@ function buildLogBucket() {
       DeletionPolicy: 'Retain',
       UpdateReplacePolicy: 'Retain',
       Properties: {
-        AccessControl: 'LogDeliveryWrite',
         BucketEncryption: {
           ServerSideEncryptionConfiguration: [
             {
               ServerSideEncryptionByDefault: {
                 SSEAlgorithm: 'AES256',
               },
+            },
+          ],
+        },
+        LifecycleConfiguration: {
+          Rules: [
+            {
+              ExpirationInDays: 365,
+              Id: 'RetentionRule',
+              Prefix: 'AWSLogs',
+              Status: 'Enabled',
+              Transitions: [
+                {
+                  TransitionInDays: 30,
+                  StorageClass: 'STANDARD_IA',
+                },
+                {
+                  TransitionInDays: 90,
+                  StorageClass: 'GLACIER',
+                },
+              ],
+            },
+          ],
+        },
+        OwnershipControls: {
+          Rules: [
+            {
+              ObjectOwnership: 'BucketOwnerEnforced',
             },
           ],
         },
@@ -35,6 +61,9 @@ function buildLogBucket() {
             },
           },
         ],
+        VersioningConfiguration: {
+          Status: 'Enabled',
+        },
       },
     },
   };
@@ -63,9 +92,22 @@ function buildLogBucketPolicy() {
               Principal: {
                 Service: 'delivery.logs.amazonaws.com',
               },
-              Action: 's3:GetBucketAcl',
+              Action: ['s3:GetBucketAcl', 's3:ListBucket'],
               Resource: {
                 'Fn::GetAtt': ['LogBucket', 'Arn'],
+              },
+              Condition: {
+                StringEquals: {
+                  'aws:SourceAccount': {
+                    Ref: 'AWS::AccountId',
+                  },
+                },
+                ArnLike: {
+                  'aws:SourceArn': {
+                    // eslint-disable-next-line no-template-curly-in-string
+                    'Fn::Sub': 'arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:*',
+                  },
+                },
               },
             },
             {
@@ -77,25 +119,35 @@ function buildLogBucketPolicy() {
               Action: 's3:PutObject',
               Resource: {
                 // eslint-disable-next-line no-template-curly-in-string
-                'Fn::Sub': 'arn:${AWS::Partition}:s3:::${LogBucket}/AWSLogs/${AWS::AccountId}/*',
+                'Fn::Sub': 'arn:${AWS::Partition}:s3:::${LogBucket}/*',
               },
               Condition: {
                 StringEquals: {
+                  'aws:SourceAccount': {
+                    Ref: 'AWS::AccountId',
+                  },
                   's3:x-amz-acl': 'bucket-owner-full-control',
+                },
+                ArnLike: {
+                  'aws:SourceArn': {
+                    // eslint-disable-next-line no-template-curly-in-string
+                    'Fn::Sub': 'arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:*',
+                  },
                 },
               },
             },
             {
+              Sid: 'AllowSSLRequestsOnly',
               Effect: 'Deny',
               Principal: '*',
               Action: 's3:*',
               Resource: [
                 {
                   // eslint-disable-next-line no-template-curly-in-string
-                  'Fn::Sub': '${WebBucket.Arn}/*',
+                  'Fn::Sub': '${LogBucket.Arn}/*',
                 },
                 {
-                  'Fn::GetAtt': 'WebBucket.Arn',
+                  'Fn::GetAtt': 'LogBucket.Arn',
                 },
               ],
               Condition: {
@@ -123,10 +175,18 @@ function buildVpcFlowLogs({ name = 'S3FlowLog' } = {}) {
       Type: 'AWS::EC2::FlowLog',
       DependsOn: 'LogBucketPolicy',
       Properties: {
-        LogDestinationType: 's3',
+        DestinationOptions: {
+          FileFormat: 'parquet',
+          HiveCompatiblePartitions: true,
+          PerHourPartition: true,
+        },
         LogDestination: {
           'Fn::GetAtt': ['LogBucket', 'Arn'],
         },
+        LogDestinationType: 's3',
+        // eslint-disable-next-line no-template-curly-in-string
+        LogFormat: '${version} ${account-id} ${interface-id} ${srcaddr} ${dstaddr} ${srcport} ${dstport} ${protocol} ${packets} ${bytes} ${start} ${end} ${action} ${log-status} ${vpc-id} ${subnet-id} ${instance-id} ${tcp-flags} ${type} ${pkt-srcaddr} ${pkt-dstaddr} ${region} ${az-id} ${sublocation-type} ${sublocation-id} ${pkt-src-aws-service} ${pkt-dst-aws-service} ${flow-direction} ${traffic-path}',
+        MaxAggregationInterval: 60, // seconds
         ResourceId: {
           Ref: 'VPC',
         },
