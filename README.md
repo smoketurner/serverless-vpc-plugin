@@ -102,6 +102,10 @@ custom:
 
     # Whether to create a NAT instance
     createNatInstance: false
+    # When enabled with the above, it will utilize the
+    # [fck-nat](https://fck-nat.dev/) AMI vs. the Amazon AMI's with arm64
+    # t4g.nano instances
+    createNatInstanceFckNat: false
 
     # Whether to create AWS Systems Manager (SSM) Parameters
     createParameters: false
