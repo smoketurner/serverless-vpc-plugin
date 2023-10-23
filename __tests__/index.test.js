@@ -247,7 +247,7 @@ describe('ServerlessVpcPlugin', () => {
 
       mockHelper('EC2', 'describeImages', mockCallback);
 
-      const actual = await plugin.getImagesByName('test');
+      const actual = await plugin.getImagesByName('test', 'test', 'test');
       expect(actual).toEqual(['ami-test']);
       expect(mockCallback).toHaveBeenCalled();
       expect.assertions(3);

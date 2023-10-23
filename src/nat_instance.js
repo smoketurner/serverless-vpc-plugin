@@ -68,11 +68,12 @@ function buildNatSecurityGroup() {
  * Build the NAT instance
  *
  * @param {Object} imageId AMI image ID
+ * @param {String} instance type
  * @param {Array} zones Array of availability zones
  * @param {Object} params
  * @return {Object}
  */
-function buildNatInstance(imageId, zones = [], { name = 'NatInstance' } = {}) {
+function buildNatInstance(imageId, instanceType, zones = [], { name = 'NatInstance' } = {}) {
   if (!imageId) {
     return {};
   }
@@ -99,7 +100,7 @@ function buildNatInstance(imageId, zones = [], { name = 'NatInstance' } = {}) {
           },
         ],
         ImageId: imageId, // amzn-ami-vpc-nat-hvm-2018.03.0.20181116-x86_64-ebs
-        InstanceType: 't2.micro',
+        InstanceType: instanceType,
         Monitoring: false,
         NetworkInterfaces: [
           {

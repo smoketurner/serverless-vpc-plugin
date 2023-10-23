@@ -121,7 +121,68 @@ describe('nat_instance', () => {
 
       const imageId = 'ami-00a9d4a05375b2763';
 
-      const actual = buildNatInstance(imageId, ['us-east-1a', 'us-east-1b']);
+      const actual = buildNatInstance(imageId, 't2.micro', ['us-east-1a', 'us-east-1b']);
+      expect(actual).toEqual(expected);
+      expect.assertions(1);
+    });
+  });
+
+  describe('#buildNatInstance createNatInstanceFckNat', () => {
+    it('builds an EC2 instance', () => {
+      const expected = {
+        NatInstance: {
+          Type: 'AWS::EC2::Instance',
+          DependsOn: 'InternetGatewayAttachment',
+          Properties: {
+            AvailabilityZone: {
+              'Fn::Select': ['0', ['us-east-1a', 'us-east-1b']],
+            },
+            BlockDeviceMappings: [
+              {
+                DeviceName: '/dev/xvda',
+                Ebs: {
+                  VolumeSize: 10,
+                  VolumeType: 'gp2',
+                  DeleteOnTermination: true,
+                },
+              },
+            ],
+            ImageId: 'ami-0d30a34832b46dcae',
+            InstanceType: 't4g.nano',
+            Monitoring: false,
+            NetworkInterfaces: [
+              {
+                AssociatePublicIpAddress: true,
+                DeleteOnTermination: true,
+                Description: 'eth0',
+                DeviceIndex: '0',
+                GroupSet: [
+                  {
+                    Ref: 'NatSecurityGroup',
+                  },
+                ],
+                SubnetId: {
+                  Ref: 'PublicSubnet1',
+                },
+              },
+            ],
+            SourceDestCheck: false,
+            Tags: [
+              {
+                Key: 'Name',
+                Value: {
+                  // eslint-disable-next-line no-template-curly-in-string
+                  'Fn::Sub': '${AWS::StackName}-nat',
+                },
+              },
+            ],
+          },
+        },
+      };
+
+      const imageId = 'ami-0d30a34832b46dcae';
+
+      const actual = buildNatInstance(imageId, 't4g.nano', ['us-east-1a', 'us-east-1b']);
       expect(actual).toEqual(expected);
       expect.assertions(1);
     });

@@ -43,6 +43,7 @@ class ServerlessVpcPlugin {
     let createDbSubnet = true;
     let createFlowLogs = false;
     let createNatInstance = false;
+    let createNatInstanceFckNat = false;
     let createBastionHost = false;
     let createParameters = false;
     let bastionHostKeyName = null;
@@ -103,6 +104,12 @@ class ServerlessVpcPlugin {
 
       if ('createNatInstance' in vpcConfig && typeof vpcConfig.createNatInstance === 'boolean') {
         ({ createNatInstance } = vpcConfig);
+        if (
+          'createNatInstanceFckNat' in vpcConfig &&
+          typeof vpcConfig.createNatInstanceFckNat === 'boolean'
+        ) {
+          ({ createNatInstanceFckNat } = vpcConfig);
+        }
       }
 
       if (createNatGateway && createNatInstance) {
@@ -162,10 +169,15 @@ class ServerlessVpcPlugin {
     const resources = providerObj.compiledCloudFormationTemplate.Resources;
 
     let vpcNatAmi = null;
+    let instanceType = null;
     if (createNatInstance) {
       this.serverless.cli.log('Finding latest VPC NAT Instance AMI...');
 
-      const images = await this.getImagesByName('amzn-ami-vpc-nat*');
+      instanceType = createNatInstanceFckNat ? 't4g.nano' : 't2.micro';
+      const images = createNatInstanceFckNat
+        ? await this.getImagesByName('568608671756', 'fck-nat-amzn2-*', 'arm64')
+        : await this.getImagesByName('amazon', 'amzn-ami-vpc-nat*', 'x86_64');
+
       if (Array.isArray(images) && images.length > 0) {
         [vpcNatAmi] = images;
       } else {
@@ -204,7 +216,11 @@ class ServerlessVpcPlugin {
 
     if (createNatInstance && vpcNatAmi) {
       this.serverless.cli.log(`Provisioning NAT Instance using AMI ${vpcNatAmi}`);
-      Object.assign(resources, buildNatSecurityGroup(), buildNatInstance(vpcNatAmi, zones));
+      Object.assign(
+        resources,
+        buildNatSecurityGroup(),
+        buildNatInstance(vpcNatAmi, instanceType, zones),
+      );
     }
 
     if (createBastionHost) {
@@ -374,16 +390,18 @@ class ServerlessVpcPlugin {
   /**
    * Return an array of AMI images which match the VPC NAT Instance image
    *
+   * @param {String} owner AMI id to search for
    * @param {String} name AMI name to search for
+   * @param {String} arch AMI architecture to search for
    * @return {Array}
    */
-  async getImagesByName(name) {
+  async getImagesByName(owner, name, arch) {
     const params = {
-      Owners: ['amazon'],
+      Owners: [owner],
       Filters: [
         {
           Name: 'architecture',
-          Values: ['x86_64'],
+          Values: [arch],
         },
         {
           Name: 'image-type',
